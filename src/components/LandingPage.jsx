@@ -1,5 +1,6 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../lib/AuthContext';
+import { useResponsive } from '../lib/useResponsive';
 import Hero from './Hero';
 import CategoryFilters from './CategoryFilters';
 import TrustSection from './TrustSection';
@@ -441,13 +442,40 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
     </div>
   );
 };
+const TESTIMONIALS = [
+  { quote: 'I applied for a Schengen visa and had my Maljani certificate within 4 minutes. The embassy accepted it without question. Absolutely seamless.', name: 'Amina K.', title: 'Nairobi, Kenya', emoji: '\uD83D\uDC69\uD83C\uDFFE' },
+  { quote: 'As a travel agency, we issue 50\u201380 policies a month. The agency dashboard has cut our paperwork time by 90%. Commission is tracked in real time.', name: 'James M.', title: 'Managing Director, Safara Travels', emoji: '\uD83D\uDC68\uD83C\uDFFF\u200D\uD83D\uDCBC' },
+  { quote: 'Had a medical emergency in Dubai. Filed a claim through the insurer portal using my policy number. KES 420,000 was approved within 48 hours. Incredible.', name: 'Patricia W.', title: 'Kampala, Uganda', emoji: '\uD83D\uDC69\uD83C\uDFFE\u200D\u2695\uFE0F' },
+];
+
 const LandingPage = ({ onStartWizard, onNavigate }) => {
   const { user, role } = useAuth();
+  const { mobile } = useResponsive();
   const isAgent = role === 'agent' || role === 'administrator';
   const [searchParams, setSearchParams] = useState(null);
   const [compareSelected, setCompareSelected] = useState([]);
   const [compareOpen, setCompareOpen] = useState(false);
   const [compareDates, setCompareDates] = useState(null);
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const touchStartX = useRef(null);
+
+  // Auto-rotate testimonials
+  useEffect(() => {
+    const timer = setInterval(() => setActiveTestimonial(i => (i + 1) % TESTIMONIALS.length), 6000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const handleTestimonialSwipe = useCallback((e) => {
+    if (e.type === 'touchstart') {
+      touchStartX.current = e.touches[0].clientX;
+    } else if (e.type === 'touchend' && touchStartX.current !== null) {
+      const diff = e.changedTouches[0].clientX - touchStartX.current;
+      if (Math.abs(diff) > 40) {
+        setActiveTestimonial(i => diff < 0 ? (i + 1) % TESTIMONIALS.length : (i - 1 + TESTIMONIALS.length) % TESTIMONIALS.length);
+      }
+      touchStartX.current = null;
+    }
+  }, []);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const onAddCompare    = (p)   => setCompareSelected(prev => prev.length < 3 && !prev.find(x => x.id === p.id) ? [...prev, p] : prev);
@@ -507,7 +535,7 @@ const LandingPage = ({ onStartWizard, onNavigate }) => {
       {user && !isAgent && (
         <div style={{ position: 'relative', zIndex: 1, padding: '0 0 20px' }}>
           <div className="container">
-            <div style={{ background: 'linear-gradient(135deg,rgba(49,99,49,0.18),rgba(49,99,49,0.08))', border: '1px solid rgba(49,99,49,0.35)', borderRadius: 'var(--radius-lg)', padding: '28px 36px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+            <div style={{ background: 'linear-gradient(135deg,rgba(49,99,49,0.18),rgba(49,99,49,0.08))', border: '1px solid rgba(49,99,49,0.35)', borderRadius: 'var(--radius-lg)', padding: mobile ? '20px 16px' : '28px 36px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, flexDirection: mobile ? 'column' : 'row', textAlign: mobile ? 'center' : 'left' }}>
               <div>
                 <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: '#86efac', marginBottom: 6 }}>Welcome back, {user.name}</p>
                 <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700 }}>Ready to issue a new policy? <span style={{ color: 'var(--gold)' }}>You're logged in as {role}.</span></h3>
@@ -540,9 +568,9 @@ const LandingPage = ({ onStartWizard, onNavigate }) => {
 
       {/* Agency CTA */}
       {!isAgent && (
-      <section id="agencies" style={{ position: 'relative', zIndex: 1, padding: '0 0 110px' }}>
+      <section id="agencies" style={{ position: 'relative', zIndex: 1, padding: mobile ? '0 0 60px' : '0 0 110px' }}>
         <div className="container">
-          <div style={{ background: 'linear-gradient(135deg,var(--navy-light) 0%,rgba(49,99,49,0.14) 100%)', border: '1px solid var(--glass-border-bright)', borderRadius: 'var(--radius-xl)', padding: '72px 60px', display: 'grid', gridTemplateColumns: '1fr 400px', gap: 60, alignItems: 'center' }}>
+          <div style={{ background: 'linear-gradient(135deg,var(--navy-light) 0%,rgba(49,99,49,0.14) 100%)', border: '1px solid var(--glass-border-bright)', borderRadius: mobile ? 'var(--radius-lg)' : 'var(--radius-xl)', padding: mobile ? '40px 20px' : '72px 60px', display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 400px', gap: mobile ? 32 : 60, alignItems: 'center' }}>
             <div>
               <p className="section-label">For Insurance Agencies</p>
               <h2 className="section-title reveal" style={{ fontSize: 'clamp(28px,3vw,46px)', marginBottom: 18 }}>
@@ -587,32 +615,58 @@ const LandingPage = ({ onStartWizard, onNavigate }) => {
 
       <TrustedPartners />
 
-      {/* Testimonials */}
-      <section style={{ position: 'relative', zIndex: 1, padding: '0 0 110px' }}>
+      {/* Testimonials — swipeable carousel */}
+      <section style={{ position: 'relative', zIndex: 1, padding: mobile ? '0 0 60px' : '0 0 110px' }}>
         <div className="container">
           <div className="section-header">
             <p className="section-label">Customer Stories</p>
             <h2 className="section-title reveal">Trusted by 50,000+ Travelers</h2>
             <p className="reveal reveal-delay-1">Real experiences from real policyholders across Africa and beyond.</p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24 }}>
-            {[
-              { quote: 'I applied for a Schengen visa and had my Maljani certificate within 4 minutes. The embassy accepted it without question. Absolutely seamless.', name: 'Amina K.', title: 'Nairobi, Kenya', emoji: '👩🏾' },
-              { quote: 'As a travel agency, we issue 50–80 policies a month. The agency dashboard has cut our paperwork time by 90%. Commission is tracked in real time.', name: 'James M.', title: 'Managing Director, Safara Travels', emoji: '👨🏿‍💼' },
-              { quote: 'Had a medical emergency in Dubai. Filed a claim through the insurer portal using my policy number. KES 420,000 was approved within 48 hours. Incredible.', name: 'Patricia W.', title: 'Kampala, Uganda', emoji: '👩🏾‍⚕️' },
-            ].map(t => (
-              <blockquote key={t.name} className="reveal" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-lg)', padding: '28px 28px 24px', margin: 0, display: 'flex', flexDirection: 'column' }}>
-                <div style={{ fontSize: 22, color: 'var(--indigo-glow)', marginBottom: 14, lineHeight: 1 }}>"</div>
-                <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 1.8, flex: 1, marginBottom: 20 }}>{t.quote}</p>
-                <footer style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--glass-bg-md)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{t.emoji}</div>
+
+          <div
+            style={{ position: 'relative', overflow: 'hidden', maxWidth: 640, margin: '0 auto' }}
+            onTouchStart={handleTestimonialSwipe}
+            onTouchEnd={handleTestimonialSwipe}
+          >
+            {TESTIMONIALS.map((t, idx) => (
+              <blockquote
+                key={t.name}
+                className="reveal"
+                style={{
+                  background: 'var(--glass-bg)', border: '1px solid var(--glass-border)',
+                  borderRadius: 'var(--radius-lg)', padding: mobile ? '24px 20px 20px' : '36px 36px 28px',
+                  margin: 0, display: idx === activeTestimonial ? 'flex' : 'none', flexDirection: 'column',
+                  animation: 'fadeIn 0.5s ease',
+                }}
+              >
+                <div style={{ fontSize: 28, color: 'var(--indigo-glow)', marginBottom: 14, lineHeight: 1 }}>"</div>
+                <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: mobile ? 15 : 17, lineHeight: 1.85, flex: 1, marginBottom: 24 }}>{t.quote}</p>
+                <footer style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{ width: 46, height: 46, borderRadius: '50%', background: 'var(--glass-bg-md)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>{t.emoji}</div>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: 14 }}>{t.name}</div>
-                    <div style={{ fontSize: 12, color: 'var(--slate)' }}>{t.title}</div>
+                    <div style={{ fontWeight: 700, fontSize: 15 }}>{t.name}</div>
+                    <div style={{ fontSize: 13, color: 'var(--slate)' }}>{t.title}</div>
                   </div>
                 </footer>
               </blockquote>
             ))}
+
+            {/* Dots */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 24 }}>
+              {TESTIMONIALS.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setActiveTestimonial(idx)}
+                  aria-label={`Testimonial ${idx + 1}`}
+                  style={{
+                    width: idx === activeTestimonial ? 28 : 10, height: 10, borderRadius: 100, border: 'none',
+                    background: idx === activeTestimonial ? 'var(--gold)' : 'rgba(255,255,255,0.15)',
+                    cursor: 'pointer', transition: 'all 0.3s ease', padding: 0,
+                  }}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -620,9 +674,9 @@ const LandingPage = ({ onStartWizard, onNavigate }) => {
       <FAQSection />
 
       {/* Final CTA */}
-      <section style={{ position: 'relative', zIndex: 1, padding: '0 0 120px' }}>
+      <section style={{ position: 'relative', zIndex: 1, padding: mobile ? '0 0 60px' : '0 0 120px' }}>
         <div className="container">
-          <div style={{ background: 'linear-gradient(135deg,var(--indigo) 0%,var(--indigo-glow) 100%)', borderRadius: 'var(--radius-xl)', padding: '80px 60px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ background: 'linear-gradient(135deg,var(--indigo) 0%,var(--indigo-glow) 100%)', borderRadius: mobile ? 'var(--radius-lg)' : 'var(--radius-xl)', padding: mobile ? '48px 20px' : '80px 60px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', top: -40, right: -40, width: 300, height: 300, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', pointerEvents: 'none' }} aria-hidden="true" />
             <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', opacity: 0.7, marginBottom: 14 }}>Ready to travel?</p>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px,3.5vw,52px)', fontWeight: 800, marginBottom: 18, lineHeight: 1.1 }}>Get Covered in 3 Minutes.</h2>
