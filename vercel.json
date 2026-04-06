@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/graphql",
+      "destination": "https://mtj.ivk.mybluehost.me/website_e48ea083/graphql"
+    },
+    {
+      "source": "/wp-json/:path*",
+      "destination": "https://mtj.ivk.mybluehost.me/website_e48ea083/wp-json/:path*"
+    }
+  ]
+}
