@@ -99,7 +99,7 @@ const inputStyle = { padding: '10px 14px', borderRadius: 8, border: '1px solid v
 const CompareBar = ({ selected, onRemove, onClear, onCompare }) => {
   if (selected.length < 2) return null;
   return (
-    <div role="region" aria-label="Policy comparison bar" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 900, background: 'rgba(8,14,39,0.96)', backdropFilter: 'blur(18px)', borderTop: '1px solid rgba(49,99,49,0.35)', padding: '16px 40px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+    <div role="region" aria-label="Policy comparison bar" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 900, background: 'rgba(8,14,39,0.96)', backdropFilter: 'blur(18px)', borderTop: '1px solid rgba(49,99,49,0.35)', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginRight: 4 }}>
         <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--indigo-glow)', boxShadow: '0 0 8px var(--indigo-glow)' }} aria-hidden="true" />
         <span style={{ fontWeight: 700, fontSize: 14 }}>Comparing {selected.length}/3</span>

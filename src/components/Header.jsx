@@ -171,72 +171,70 @@ const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onFor
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               {/* Mobile hamburger */}
               {mobile && (
-                <div ref={menuRef} style={{ position: 'relative' }}>
+                <div ref={menuRef}>
                   <button
                     onClick={() => setMenuOpen((prev) => !prev)}
                     aria-label={menuOpen ? 'Close menu' : 'Open menu'}
                     aria-expanded={menuOpen}
                     style={{
-                      background: 'none', border: '1px solid rgba(255,255,255,0.15)',
-                      borderRadius: 8, width: 36, height: 36,
+                      background: menuOpen ? 'rgba(255,255,255,0.1)' : 'none',
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      borderRadius: 8, width: 38, height: 38,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      cursor: 'pointer', color: 'rgba(255,255,255,0.75)',
+                      cursor: 'pointer', color: 'rgba(255,255,255,0.85)',
                       transition: 'all 0.25s ease', flexShrink: 0,
+                      position: 'relative', zIndex: 101,
                     }}
                   >
                     {menuOpen ? (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18" />
                         <line x1="6" y1="6" x2="18" y2="18" />
                       </svg>
                     ) : (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="3" y1="6" x2="21" y2="6" />
                         <line x1="3" y1="12" x2="21" y2="12" />
                         <line x1="3" y1="18" x2="21" y2="18" />
                       </svg>
                     )}
                   </button>
-
-                  {/* Mobile nav dropdown */}
-                  {menuOpen && (
-                    <div
-                      style={{
-                        position: 'absolute', top: 'calc(100% + 12px)', right: 0,
-                        background: 'rgba(12,18,44,0.96)',
-                        backdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(255,255,255,0.12)',
-                        borderRadius: 12, padding: '8px 0',
-                        minWidth: 200, boxShadow: '0 16px 48px rgba(0,0,0,0.4)',
-                        animation: 'ticDropIn 0.2s ease',
-                      }}
-                    >
-                      {navLinks.map((item) => {
-                        const isActive = activeView === item.view;
-                        return (
-                          <button
-                            key={item.view}
-                            onClick={() => { onNavigate(item.view); setMenuOpen(false); }}
-                            aria-current={isActive ? 'page' : undefined}
-                            style={{
-                              display: 'block', width: '100%', padding: '11px 18px',
-                              background: isActive ? 'rgba(255,255,255,0.06)' : 'none',
-                              border: 'none', textAlign: 'left',
-                              color: isActive ? '#fff' : 'rgba(255,255,255,0.7)',
-                              fontSize: 14, fontWeight: isActive ? 600 : 400,
-                              fontFamily: 'var(--font-body)',
-                              cursor: 'pointer', transition: 'background 0.15s, color 0.15s',
-                              borderLeft: isActive ? '2px solid var(--gold)' : '2px solid transparent',
-                            }}
-                            onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#fff'; } }}
-                            onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; } }}
-                          >
-                            {item.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
+                </div>
+              )}
+              {/* Full-screen mobile nav overlay */}
+              {mobile && menuOpen && (
+                <div className="tic-mobile-menu" ref={menuRef}>
+                  <nav style={{ flex: 1 }}>
+                    {navLinks.map((item) => {
+                      const isActive = activeView === item.view;
+                      return (
+                        <button
+                          key={item.view}
+                          className={`tic-mobile-menu__link${isActive ? ' tic-mobile-menu__link--active' : ''}`}
+                          onClick={() => { onNavigate(item.view); setMenuOpen(false); }}
+                          aria-current={isActive ? 'page' : undefined}
+                        >
+                          {item.label}
+                        </button>
+                      );
+                    })}
+                  </nav>
+                  <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {user ? (
+                      <>
+                        <div style={{ fontSize: 13, color: 'var(--slate)', marginBottom: 4 }}>
+                          Signed in as <span style={{ color: '#fff', fontWeight: 600 }}>{user.name}</span>
+                        </div>
+                        <button className="btn btn--primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { onNavigate('dashboard'); setMenuOpen(false); }}>Dashboard</button>
+                        <button className="btn btn--ghost" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { logout(); setMenuOpen(false); }}>Logout</button>
+                      </>
+                    ) : (
+                      <>
+                        <button className="btn btn--primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { onNavigate('register'); setMenuOpen(false); }}>Get Started</button>
+                        <button className="btn btn--ghost" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { onNavigate('login'); setMenuOpen(false); }}>Login</button>
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
               {loading ? (

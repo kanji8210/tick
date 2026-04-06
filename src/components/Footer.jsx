@@ -34,7 +34,7 @@ const Footer = ({ onNavigate }) => {
   ];
 
   return (
-    <footer style={{ position: 'relative', zIndex: 1, borderTop: '1px solid var(--glass-border)', padding: '64px 0 36px' }}>
+    <footer style={{ position: 'relative', zIndex: 1, borderTop: '1px solid var(--glass-border)', padding: mobile ? '40px 0 28px' : '64px 0 36px' }}>
       <div className="container">
 
         <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : tablet ? '1fr 1fr' : '2fr 1fr 1fr 1fr', gap: mobile ? 32 : tablet ? 36 : 56, marginBottom: 48 }}>
@@ -77,7 +77,7 @@ const Footer = ({ onNavigate }) => {
         </div>
 
         {/* Bottom bar */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 28, borderTop: '1px solid var(--glass-border)', flexWrap: 'wrap', gap: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: mobile ? 'center' : 'space-between', paddingTop: 28, borderTop: '1px solid var(--glass-border)', flexWrap: 'wrap', gap: 14, textAlign: mobile ? 'center' : 'left', flexDirection: mobile ? 'column' : 'row' }}>
           <p style={{ fontSize: 13, color: 'var(--slate-dark)' }}>© 2026 Travel Insurance Center-Kenya. All rights reserved.</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             {['✓ IRA Compliant', '✓ SSL Secured', '✓ GDPR Ready'].map((b) => (

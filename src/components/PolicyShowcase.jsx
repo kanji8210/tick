@@ -234,7 +234,7 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
   };
 
   return (
-    <section id="policy-showcase" style={{ position: 'relative', zIndex: 1, padding: '80px 0 110px' }}>
+    <section id="policy-showcase" style={{ position: 'relative', zIndex: 1, padding: mobile ? '48px 0 60px' : '80px 0 110px' }}>
       <BenefitModal
         policy={selectedPolicy}
         onClose={() => setSelectedPolicy(null)}
@@ -243,7 +243,7 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
       <InsurerProfileModal policy={selectedInsurerPolicy} onClose={() => setSelectedInsurerPolicy(null)} />
 
       <div className="container">
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 36, flexWrap: 'wrap', gap: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 36, flexWrap: 'wrap', gap: mobile ? 12 : 20, flexDirection: mobile ? 'column' : 'row', alignItems: mobile ? 'stretch' : 'flex-end' }}>
           <div>
             <p className="section-label">Compare & Buy</p>
             <h2 className="section-title" style={{ fontSize: 'clamp(28px,3vw,44px)' }}>
@@ -283,10 +283,10 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
 
         {/* Filter chips — derived from policies that are actually in the system */}
         {filterChips.length > 1 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 40 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: mobile ? 'nowrap' : 'wrap', marginBottom: 40, overflowX: mobile ? 'auto' : 'visible', WebkitOverflowScrolling: 'touch', paddingBottom: mobile ? 4 : 0, scrollbarWidth: 'none' }}>
             {filterChips.map(chip => (
               <button key={chip.label} onClick={() => setActiveFilter(chip.slug)}
-                style={{ padding: '9px 20px', borderRadius: 100, border: `1px solid ${activeFilter === chip.slug ? 'rgba(49,99,49,0.5)' : 'var(--glass-border)'}`, background: activeFilter === chip.slug ? 'rgba(49,99,49,0.18)' : 'var(--glass-bg)', color: activeFilter === chip.slug ? '#86efac' : 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                style={{ padding: '9px 20px', borderRadius: 100, border: `1px solid ${activeFilter === chip.slug ? 'rgba(49,99,49,0.5)' : 'var(--glass-border)'}`, background: activeFilter === chip.slug ? 'rgba(49,99,49,0.18)' : 'var(--glass-bg)', color: activeFilter === chip.slug ? '#86efac' : 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap', flexShrink: 0 }}
               >{chip.label}</button>
             ))}
           </div>

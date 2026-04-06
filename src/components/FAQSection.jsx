@@ -1,4 +1,5 @@
 ﻿import React, { useState } from 'react';
+import { useResponsive } from '../lib/useResponsive';
 
 const FAQS = [
   { q: 'Which destinations are covered?',            a: 'Maljani covers East Africa, Southern Africa, West Africa, Schengen/Europe, Middle East, Asia, and Worldwide plans. Your selected destination auto-filters policies from our network of 15+ verified insurers.' },
@@ -11,17 +12,18 @@ const FAQS = [
 
 const FAQSection = () => {
   const [open, setOpen] = useState(null);
+  const { mobile } = useResponsive();
   const toggle = (i) => setOpen(open === i ? null : i);
 
   return (
-    <section style={{ position: 'relative', zIndex: 1, padding: '0 0 110px' }}>
+    <section style={{ position: 'relative', zIndex: 1, padding: mobile ? '0 0 60px' : '0 0 110px' }}>
       <div className="container">
         <div className="section-header">
           <p className="section-label">Common Questions</p>
           <h2 className="section-title reveal">Everything You Need to Know</h2>
           <p className="reveal reveal-delay-1">Clear answers on coverage, pricing, certificates, and claims.</p>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, maxWidth: 1040, margin: '0 auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', gap: mobile ? 10 : 14, maxWidth: 1040, margin: '0 auto' }}>
           {FAQS.map((f, i) => (
             <div key={i} style={{ background: 'var(--glass-bg)', border: `1px solid ${open === i ? 'rgba(49,99,49,0.38)' : 'var(--glass-border)'}`, borderRadius: 'var(--radius-md)', overflow: 'hidden', transition: 'border-color 0.25s' }}>
               <button

@@ -61,7 +61,8 @@ const TrustSection = ({ onNavigate }) => {
       <div className="container">
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          flexWrap: 'wrap', gap: 20, padding: '20px 0',
+          flexDirection: mobile ? 'column' : 'row',
+          flexWrap: 'wrap', gap: mobile ? 16 : 20, padding: '20px 0',
         }}>
 
           {/* Left: shield + message */}

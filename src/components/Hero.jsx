@@ -66,16 +66,16 @@ const Hero = ({ onStart, onNavigate }) => {
   );
 
   return (
-    <section id="hero-top" style={{ position: "relative", zIndex: 1, minHeight: mobile ? "auto" : "100vh", display: "flex", alignItems: "center", padding: mobile ? "100px 0 60px" : "128px 0 80px" }}>
+    <section id="hero-top" style={{ position: "relative", zIndex: 1, minHeight: mobile ? "auto" : "100vh", display: "flex", alignItems: "center", padding: mobile ? "90px 0 48px" : "128px 0 80px" }}>
       <div style={{
         position: "absolute", right: "-8%", top: "50%", transform: "translateY(-50%)",
-        width: mobile ? 300 : 560, height: mobile ? 300 : 560, border: "1px dashed rgba(49,99,49,0.18)", borderRadius: "50%",
-        pointerEvents: "none", animation: "spin-slow 80s linear infinite",
+        width: mobile ? 0 : 560, height: mobile ? 0 : 560, border: mobile ? "none" : "1px dashed rgba(49,99,49,0.18)", borderRadius: "50%",
+        pointerEvents: "none", animation: mobile ? "none" : "spin-slow 80s linear infinite",
       }} aria-hidden="true" />
       <style>{`@keyframes spin-slow { to { transform: translateY(-50%) rotate(360deg); } } @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }`}</style>
 
       <div className="container">
-        <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr" : tablet ? "1fr 380px" : "1fr 460px", gap: mobile ? 40 : tablet ? 48 : 72, alignItems: "center" }}>
+        <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr" : tablet ? "1fr 380px" : "1fr 460px", gap: mobile ? 32 : tablet ? 48 : 72, alignItems: "center" }}>
 
           {/* ── Left column ── */}
           {isAgent ? (
@@ -130,11 +130,11 @@ const Hero = ({ onStart, onNavigate }) => {
                 Compare policies from Africa&apos;s leading insurers in seconds.
                 Instant certificates. Zero paperwork. Built for travelers and agencies.
               </p>
-              <div className="reveal reveal-delay-3" style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", marginBottom: 18 }}>
-                <button className="btn btn--primary btn--lg" onClick={() => document.getElementById("policy-showcase")?.scrollIntoView({ behavior: "smooth" })}>Compare Policies &rarr;</button>
-                <button className="btn btn--ghost btn--lg" onClick={() => document.getElementById("agencies")?.scrollIntoView({ behavior: "smooth" })}>For Agencies</button>
+              <div className="reveal reveal-delay-3" style={{ display: "flex", alignItems: mobile ? "stretch" : "center", flexDirection: mobile ? "column" : "row", gap: mobile ? 10 : 14, flexWrap: "wrap", marginBottom: 18 }}>
+                <button className="btn btn--primary btn--lg" style={mobile ? { width: '100%', justifyContent: 'center' } : {}} onClick={() => document.getElementById("policy-showcase")?.scrollIntoView({ behavior: "smooth" })}>Compare Policies &rarr;</button>
+                <button className="btn btn--ghost btn--lg" style={mobile ? { width: '100%', justifyContent: 'center' } : {}} onClick={() => document.getElementById("agencies")?.scrollIntoView({ behavior: "smooth" })}>For Agencies</button>
               </div>
-              <div className="reveal reveal-delay-4" style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", fontSize: 13, color: "var(--slate-dark)" }}>
+              <div className="reveal reveal-delay-4" style={{ display: "flex", alignItems: "center", gap: mobile ? 8 : 16, flexWrap: "wrap", fontSize: mobile ? 12 : 13, color: "var(--slate-dark)" }}>
                 {["\u2713 No sign-up needed to compare", "\u2713 Embassy-verified certificates", "\u2713 15+ Partner insurers"].map(t => (
                   <span key={t} style={{ display: "flex", alignItems: "center", gap: 5 }}>
                     <em style={{ color: "#22c55e", fontStyle: "normal" }}>{t[0]}</em>{t.slice(1)}
@@ -173,9 +173,9 @@ const Hero = ({ onStart, onNavigate }) => {
             <div className="reveal reveal-delay-2">
               <div style={{
                 background: "var(--glass-bg-md)", border: "1px solid var(--glass-border-bright)",
-                borderRadius: "var(--radius-xl)", padding: 32, backdropFilter: "blur(24px)",
+                borderRadius: mobile ? "var(--radius-lg)" : "var(--radius-xl)", padding: mobile ? 20 : 32, backdropFilter: "blur(24px)",
                 boxShadow: "var(--shadow-card), inset 0 1px 0 rgba(255,255,255,0.08)",
-                position: "relative", overflow: "hidden", animation: "float 7s ease-in-out infinite",
+                position: "relative", overflow: "hidden", animation: mobile ? "none" : "float 7s ease-in-out infinite",
               }} role="form" aria-label="Get an insurance quote">
                 <div style={{ position: "absolute", top: -1, left: 20, right: 20, height: 2, background: "linear-gradient(90deg,transparent,var(--indigo-glow),transparent)", borderRadius: 2 }} />
                 <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, marginBottom: 6 }}>Get Your Quote</h2>

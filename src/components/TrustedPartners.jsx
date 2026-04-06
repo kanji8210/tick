@@ -1,9 +1,12 @@
 ﻿import React from 'react';
+import { useResponsive } from '../lib/useResponsive';
 
 const PARTNERS = ['Jubilee Insurance','AAR Insurance','Britam Group','CIC Group','UAP Old Mutual','Kenya Orient','Resolution Insurance','Heritage Insurance'];
 
-const TrustedPartners = () => (
-  <section style={{ position: 'relative', zIndex: 1, padding: '0 0 90px' }}>
+const TrustedPartners = () => {
+  const { mobile } = useResponsive();
+  return (
+  <section style={{ position: 'relative', zIndex: 1, padding: mobile ? '0 0 48px' : '0 0 90px' }}>
     <div className="container">
       <p style={{ textAlign: 'center', fontSize: 12, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--slate-dark)', marginBottom: 28 }}>Trusted by leading African insurers</p>
       <div style={{ overflow: 'hidden', maskImage: 'linear-gradient(90deg,transparent,black 8%,black 92%,transparent)' }} aria-hidden="true">
@@ -19,6 +22,7 @@ const TrustedPartners = () => (
       </div>
     </div>
   </section>
-);
+  );
+};
 
 export default TrustedPartners;
