@@ -61,12 +61,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   margin: 0 auto; padding: 0 80px;
 }
 @media (max-width: 1024px) { .container { padding: 0 40px; } }
-@media (max-width: 768px)  { .container { padding: 0 20px; } }
-
-/* Header uses tighter padding on mobile for full-width feel */
-@media (max-width: 768px) {
-  .tic-header .container { padding: 0 12px; }
-}
+@media (max-width: 768px)  { .container { padding: 0 12px; } }
 
 /* ── Background effects ── */
 .bg-mesh {

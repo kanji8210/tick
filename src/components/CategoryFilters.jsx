@@ -1,5 +1,6 @@
 ﻿import React, { useMemo } from 'react';
 import { useQuery } from 'urql';
+import { useResponsive } from '../lib/useResponsive';
 
 const GET_POLICY_REGIONS = `
   query GetPolicyRegions {
@@ -13,6 +14,7 @@ const GET_POLICY_REGIONS = `
 
 const CategoryFilters = ({ onSelect }) => {
   const [active, setActive] = React.useState(null);
+  const { mobile } = useResponsive();
   const [{ data }] = useQuery({ query: GET_POLICY_REGIONS });
 
   /* Derive unique regions that have at least one policy. */
@@ -35,12 +37,12 @@ const CategoryFilters = ({ onSelect }) => {
   };
 
   const btnStyle = (slug) => ({
-    display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 100,
+    display: 'flex', alignItems: 'center', gap: 8, padding: mobile ? '8px 14px' : '10px 20px', borderRadius: 100,
     background: active === slug ? 'rgba(49,99,49,0.18)' : 'var(--glass-bg)',
     border: `1px solid ${active === slug ? 'rgba(49,99,49,0.45)' : 'var(--glass-border)'}`,
     color: active === slug ? '#86efac' : 'rgba(255,255,255,0.65)',
-    fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 600,
-    cursor: 'pointer', transition: 'all 0.22s', whiteSpace: 'nowrap',
+    fontFamily: 'var(--font-body)', fontSize: mobile ? 12 : 13, fontWeight: 600,
+    cursor: 'pointer', transition: 'all 0.22s',
   });
 
   return (
@@ -50,8 +52,7 @@ const CategoryFilters = ({ onSelect }) => {
           <p className="section-label" style={{ margin: 0 }}>✈️ Popular Destinations</p>
           <a href="#policy-showcase" style={{ fontSize: 13, color: 'var(--slate)', textDecoration: 'none' }}>View all policies →</a>
         </div>
-        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: 'max-content', padding: '4px 2px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: mobile ? 8 : 12, padding: '4px 0' }}>
             {/* "All" pill to clear the region filter */}
             <button onClick={() => handleClick(null)} style={btnStyle(null)}>
               🌐 All Destinations
@@ -61,7 +62,6 @@ const CategoryFilters = ({ onSelect }) => {
                 {r.name}
               </button>
             ))}
-          </div>
         </div>
       </div>
     </div>

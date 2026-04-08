@@ -29,12 +29,12 @@ const FAQSection = () => {
               <button
                 onClick={() => toggle(i)}
                 aria-expanded={open === i}
-                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '20px 22px', background: 'none', border: 'none', color: open === i ? '#86efac' : 'var(--white)', fontFamily: 'var(--font-body)', fontSize: 15, fontWeight: 600, textAlign: 'left', cursor: 'pointer', transition: 'color 0.2s' }}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: mobile ? '16px 14px' : '20px 22px', background: 'none', border: 'none', color: open === i ? '#86efac' : 'var(--white)', fontFamily: 'var(--font-body)', fontSize: mobile ? 14 : 15, fontWeight: 600, textAlign: 'left', cursor: 'pointer', transition: 'color 0.2s' }}
               >
                 {f.q}
                 <span style={{ flexShrink: 0, fontSize: 20, color: open === i ? 'var(--indigo-glow)' : 'var(--slate)', transform: open === i ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s, color 0.2s', lineHeight: 1 }} aria-hidden="true">⌄</span>
               </button>
-              <div style={{ maxHeight: open === i ? 200 : 0, overflow: 'hidden', transition: 'max-height 0.4s cubic-bezier(0.4,0,0.2,1)', padding: open === i ? '0 22px 20px' : '0 22px' }}>
+              <div style={{ maxHeight: open === i ? 200 : 0, overflow: 'hidden', transition: 'max-height 0.4s cubic-bezier(0.4,0,0.2,1)', padding: open === i ? (mobile ? '0 14px 16px' : '0 22px 20px') : (mobile ? '0 14px' : '0 22px') }}>
                 <p style={{ color: 'var(--slate)', fontSize: 14, lineHeight: 1.75 }}>{f.a}</p>
               </div>
             </div>

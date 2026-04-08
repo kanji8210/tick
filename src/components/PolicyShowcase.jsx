@@ -87,12 +87,13 @@ const InsurerLogo = ({ logoUrl, name, size = 44 }) => {
 
 /* ── Insurer Profile Modal ──────────────────────────────────────────────────── */
 const InsurerProfileModal = ({ policy, onClose }) => {
+  const { mobile } = useResponsive();
   if (!policy) return null;
   const name    = policy.policyInsurerName || NOT_PROVIDED;
   const logoUrl = policy.policyInsurerLogo || '';
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }} onClick={onClose}>
-      <div className="glass-card" style={{ maxWidth: 400, width: '100%', padding: '2.5rem', position: 'relative', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: mobile ? 'flex-end' : 'center', justifyContent: 'center', padding: mobile ? 0 : '2rem' }} onClick={onClose}>
+      <div className="glass-card" style={{ maxWidth: mobile ? '100%' : 400, width: '100%', padding: mobile ? '2rem 1.5rem' : '2.5rem', position: 'relative', textAlign: 'center', borderRadius: mobile ? '20px 20px 0 0' : undefined }} onClick={e => e.stopPropagation()}>
         <button type="button" onClick={onClose} style={{ position: 'absolute', top: 14, right: 14, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--slate)', fontSize: 18, borderRadius: 8, padding: '4px 10px', cursor: 'pointer' }}>✕</button>
         <div style={{ width: 80, height: 80, margin: '0 auto 1.5rem' }}>
           <InsurerLogo logoUrl={logoUrl} name={name} size={80} />
@@ -107,6 +108,7 @@ const InsurerProfileModal = ({ policy, onClose }) => {
 
 /* ── Benefit Detail Modal ───────────────────────────────────────────────────── */
 const BenefitModal = ({ policy, onClose, onNavigate }) => {
+  const { mobile } = useResponsive();
   if (!policy) return null;
   const tags        = parseTags(policy.policyFeatureTags);
   const price       = minPremium(policy.policyDayPremiums);
@@ -124,8 +126,8 @@ const BenefitModal = ({ policy, onClose, onNavigate }) => {
     : [];
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }} onClick={onClose}>
-      <div className="glass-card" style={{ maxWidth: 620, width: '100%', padding: '2.5rem', position: 'relative', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)', zIndex: 2000, display: 'flex', alignItems: mobile ? 'flex-end' : 'center', justifyContent: 'center', padding: mobile ? '0' : '2rem' }} onClick={onClose}>
+      <div className="glass-card" style={{ maxWidth: 620, width: '100%', padding: mobile ? '1.5rem' : '2.5rem', position: 'relative', maxHeight: mobile ? '92vh' : '80vh', overflowY: 'auto', borderRadius: mobile ? '20px 20px 0 0' : undefined }} onClick={e => e.stopPropagation()}>
         <button type="button" onClick={onClose} style={{ position: 'absolute', top: 14, right: 14, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--slate)', fontSize: 18, borderRadius: 8, padding: '4px 10px', cursor: 'pointer' }}>✕</button>
         <span className="badge badge--indigo" style={{ marginBottom: 14 }}>Plan Details</span>
 
@@ -255,13 +257,14 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
               background: 'rgba(49,99,49,0.1)', 
               border: '1px solid rgba(49,99,49,0.3)', 
               borderRadius: 'var(--radius-md)', 
-              padding: '12px 20px', 
+              padding: mobile ? '10px 14px' : '12px 20px', 
               display: 'flex', 
-              alignItems: 'center', 
-              gap: 16,
+              alignItems: mobile ? 'flex-start' : 'center',
+              flexDirection: mobile ? 'column' : 'row', 
+              gap: mobile ? 8 : 16,
               boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
             }}>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)' }}>
+              <div style={{ fontSize: mobile ? 12 : 13, color: 'rgba(255,255,255,0.9)', lineHeight: 1.5 }}>
                 <span style={{ color: 'var(--slate)', marginRight: 6 }}>Search:</span>
                 <strong style={{ color: 'var(--gold)' }}>{searchParams?.region || 'All Regions'}</strong>
                 <span style={{ margin: '0 8px', opacity: 0.3 }}>|</span>
@@ -283,10 +286,10 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
 
         {/* Filter chips — derived from policies that are actually in the system */}
         {filterChips.length > 1 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: mobile ? 'nowrap' : 'wrap', marginBottom: 40, overflowX: mobile ? 'auto' : 'visible', WebkitOverflowScrolling: 'touch', paddingBottom: mobile ? 4 : 0, scrollbarWidth: 'none' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: mobile ? 8 : 10, flexWrap: 'wrap', marginBottom: mobile ? 28 : 40 }}>
             {filterChips.map(chip => (
               <button key={chip.label} onClick={() => setActiveFilter(chip.slug)}
-                style={{ padding: '9px 20px', borderRadius: 100, border: `1px solid ${activeFilter === chip.slug ? 'rgba(49,99,49,0.5)' : 'var(--glass-border)'}`, background: activeFilter === chip.slug ? 'rgba(49,99,49,0.18)' : 'var(--glass-bg)', color: activeFilter === chip.slug ? '#86efac' : 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap', flexShrink: 0 }}
+                style={{ padding: mobile ? '8px 14px' : '9px 20px', borderRadius: 100, border: `1px solid ${activeFilter === chip.slug ? 'rgba(49,99,49,0.5)' : 'var(--glass-border)'}`, background: activeFilter === chip.slug ? 'rgba(49,99,49,0.18)' : 'var(--glass-bg)', color: activeFilter === chip.slug ? '#86efac' : 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-body)', fontSize: mobile ? 12 : 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
               >{chip.label}</button>
             ))}
           </div>
@@ -307,28 +310,27 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                   onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = 'var(--shadow-card)'; }}
                   onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
                 >
-                  {/* Top compare checkbox */}
-                  <div style={{ position: 'absolute', top: 14, right: 14, zIndex: 2 }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: compareSelected.length >= 3 && !checked ? 'not-allowed' : 'pointer', background: checked ? 'rgba(49,99,49,0.3)' : 'rgba(0,0,0,0.55)', border: `1px solid ${checked ? 'var(--indigo-glow)' : 'var(--glass-border)'}`, borderRadius: 8, padding: '5px 10px', backdropFilter: 'blur(8px)', fontSize: 12, fontWeight: 600, color: checked ? '#86efac' : 'var(--slate)', whiteSpace: 'nowrap' }}>
-                      <input type="checkbox" checked={checked} onChange={() => toggleCompare(policy)} disabled={compareSelected.length >= 3 && !checked} style={{ accentColor: 'var(--indigo)', width: 14, height: 14, cursor: 'pointer' }} />
-                      Compare
-                    </label>
-                  </div>
-
                   {/* Card header */}
-                  <div style={{ padding: '22px 22px 16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                      <InsurerLogo logoUrl={policy.policyInsurerLogo} name={policy.policyInsurerName} size={44} />
-                      <div>
-                        <button type="button" onClick={() => setSelectedInsurerPolicy(policy)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.75)', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: 0, textAlign: 'left' }} title="View insurer profile">{policy.policyInsurerName || 'Insurer'}</button>
-                        <div style={{ display: 'flex', gap: 2, marginTop: 2 }}>
-                          {'★★★★★'.split('').map((s, i) => <span key={i} style={{ color: i < 5 ? '#FBBF24' : 'var(--slate-dark)', fontSize: 11 }}>{s}</span>)}
-                          <span style={{ color: 'var(--slate-dark)', fontSize: 11, marginLeft: 3 }}>5.0</span>
+                  <div style={{ padding: '18px 18px 14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                        <InsurerLogo logoUrl={policy.policyInsurerLogo} name={policy.policyInsurerName} size={mobile ? 38 : 44} />
+                        <div style={{ minWidth: 0 }}>
+                          <button type="button" onClick={() => setSelectedInsurerPolicy(policy)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.75)', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: 0, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', display: 'block' }} title="View insurer profile">{policy.policyInsurerName || 'Insurer'}</button>
+                          <div style={{ display: 'flex', gap: 2, marginTop: 2 }}>
+                            {'★★★★★'.split('').map((s, i) => <span key={i} style={{ color: i < 5 ? '#FBBF24' : 'var(--slate-dark)', fontSize: 11 }}>{s}</span>)}
+                            <span style={{ color: 'var(--slate-dark)', fontSize: 11, marginLeft: 3 }}>5.0</span>
+                          </div>
                         </div>
                       </div>
+                      {/* Compare checkbox — inline, no overlap */}
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: compareSelected.length >= 3 && !checked ? 'not-allowed' : 'pointer', background: checked ? 'rgba(49,99,49,0.25)' : 'rgba(255,255,255,0.04)', border: `1px solid ${checked ? 'var(--indigo-glow)' : 'var(--glass-border)'}`, borderRadius: 8, padding: '5px 10px', fontSize: 11, fontWeight: 600, color: checked ? '#86efac' : 'var(--slate)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                        <input type="checkbox" checked={checked} onChange={() => toggleCompare(policy)} disabled={compareSelected.length >= 3 && !checked} style={{ accentColor: 'var(--indigo)', width: 14, height: 14, cursor: 'pointer' }} />
+                        Compare
+                      </label>
                     </div>
 
-                    <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 700, marginBottom: 10, lineHeight: 1.3 }}>{policy.title}</h3>
+                    <h3 style={{ fontFamily: 'var(--font-display)', fontSize: mobile ? 16 : 18, fontWeight: 700, marginBottom: 10, lineHeight: 1.3 }}>{policy.title}</h3>
 
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 16 }}>
                       {searchParams?.departure && searchParams?.returnDate ? (
@@ -369,7 +371,7 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                   </div>
 
                   {/* Card footer */}
-                  <div style={{ borderTop: '1px solid var(--glass-border)', padding: '16px 22px', display: 'flex', gap: 10 }}>
+                  <div style={{ borderTop: '1px solid var(--glass-border)', padding: mobile ? '14px 18px' : '16px 22px', display: 'flex', gap: 10 }}>
                     <button type="button" className="btn btn--primary btn--sm" style={{ flex: 1, justifyContent: 'center' }} onClick={() => onNavigate('policy-detail', policy.databaseId, searchParams)}>View Plan →</button>
                     <button type="button" className="btn btn--ghost btn--sm" onClick={() => setSelectedPolicy(policy)}>Details</button>
                   </div>

@@ -98,25 +98,26 @@ const inputStyle = { padding: '10px 14px', borderRadius: 8, border: '1px solid v
 
 /* Compare Bar */
 const CompareBar = ({ selected, onRemove, onClear, onCompare }) => {
+  const { mobile } = useResponsive();
   if (selected.length < 2) return null;
   return (
-    <div role="region" aria-label="Policy comparison bar" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 900, background: 'rgba(8,14,39,0.96)', backdropFilter: 'blur(18px)', borderTop: '1px solid rgba(49,99,49,0.35)', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginRight: 4 }}>
+    <div role="region" aria-label="Policy comparison bar" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 900, background: 'rgba(8,14,39,0.96)', backdropFilter: 'blur(18px)', borderTop: '1px solid rgba(49,99,49,0.35)', padding: mobile ? '10px 12px' : '12px 12px', display: 'flex', alignItems: 'center', gap: mobile ? 6 : 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginRight: 4, ...(mobile ? { width: '100%', justifyContent: 'center' } : {}) }}>
         <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--indigo-glow)', boxShadow: '0 0 8px var(--indigo-glow)' }} aria-hidden="true" />
-        <span style={{ fontWeight: 700, fontSize: 14 }}>Comparing {selected.length}/3</span>
+        <span style={{ fontWeight: 700, fontSize: mobile ? 13 : 14 }}>Comparing {selected.length}/3</span>
       </div>
       {selected.map(p => (
-        <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--glass-bg-md)', border: '1px solid var(--glass-border)', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 600 }}>
+        <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--glass-bg-md)', border: '1px solid var(--glass-border)', borderRadius: 10, padding: mobile ? '6px 10px' : '8px 14px', fontSize: mobile ? 12 : 13, fontWeight: 600, flex: mobile ? '1 1 0' : undefined, minWidth: 0 }}>
           {p.policyInsurerLogo && (
-            <img src={p.policyInsurerLogo} alt="" style={{ width: 20, height: 20, objectFit: 'contain', borderRadius: 4, flexShrink: 0 }} />
+            <img src={p.policyInsurerLogo} alt="" style={{ width: mobile ? 16 : 20, height: mobile ? 16 : 20, objectFit: 'contain', borderRadius: 4, flexShrink: 0 }} />
           )}
-          <span style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</span>
-          <button onClick={() => onRemove(p.id)} aria-label={`Remove ${p.title} from comparison`} style={{ background: 'none', border: 'none', color: 'var(--slate)', fontSize: 16, cursor: 'pointer', lineHeight: 1, padding: '0 2px' }}>x</button>
+          <span style={{ maxWidth: mobile ? 100 : 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>{p.title}</span>
+          <button onClick={() => onRemove(p.id)} aria-label={`Remove ${p.title} from comparison`} style={{ background: 'none', border: 'none', color: 'var(--slate)', fontSize: 16, cursor: 'pointer', lineHeight: 1, padding: '0 2px', flexShrink: 0 }}>x</button>
         </div>
       ))}
-      <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
-        <button className="btn btn--ghost btn--sm" onClick={onClear}>Clear</button>
-        <button className="btn btn--primary btn--sm" onClick={onCompare}>Compare Now</button>
+      <div style={{ display: 'flex', gap: 8, ...(mobile ? { width: '100%' } : { marginLeft: 'auto' }) }}>
+        <button className="btn btn--ghost btn--sm" onClick={onClear} style={mobile ? { flex: 1 } : undefined}>Clear</button>
+        <button className="btn btn--primary btn--sm" onClick={onCompare} style={mobile ? { flex: 2 } : undefined}>Compare Now</button>
       </div>
     </div>
   );
@@ -141,6 +142,7 @@ const SectionRow = ({ label, cols, accent }) => (
 
 /* Date picker shown before opening Compare Modal */
 const CompareDatePicker = ({ onConfirm, onSkip, onClose }) => {
+  const { mobile } = useResponsive();
   const today = new Date().toISOString().split('T')[0];
   const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
   const [dep, setDep] = useState(today);
@@ -149,11 +151,11 @@ const CompareDatePicker = ({ onConfirm, onSkip, onClose }) => {
   const days = tripDays(dep, ret);
   return (
     <div
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(16px)', zIndex: 1010, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(16px)', zIndex: 1010, display: 'flex', alignItems: mobile ? 'flex-end' : 'center', justifyContent: 'center', padding: mobile ? 0 : '1rem' }}
       onClick={onClose}
     >
       <div
-        style={{ background: 'var(--navy-mid)', border: '1px solid var(--glass-border-bright)', borderRadius: 'var(--radius-xl)', padding: '2rem', width: '100%', maxWidth: 400, position: 'relative' }}
+        style={{ background: 'var(--navy-mid)', border: '1px solid var(--glass-border-bright)', borderRadius: mobile ? '20px 20px 0 0' : 'var(--radius-xl)', padding: mobile ? '1.5rem 1.25rem' : '2rem', width: '100%', maxWidth: mobile ? '100%' : 400, position: 'relative' }}
         onClick={e => e.stopPropagation()}
       >
         <button onClick={onClose} style={{ position: 'absolute', top: 14, right: 16, background: 'none', border: 'none', color: 'var(--slate)', fontSize: 22, cursor: 'pointer', lineHeight: 1 }}>x</button>
@@ -215,6 +217,7 @@ const CompareDatePicker = ({ onConfirm, onSkip, onClose }) => {
 
 /* Compare Modal */
 const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compareDates }) => {
+  const { mobile } = useResponsive();
   if (!selected.length) return null;
 
   const allBenefitLists = selected.map(p => parseBenefits(p.policyBenefits));
@@ -263,17 +266,17 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
 
   return (
     <div
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(16px)', zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '2rem', overflowY: 'auto' }}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(16px)', zIndex: 1000, display: 'flex', alignItems: mobile ? 'flex-end' : 'flex-start', justifyContent: 'center', padding: mobile ? 0 : '2rem', overflowY: 'auto' }}
       onClick={onClose}
     >
       <div
-        style={{ background: 'var(--navy-mid)', border: '1px solid var(--glass-border-bright)', borderRadius: 'var(--radius-xl)', width: '100%', maxWidth: 920, position: 'relative', marginTop: 20, marginBottom: 40 }}
+        style={{ background: 'var(--navy-mid)', border: '1px solid var(--glass-border-bright)', borderRadius: mobile ? '20px 20px 0 0' : 'var(--radius-xl)', width: '100%', maxWidth: mobile ? '100%' : 920, position: 'relative', marginTop: mobile ? 0 : 20, marginBottom: mobile ? 0 : 40, maxHeight: mobile ? '94vh' : undefined, overflowY: mobile ? 'auto' : undefined }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div style={{ padding: '24px 28px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ padding: mobile ? '20px 16px 0' : '24px 28px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: mobile ? 'sticky' : undefined, top: 0, background: mobile ? 'var(--navy-mid)' : undefined, zIndex: mobile ? 2 : undefined, borderRadius: mobile ? '20px 20px 0 0' : undefined }}>
           <div>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', marginBottom: 4 }}>Policy Comparison</h2>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: mobile ? '1.15rem' : '1.5rem', marginBottom: 4 }}>Policy Comparison</h2>
             <p style={{ fontSize: 12, color: 'var(--slate)' }}>
               {compareDates?.departure
                 ? `${compareDates.departure} → ${compareDates.returnDate} · ${tripDays(compareDates.departure, compareDates.returnDate)} days · ${compareDates.passengers || 1} traveller${(compareDates.passengers || 1) !== 1 ? 's' : ''}`
@@ -284,8 +287,8 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
           <button onClick={onClose} aria-label="Close comparison" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--slate)', fontSize: 18, borderRadius: 8, padding: '4px 12px', cursor: 'pointer', flexShrink: 0 }}>x</button>
         </div>
 
-        <div style={{ overflowX: 'auto', padding: '20px 0 28px' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <div style={{ overflowX: mobile ? 'hidden' : 'auto', padding: mobile ? '16px 0 20px' : '20px 0 28px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, display: mobile ? 'block' : undefined }}>
             <thead>
               <tr style={{ borderBottom: '2px solid rgba(49,99,49,0.4)' }}>
                 <th style={{ width: '15%', padding: '14px 16px' }} />
@@ -432,7 +435,7 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
             </tbody>
           </table>
         </div>
-        <div style={{ padding: '0 28px 20px' }}>
+        <div style={{ padding: mobile ? '0 16px 20px' : '0 28px 20px' }}>
           <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', lineHeight: 1.6 }}>
             <strong style={{ color: 'rgba(255,255,255,0.45)' }}>Get a Quote</strong> proceeds directly to the purchase wizard for that policy.
             {' '}<strong style={{ color: 'rgba(255,255,255,0.45)' }}>Keep Comparing</strong> closes this view and pre-selects that policy so you can pick 1–2 others to compare.

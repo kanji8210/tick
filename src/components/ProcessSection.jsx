@@ -23,7 +23,7 @@ const ProcessSection = () => {
         {!mobile && <div style={{ position: 'absolute', top: 44, left: 'calc(16.67% + 20px)', right: 'calc(16.67% + 20px)', height: 1, background: 'repeating-linear-gradient(90deg,var(--indigo) 0,var(--indigo) 6px,transparent 6px,transparent 14px)', opacity: 0.35, pointerEvents: 'none' }} aria-hidden="true" />}
 
         {STEPS.map((s, i) => (
-          <div key={s.n} className={`reveal reveal-delay-${i}`} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-lg)', padding: '40px 32px', textAlign: 'center', backdropFilter: 'blur(10px)', transition: 'border-color 0.3s, transform 0.3s, box-shadow 0.3s' }}
+          <div key={s.n} className={`reveal reveal-delay-${i}`} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-lg)', padding: mobile ? '28px 20px' : '40px 32px', textAlign: 'center', backdropFilter: 'blur(10px)', transition: 'border-color 0.3s, transform 0.3s, box-shadow 0.3s' }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(49,99,49,0.4)'; e.currentTarget.style.transform = 'translateY(-6px)'; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--glass-border)'; e.currentTarget.style.transform = 'none'; }}
           >
