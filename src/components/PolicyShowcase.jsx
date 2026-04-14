@@ -306,9 +306,7 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
               const checked  = isInCompare(policy.id);
 
               return (
-                <div key={policy.id} style={{ background: 'var(--glass-bg)', border: `1px solid ${checked ? 'rgba(49,99,49,0.5)' : 'var(--glass-border)'}`, borderRadius: 'var(--radius-lg)', overflow: 'hidden', transition: 'border-color 0.25s, transform 0.25s, box-shadow 0.25s', position: 'relative' }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = 'var(--shadow-card)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
+                <div key={policy.id} className="policy-card" style={{ background: 'var(--glass-bg)', border: `1px solid ${checked ? 'rgba(49,99,49,0.5)' : 'var(--glass-border)'}`, borderRadius: 'var(--radius-lg)', overflow: 'hidden', position: 'relative' }}
                 >
                   {/* Card header */}
                   <div style={{ padding: '18px 18px 14px' }}>

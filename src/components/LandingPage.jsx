@@ -99,12 +99,18 @@ const inputStyle = { padding: '10px 14px', borderRadius: 8, border: '1px solid v
 /* Compare Bar */
 const CompareBar = ({ selected, onRemove, onClear, onCompare }) => {
   const { mobile } = useResponsive();
-  if (selected.length < 2) return null;
+  if (selected.length < 1) return null;
+  const canCompare = selected.length >= 2;
   return (
-    <div role="region" aria-label="Policy comparison bar" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 900, background: 'rgba(8,14,39,0.96)', backdropFilter: 'blur(18px)', borderTop: '1px solid rgba(49,99,49,0.35)', padding: mobile ? '10px 12px' : '12px 12px', display: 'flex', alignItems: 'center', gap: mobile ? 6 : 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+    <div role="region" aria-label="Policy comparison bar" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 900, background: 'rgba(8,14,39,0.96)', backdropFilter: 'blur(18px)', borderTop: '1px solid rgba(49,99,49,0.35)', padding: mobile ? '10px 12px' : '14px 24px', display: 'flex', alignItems: 'center', gap: mobile ? 6 : 12, flexWrap: 'wrap', justifyContent: 'center', maxHeight: mobile ? '35vh' : undefined, overflowY: mobile ? 'auto' : undefined }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginRight: 4, ...(mobile ? { width: '100%', justifyContent: 'center' } : {}) }}>
-        <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--indigo-glow)', boxShadow: '0 0 8px var(--indigo-glow)' }} aria-hidden="true" />
-        <span style={{ fontWeight: 700, fontSize: mobile ? 13 : 14 }}>Comparing {selected.length}/3</span>
+        <div style={{ width: 8, height: 8, borderRadius: '50%', background: canCompare ? '#22c55e' : 'var(--gold)', boxShadow: canCompare ? '0 0 8px #22c55e' : '0 0 8px var(--gold)' }} aria-hidden="true" />
+        <span style={{ fontWeight: 700, fontSize: mobile ? 13 : 14 }}>
+          {canCompare
+            ? `Comparing ${selected.length}/3`
+            : `${selected.length} selected — pick ${2 - selected.length} more`
+          }
+        </span>
       </div>
       {selected.map(p => (
         <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--glass-bg-md)', border: '1px solid var(--glass-border)', borderRadius: 10, padding: mobile ? '6px 10px' : '8px 14px', fontSize: mobile ? 12 : 13, fontWeight: 600, flex: mobile ? '1 1 0' : undefined, minWidth: 0 }}>
@@ -112,12 +118,12 @@ const CompareBar = ({ selected, onRemove, onClear, onCompare }) => {
             <img src={p.policyInsurerLogo} alt="" style={{ width: mobile ? 16 : 20, height: mobile ? 16 : 20, objectFit: 'contain', borderRadius: 4, flexShrink: 0 }} />
           )}
           <span style={{ maxWidth: mobile ? 100 : 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>{p.title}</span>
-          <button onClick={() => onRemove(p.id)} aria-label={`Remove ${p.title} from comparison`} style={{ background: 'none', border: 'none', color: 'var(--slate)', fontSize: 16, cursor: 'pointer', lineHeight: 1, padding: '0 2px', flexShrink: 0 }}>x</button>
+          <button onClick={() => onRemove(p.id)} aria-label={`Remove ${p.title} from comparison`} style={{ background: 'none', border: 'none', color: 'var(--slate)', fontSize: 16, cursor: 'pointer', lineHeight: 1, padding: '0 2px', flexShrink: 0 }}>&times;</button>
         </div>
       ))}
       <div style={{ display: 'flex', gap: 8, ...(mobile ? { width: '100%' } : { marginLeft: 'auto' }) }}>
         <button className="btn btn--ghost btn--sm" onClick={onClear} style={mobile ? { flex: 1 } : undefined}>Clear</button>
-        <button className="btn btn--primary btn--sm" onClick={onCompare} style={mobile ? { flex: 2 } : undefined}>Compare Now</button>
+        <button className="btn btn--primary btn--sm" onClick={onCompare} disabled={!canCompare} style={{ ...(mobile ? { flex: 2 } : {}), opacity: canCompare ? 1 : 0.45, cursor: canCompare ? 'pointer' : 'not-allowed' }}>Compare Now</button>
       </div>
     </div>
   );
@@ -234,7 +240,6 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
     const prem = p.policyDayPremiums;
     if (!prem || prem.length === 0) return 'N/A';
     const cur = p.policyCurrency || 'KES';
-    // Exact price for known trip duration
     if (compareDates?.departure && compareDates?.returnDate) {
       const d = tripDays(compareDates.departure, compareDates.returnDate);
       const perPerson = bracketPremium(prem, d);
@@ -242,7 +247,7 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
         const total = perPerson * (compareDates.passengers || 1);
         return (
           <div>
-            <div style={{ fontWeight: 700, fontSize: 15, color: '#86efac' }}>
+            <div style={{ fontWeight: 700, fontSize: mobile ? 16 : 15, color: '#86efac' }}>
               {cur} {total.toLocaleString('en-KE')} total
             </div>
             <div style={{ fontSize: 11, color: 'var(--slate)', marginTop: 2 }}>
@@ -252,7 +257,6 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
         );
       }
     }
-    // Fallback: price range
     const prices = prem.map(b => Number(b.premium)).filter(n => !isNaN(n));
     if (prices.length === 0) return 'N/A';
     const min = Math.min(...prices), max = Math.max(...prices);
@@ -260,9 +264,238 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
     return `${cur} ${min.toLocaleString('en-KE')} \u2013 ${max.toLocaleString('en-KE')}`;
   };
 
+  /* ── Mobile: stacked card layout ─────────────────────────────── */
+  const MobileLayout = () => (
+    <div style={{ padding: '16px 16px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {selected.map((p, idx) => {
+        const regions = p.regions?.nodes?.map(r => r.name).filter(Boolean) || [];
+        const tags = getDisplayFeatures(p);
+        const uBenefits = uniqueBenefits[idx] || [];
+        return (
+          <div key={p.id} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border-bright)', borderRadius: 16, padding: '20px 16px', width: '100%', boxSizing: 'border-box' }}>
+            {/* Policy header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              {p.policyInsurerLogo && (
+                <img src={p.policyInsurerLogo} alt={p.policyInsurerName || ''} style={{ height: 32, maxWidth: 60, objectFit: 'contain', flexShrink: 0, filter: 'brightness(1.1)' }} />
+              )}
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, lineHeight: 1.3, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</div>
+                {p.policyInsurerName && <div style={{ fontSize: 11, color: 'var(--slate)' }}>{p.policyInsurerName}</div>}
+              </div>
+            </div>
+
+            {/* Price */}
+            <div style={{ marginBottom: 14, padding: '10px 12px', background: 'rgba(49,99,49,0.08)', borderRadius: 10, border: '1px solid rgba(49,99,49,0.2)' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>Price</div>
+              <div style={{ fontWeight: 700, fontSize: 16, color: '#86efac' }}>{priceRange(p)}</div>
+            </div>
+
+            {/* Destinations */}
+            {regions.length > 0 && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Destinations</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {regions.map(r => <span key={r} style={{ background: 'rgba(49,99,49,0.18)', border: '1px solid rgba(49,99,49,0.3)', borderRadius: 6, padding: '3px 8px', fontSize: 11, fontWeight: 600 }}>{r}</span>)}
+                </div>
+              </div>
+            )}
+
+            {/* Coverage tags */}
+            {tags.length > 0 && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Coverage</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {tags.map(t => <span key={t} style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 6, padding: '3px 8px', fontSize: 11, fontWeight: 600, color: '#86efac' }}>{t}</span>)}
+                </div>
+              </div>
+            )}
+
+            {/* Unique benefits */}
+            {uBenefits.length > 0 && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Unique Benefits</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {uBenefits.map((b, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                      <span style={{ color: '#60a5fa', fontSize: 12, lineHeight: 1.5, flexShrink: 0 }}>{'\u25c6'}</span>
+                      <span style={{ color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, fontSize: 12 }}>{b}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Coverage checks */}
+            {commonBenefits.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Coverage Check</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  {commonBenefits.slice(0, 8).map((benefit, i) => {
+                    const has = policyHasBenefit(p, benefit);
+                    return (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+                        <span style={{ color: has ? '#22c55e' : 'rgba(255,255,255,0.18)', fontSize: 14, flexShrink: 0 }}>{has ? '\u2713' : '\u2717'}</span>
+                        <span style={{ color: 'rgba(255,255,255,0.7)', lineHeight: 1.4 }}>{benefit.length > 50 ? benefit.slice(0, 47) + '\u2026' : benefit}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Action buttons */}
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="btn btn--primary btn--sm" onClick={() => onPickPolicy(p)} style={{ flex: 1, justifyContent: 'center', fontWeight: 700 }}>
+                Get a Quote &rarr;
+              </button>
+              <button className="btn btn--ghost btn--sm" onClick={() => onKeepComparing(p)} style={{ flex: 1, justifyContent: 'center', fontSize: 11 }}>
+                Keep Comparing
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  /* ── Desktop: side-by-side table layout ──────────────────────── */
   const colW = `${Math.floor(85 / selected.length)}%`;
   const cellBase = { padding: '11px 16px', verticalAlign: 'top', fontSize: 13, borderBottom: '1px solid rgba(255,255,255,0.05)' };
   const labelCell = { ...cellBase, width: '15%', color: 'var(--slate)', fontWeight: 600, whiteSpace: 'nowrap', fontSize: 12 };
+
+  const DesktopLayout = () => (
+    <div style={{ overflowX: 'auto', padding: '20px 0 28px' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <thead>
+          <tr style={{ borderBottom: '2px solid rgba(49,99,49,0.4)' }}>
+            <th style={{ width: '15%', padding: '14px 16px' }} />
+            {selected.map(p => (
+              <th key={p.id} style={{ width: colW, padding: '14px 16px', textAlign: 'left', verticalAlign: 'bottom' }}>
+                {p.policyInsurerLogo && (
+                  <img src={p.policyInsurerLogo} alt={p.policyInsurerName || ''} style={{ height: 28, maxWidth: 80, objectFit: 'contain', display: 'block', marginBottom: 8, filter: 'brightness(1.1)' }} />
+                )}
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, lineHeight: 1.3, marginBottom: 4 }}>{p.title}</div>
+                {p.policyInsurerName && <div style={{ fontSize: 11, color: 'var(--slate)' }}>{p.policyInsurerName}</div>}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          <SectionRow label="At a Glance" cols={selected.length} />
+          <tr>
+            <td style={labelCell}>Price Range</td>
+            {selected.map(p => (
+              <td key={p.id} style={{ ...cellBase, width: colW }}>
+                <span style={{ fontWeight: 700, fontSize: 14, color: '#86efac' }}>{priceRange(p)}</span>
+              </td>
+            ))}
+          </tr>
+          <tr>
+            <td style={labelCell}>Destinations</td>
+            {selected.map(p => {
+              const regions = p.regions?.nodes?.map(r => r.name).filter(Boolean) || [];
+              return (
+                <td key={p.id} style={{ ...cellBase, width: colW }}>
+                  {regions.length > 0
+                    ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        {regions.map(r => <span key={r} style={{ background: 'rgba(49,99,49,0.18)', border: '1px solid rgba(49,99,49,0.3)', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 600 }}>{r}</span>)}
+                      </div>
+                    : <span style={{ color: 'var(--slate)' }}>{'\u2014'}</span>
+                  }
+                </td>
+              );
+            })}
+          </tr>
+          <tr>
+            <td style={labelCell}>Coverage</td>
+            {selected.map(p => {
+              const tags = getDisplayFeatures(p);
+              return (
+                <td key={p.id} style={{ ...cellBase, width: colW }}>
+                  {tags.length > 0
+                    ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        {tags.map(t => <span key={t} style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#86efac' }}>{t}</span>)}
+                      </div>
+                    : <span style={{ color: 'var(--slate)' }}>{'\u2014'}</span>
+                  }
+                </td>
+              );
+            })}
+          </tr>
+
+          {uniqueBenefits.some(l => l.length > 0) && (() => {
+            const maxRows = Math.max(...uniqueBenefits.map(l => l.length), 1);
+            return (
+              <>
+                <SectionRow label="Unique Coverage" cols={selected.length} />
+                {Array.from({ length: maxRows }, (_, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                    <td style={labelCell} />
+                    {selected.map((p, pi) => {
+                      const item = uniqueBenefits[pi]?.[i];
+                      return (
+                        <td key={p.id} style={{ ...cellBase, width: colW }}>
+                          {item && (
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
+                              <span style={{ color: '#60a5fa', fontSize: 14, lineHeight: 1.4, flexShrink: 0 }}>{'\u25c6'}</span>
+                              <span style={{ color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, fontSize: 12 }}>{item}</span>
+                            </div>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </>
+            );
+          })()}
+
+          {commonBenefits.length > 0 && selected.length > 1 && (() => {
+            const checkItems = commonBenefits.slice(0, 10);
+            return (
+              <>
+                <SectionRow label="Coverage Presence Check" cols={selected.length} />
+                {checkItems.map((benefit, i) => (
+                  <tr key={i} style={{ background: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                    <td style={{ ...labelCell, fontSize: 11, whiteSpace: 'normal', lineHeight: 1.4 }}>
+                      {benefit.length > 40 ? benefit.slice(0, 37) + '\u2026' : benefit}
+                    </td>
+                    {selected.map(p => {
+                      const has = policyHasBenefit(p, benefit);
+                      return (
+                        <td key={p.id} style={{ ...cellBase, width: colW, textAlign: 'center' }}>
+                          {has
+                            ? <span style={{ color: '#22c55e', fontSize: 16 }} title="Covered">{'\u2713'}</span>
+                            : <span style={{ color: 'rgba(255,255,255,0.18)', fontSize: 16 }} title="Not mentioned">{'\u2717'}</span>
+                          }
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </>
+            );
+          })()}
+
+          <tr style={{ borderTop: '2px solid rgba(49,99,49,0.3)', background: 'rgba(8,14,39,0.5)' }}>
+            <td style={{ ...labelCell, verticalAlign: 'middle', paddingTop: 20, paddingBottom: 20, fontSize: 11, color: 'var(--slate)' }}>Actions</td>
+            {selected.map(p => (
+              <td key={p.id} style={{ ...cellBase, width: colW, paddingTop: 20, paddingBottom: 20, verticalAlign: 'middle' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <button className="btn btn--primary btn--sm" onClick={() => onPickPolicy(p)} style={{ width: '100%', justifyContent: 'center', fontWeight: 700 }}>
+                    Get a Quote &rarr;
+                  </button>
+                  <button className="btn btn--ghost btn--sm" onClick={() => onKeepComparing(p)} style={{ width: '100%', justifyContent: 'center', fontSize: 11 }}>
+                    Keep Comparing with this
+                  </button>
+                </div>
+              </td>
+            ))}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
 
   return (
     <div
@@ -274,171 +507,25 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div style={{ padding: mobile ? '20px 16px 0' : '24px 28px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: mobile ? 'sticky' : undefined, top: 0, background: mobile ? 'var(--navy-mid)' : undefined, zIndex: mobile ? 2 : undefined, borderRadius: mobile ? '20px 20px 0 0' : undefined }}>
+        <div style={{ padding: mobile ? '20px 16px 12px' : '24px 28px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: mobile ? 'sticky' : undefined, top: 0, background: mobile ? 'var(--navy-mid)' : undefined, zIndex: mobile ? 2 : undefined, borderRadius: mobile ? '20px 20px 0 0' : undefined }}>
           <div>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: mobile ? '1.15rem' : '1.5rem', marginBottom: 4 }}>Policy Comparison</h2>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: mobile ? '1.1rem' : '1.5rem', marginBottom: 4 }}>Policy Comparison</h2>
             <p style={{ fontSize: 12, color: 'var(--slate)' }}>
               {compareDates?.departure
-                ? `${compareDates.departure} → ${compareDates.returnDate} · ${tripDays(compareDates.departure, compareDates.returnDate)} days · ${compareDates.passengers || 1} traveller${(compareDates.passengers || 1) !== 1 ? 's' : ''}`
+                ? `${compareDates.departure} \u2192 ${compareDates.returnDate} \u00b7 ${tripDays(compareDates.departure, compareDates.returnDate)} days \u00b7 ${compareDates.passengers || 1} traveller${(compareDates.passengers || 1) !== 1 ? 's' : ''}`
                 : `Comparing ${selected.length} ${selected.length === 1 ? 'policy' : 'policies'} side by side`
               }
             </p>
           </div>
-          <button onClick={onClose} aria-label="Close comparison" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--slate)', fontSize: 18, borderRadius: 8, padding: '4px 12px', cursor: 'pointer', flexShrink: 0 }}>x</button>
+          <button onClick={onClose} aria-label="Close comparison" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--slate)', fontSize: 18, borderRadius: 8, padding: '4px 12px', cursor: 'pointer', flexShrink: 0 }}>&times;</button>
         </div>
 
-        <div style={{ overflowX: mobile ? 'hidden' : 'auto', padding: mobile ? '16px 0 20px' : '20px 0 28px' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, display: mobile ? 'block' : undefined }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid rgba(49,99,49,0.4)' }}>
-                <th style={{ width: '15%', padding: '14px 16px' }} />
-                {selected.map(p => (
-                  <th key={p.id} style={{ width: colW, padding: '14px 16px', textAlign: 'left', verticalAlign: 'bottom' }}>
-                    {p.policyInsurerLogo && (
-                      <img src={p.policyInsurerLogo} alt={p.policyInsurerName || ''} style={{ height: 28, maxWidth: 80, objectFit: 'contain', display: 'block', marginBottom: 8, filter: 'brightness(1.1)' }} />
-                    )}
-                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, lineHeight: 1.3, marginBottom: 4 }}>{p.title}</div>
-                    {p.policyInsurerName && <div style={{ fontSize: 11, color: 'var(--slate)' }}>{p.policyInsurerName}</div>}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <SectionRow label="At a Glance" cols={selected.length} />
+        {mobile ? <MobileLayout /> : <DesktopLayout />}
 
-              {/* Price range */}
-              <tr>
-                <td style={labelCell}>Price Range</td>
-                {selected.map(p => (
-                  <td key={p.id} style={{ ...cellBase, width: colW }}>
-                    <span style={{ fontWeight: 700, fontSize: 14, color: '#86efac' }}>{priceRange(p)}</span>
-                  </td>
-                ))}
-              </tr>
-
-              {/* Destinations */}
-              <tr>
-                <td style={labelCell}>Destinations</td>
-                {selected.map(p => {
-                  const regions = p.regions?.nodes?.map(r => r.name).filter(Boolean) || [];
-                  return (
-                    <td key={p.id} style={{ ...cellBase, width: colW }}>
-                      {regions.length > 0
-                        ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                            {regions.map(r => <span key={r} style={{ background: 'rgba(49,99,49,0.18)', border: '1px solid rgba(49,99,49,0.3)', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 600 }}>{r}</span>)}
-                          </div>
-                        : <span style={{ color: 'var(--slate)' }}>\u2014</span>
-                      }
-                    </td>
-                  );
-                })}
-              </tr>
-
-              {/* Coverage features */}
-              <tr>
-                <td style={labelCell}>Coverage</td>
-                {selected.map(p => {
-                  const tags = getDisplayFeatures(p);
-                  return (
-                    <td key={p.id} style={{ ...cellBase, width: colW }}>
-                      {tags.length > 0
-                        ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                            {tags.map(t => <span key={t} style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 600, color: '#86efac' }}>{t}</span>)}
-                          </div>
-                        : <span style={{ color: 'var(--slate)' }}>\u2014</span>
-                      }
-                    </td>
-                  );
-                })}
-              </tr>
-
-              {/* Unique per-policy benefits */}
-              {uniqueBenefits.some(l => l.length > 0) && (() => {
-                const maxRows = Math.max(...uniqueBenefits.map(l => l.length), 1);
-                return (
-                  <>
-                    <SectionRow label="Unique Coverage \u2014 benefits specific to each policy" cols={selected.length} />
-                    {Array.from({ length: maxRows }, (_, i) => (
-                      <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                        <td style={labelCell} />
-                        {selected.map((p, pi) => {
-                          const item = uniqueBenefits[pi]?.[i];
-                          return (
-                            <td key={p.id} style={{ ...cellBase, width: colW }}>
-                              {item && (
-                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
-                                  <span style={{ color: '#60a5fa', fontSize: 14, lineHeight: 1.4, flexShrink: 0 }}>{'\u25c6'}</span>
-                                  <span style={{ color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, fontSize: 12 }}>{item}</span>
-                                </div>
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </>
-                );
-              })()}
-
-              {/* Coverage presence matrix */}
-              {commonBenefits.length > 0 && selected.length > 1 && (() => {
-                const checkItems = commonBenefits.slice(0, 10);
-                return (
-                  <>
-                    <SectionRow label="Coverage Presence Check \u2014 verify each benefit per policy" cols={selected.length} />
-                    {checkItems.map((benefit, i) => (
-                      <tr key={i} style={{ background: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                        <td style={{ ...labelCell, fontSize: 11, whiteSpace: 'normal', lineHeight: 1.4 }}>
-                          {benefit.length > 40 ? benefit.slice(0, 37) + '\u2026' : benefit}
-                        </td>
-                        {selected.map(p => {
-                          const has = policyHasBenefit(p, benefit);
-                          return (
-                            <td key={p.id} style={{ ...cellBase, width: colW, textAlign: 'center' }}>
-                              {has
-                                ? <span style={{ color: '#22c55e', fontSize: 16 }} title="Covered">{'\u2713'}</span>
-                                : <span style={{ color: 'rgba(255,255,255,0.18)', fontSize: 16 }} title="Not mentioned">{'\u2717'}</span>
-                              }
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </>
-                );
-              })()}
-
-              {/* Per-policy action row */}
-              <tr style={{ borderTop: '2px solid rgba(49,99,49,0.3)', background: 'rgba(8,14,39,0.5)' }}>
-                <td style={{ ...labelCell, verticalAlign: 'middle', paddingTop: 20, paddingBottom: 20, fontSize: 11, color: 'var(--slate)' }}>Actions</td>
-                {selected.map(p => (
-                  <td key={p.id} style={{ ...cellBase, width: colW, paddingTop: 20, paddingBottom: 20, verticalAlign: 'middle' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                      <button
-                        className="btn btn--primary btn--sm"
-                        onClick={() => onPickPolicy(p)}
-                        style={{ width: '100%', justifyContent: 'center', fontWeight: 700 }}
-                      >
-                        Get a Quote →
-                      </button>
-                      <button
-                        className="btn btn--ghost btn--sm"
-                        onClick={() => onKeepComparing(p)}
-                        style={{ width: '100%', justifyContent: 'center', fontSize: 11 }}
-                      >
-                        Keep Comparing with this
-                      </button>
-                    </div>
-                  </td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
-        </div>
         <div style={{ padding: mobile ? '0 16px 20px' : '0 28px 20px' }}>
-          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', lineHeight: 1.6 }}>
-            <strong style={{ color: 'rgba(255,255,255,0.45)' }}>Get a Quote</strong> proceeds directly to the purchase wizard for that policy.
-            {' '}<strong style={{ color: 'rgba(255,255,255,0.45)' }}>Keep Comparing</strong> closes this view and pre-selects that policy so you can pick 1–2 others to compare.
+          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', lineHeight: 1.6, textAlign: 'center' }}>
+            <strong style={{ color: 'rgba(255,255,255,0.45)' }}>Get a Quote</strong> proceeds to the purchase wizard.
+            {' '}<strong style={{ color: 'rgba(255,255,255,0.45)' }}>Keep Comparing</strong> pre-selects that policy so you can pick others.
           </p>
         </div>
       </div>
@@ -699,7 +786,7 @@ const LandingPage = ({ onStartWizard, onNavigate }) => {
       <button
         aria-label="Open live chat"
         onClick={() => onNavigate('catalog')}
-        style={{ position: 'fixed', bottom: compareSelected.length >= 2 ? 88 : 28, right: 28, zIndex: 800, width: 52, height: 52, borderRadius: '50%', background: 'var(--indigo)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, cursor: 'pointer', boxShadow: '0 4px 20px rgba(49,99,49,0.5)', transition: 'bottom 0.3s ease, transform 0.2s' }}
+        style={{ position: 'fixed', bottom: compareSelected.length >= 1 ? 88 : 28, right: 28, zIndex: 800, width: 52, height: 52, borderRadius: '50%', background: 'var(--indigo)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, cursor: 'pointer', boxShadow: '0 4px 20px rgba(49,99,49,0.5)', transition: 'bottom 0.3s ease, transform 0.2s' }}
         onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
         onMouseLeave={e => e.currentTarget.style.transform = 'none'}
       >💬</button>

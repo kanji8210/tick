@@ -116,6 +116,15 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
 }
 .glass-card:hover { border-color: rgba(49,99,49,0.4); }
 
+/* Policy card hover — CSS-only to avoid React re-render snap */
+.policy-card {
+  transition: border-color 0.25s, transform 0.25s ease, box-shadow 0.25s ease;
+}
+.policy-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-card);
+}
+
 .gold-text {
   background: linear-gradient(135deg, var(--gold) 30%, var(--gold-light) 70%);
   background-clip: text;
