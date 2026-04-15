@@ -28,7 +28,6 @@ const REGISTER_MUTATION = `
       authToken
       userName
       userRole
-      userEmail
     }
   }
 `;
@@ -72,7 +71,7 @@ export const AuthProvider = ({ children }) => {
           }
         }
         setUser(parsed);
-      } catch (e) {
+      } catch { 
         localStorage.removeItem('maljani_auth');
       }
     }
@@ -125,7 +124,7 @@ email: result.data.maljaniLogin.user?.email || result.data.maljaniLogin.userEmai
       if (authToken && userName) {
         const authData = {
           name:  userName,
-          email: result.data?.maljaniRegister?.user?.email || result.data?.maljaniRegister?.userEmail || userData.email,
+          email: userData.email,
           phone: userData.phone || '',
           role:  userRole?.toLowerCase() || 'insured',
           token: authToken,
@@ -226,6 +225,7 @@ email: result.data.maljaniLogin.user?.email || result.data.maljaniLogin.userEmai
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

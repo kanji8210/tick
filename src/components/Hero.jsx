@@ -11,14 +11,31 @@ const GET_REGIONS = `
   }
 `;
 
+const StepBar = ({ currentStep }) => (
+  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 28, justifyContent: "center" }}>
+    {[1, 2, 3].map((s) => (
+      <React.Fragment key={s}>
+        <div style={{
+          width: 24, height: 24, borderRadius: "50%", display: "flex",
+          alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800,
+          background: s < currentStep ? "var(--gold)" : s === currentStep ? "var(--indigo)" : "var(--glass-bg)",
+          border: `2px solid ${s <= currentStep ? (s < currentStep ? "var(--gold)" : "var(--indigo)") : "var(--glass-border)"}`,
+          color: s <= currentStep ? "#fff" : "var(--slate)", transition: "all 0.3s ease",
+        }}>{s < currentStep ? "\u2713" : s}</div>
+        {s < 3 && <div style={{ width: 30, height: 2, background: s < currentStep ? "var(--gold)" : "var(--glass-border)", transition: "all 0.3s ease" }} />}
+      </React.Fragment>
+    ))}
+  </div>
+);
+
 const Hero = ({ onStart, onNavigate }) => {
   const { user, role } = useAuth();
   const { mobile, tablet } = useResponsive();
   const isAgent = role === "agent" || role === "administrator";
   const [step, setStep] = useState(1);
   const [activeTab, setActiveTab] = useState(0);
-  const today = new Date().toISOString().split("T")[0];
-  const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];
+  const [today] = useState(() => new Date().toISOString().split("T")[0]);
+  const [nextWeek] = useState(() => new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0]);
   const [form, setForm] = useState({
     dest: "",
     departure: today,
@@ -40,23 +57,6 @@ const Hero = ({ onStart, onNavigate }) => {
     if (!form.dest) return;
     onStart({ region: form.dest, departure: form.departure, returnDate: form.returnDate, passengers: parseInt(form.travelers) || 1 });
   };
-
-  const StepBar = ({ currentStep }) => (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 28, justifyContent: "center" }}>
-      {[1, 2, 3].map((s) => (
-        <React.Fragment key={s}>
-          <div style={{
-            width: 24, height: 24, borderRadius: "50%", display: "flex",
-            alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800,
-            background: s < currentStep ? "var(--gold)" : s === currentStep ? "var(--indigo)" : "var(--glass-bg)",
-            border: `2px solid ${s <= currentStep ? (s < currentStep ? "var(--gold)" : "var(--indigo)") : "var(--glass-border)"}`,
-            color: s <= currentStep ? "#fff" : "var(--slate)", transition: "all 0.3s ease",
-          }}>{s < currentStep ? "✓" : s}</div>
-          {s < 3 && <div style={{ width: 30, height: 2, background: s < currentStep ? "var(--gold)" : "var(--glass-border)", transition: "all 0.3s ease" }} />}
-        </React.Fragment>
-      ))}
-    </div>
-  );
 
   const field = (label, id, children) => (
     <div style={{ marginBottom: 18 }}>

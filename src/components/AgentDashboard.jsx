@@ -122,16 +122,20 @@ const DonutChart = ({ data, size = 160 }) => {
   const r = size / 2 - 12;
   const cx = size / 2;
   const cy = size / 2;
-  let cumAngle = -90;
+
+  // Pre-compute cumulative angles to avoid mutable variable in render
+  const slices = data.reduce((acc, d, i) => {
+    const pct = d.count / total;
+    const angle = pct * 360;
+    const startAngle = i === 0 ? -90 : acc[i - 1].endAngle;
+    const endAngle = startAngle + angle;
+    acc.push({ ...d, pct, angle, startAngle, endAngle, i });
+    return acc;
+  }, []);
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      {data.map((d, i) => {
-        const pct = d.count / total;
-        const angle = pct * 360;
-        const startAngle = cumAngle;
-        cumAngle += angle;
-        const endAngle = cumAngle;
+      {slices.map(({ status, count, pct, angle, startAngle, endAngle, i }) => {
         const largeArc = angle > 180 ? 1 : 0;
         const rad = Math.PI / 180;
         const x1 = cx + r * Math.cos(startAngle * rad);
@@ -144,7 +148,7 @@ const DonutChart = ({ data, size = 160 }) => {
           <path key={i}
             d={`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`}
             fill={color} opacity={0.85} stroke="rgba(0,0,0,0.3)" strokeWidth={1}>
-            <title>{d.status}: {d.count} ({(pct * 100).toFixed(0)}%)</title>
+            <title>{status}: {count} ({(pct * 100).toFixed(0)}%)</title>
           </path>
         );
       })}
@@ -189,7 +193,7 @@ const TABS = [
 
 const AgentDashboard = ({ user, onNavigate }) => {
   const { user: authUser } = useAuth();
-  const { mobile, tablet } = useResponsive();
+  const { mobile } = useResponsive();
   const [activeTab, setActiveTab] = useState('overview');
   const [clientSearch, setClientSearch] = useState('');
   const [policyFilter, setPolicyFilter] = useState('all');
@@ -208,11 +212,11 @@ const AgentDashboard = ({ user, onNavigate }) => {
   const dash     = dashResult.data?.agencyDashboard;
   const agency   = dash?.agency;
   const stats    = dash?.stats;
-  const clients  = dash?.clients || [];
+  const clients  = useMemo(() => dash?.clients || [], [dash?.clients]);
   const monthly  = dash?.monthlyAnalytics || [];
   const statusDist = dash?.statusDistribution || [];
   const topProducts = dash?.topProducts || [];
-  const policies = polResult.data?.myPolicySales || [];
+  const policies = useMemo(() => polResult.data?.myPolicySales || [], [polResult.data?.myPolicySales]);
 
   /* ── filtered data ─────────────────────────────────────── */
   const filteredClients = useMemo(() => {

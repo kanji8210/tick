@@ -53,13 +53,13 @@ import Messaging from './Messaging';
 
 const InsuredDashboard = ({ user, onNavigate }) => {
   const { user: authUser } = useAuth();
-  const { mobile, tablet } = useResponsive();
+  const { mobile } = useResponsive();
   const [activeTab, setActiveTab] = useState('policies');
   const [selectedPolicyId, setSelectedPolicyId] = useState(null);
   const [actionLoading, setActionLoading] = useState(null); // tracks which sale ID has a loading action
   const [showProfileEdit, setShowProfileEdit] = useState(false);
 
-  const [result, reexecuteQuery] = useQuery({ query: MY_POLICY_SALES, pause: !authUser?.token });
+  const [result] = useQuery({ query: MY_POLICY_SALES, pause: !authUser?.token });
   const loading  = result.fetching;
   const fetchErr = result.error ? 'Could not load your policies. Please refresh the page.' : null;
   const policies = result.data?.myPolicySales || [];
@@ -79,7 +79,7 @@ const InsuredDashboard = ({ user, onNavigate }) => {
       const data = await res.json();
       const win = window.open('', '_blank');
       if (win) { win.document.write(data.html); win.document.close(); }
-    } catch (e) {
+    } catch {
       alert('Could not load the invoice. Please try again.');
     } finally {
       setActionLoading(null);

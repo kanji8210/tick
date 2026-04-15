@@ -1,6 +1,21 @@
 import React from 'react';
 import { useResponsive } from '../lib/useResponsive';
 
+const LinkColumn = ({ title, links, mobile, onNavigate }) => (
+  <div>
+    <h4 style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, marginBottom: mobile ? 12 : 18, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.04em' }}>{title}</h4>
+    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: mobile ? 9 : 11 }}>
+      {links.map((l) => (
+        <li key={l.label}>
+          <button className="footer-link" onClick={() => onNavigate(l.view)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--slate)', fontSize: 14, padding: 0, fontFamily: 'var(--font-body)' }}>
+            {l.label}
+          </button>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
+
 const Footer = ({ onNavigate }) => {
   const { mobile, tablet } = useResponsive();
 
@@ -24,21 +39,6 @@ const Footer = ({ onNavigate }) => {
     { label: 'Contact Us',      view: 'about' },
     { label: 'FAQ',             view: 'about' },
   ];
-
-  const LinkColumn = ({ title, links }) => (
-    <div>
-      <h4 style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, marginBottom: mobile ? 12 : 18, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.04em' }}>{title}</h4>
-      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: mobile ? 9 : 11 }}>
-        {links.map((l) => (
-          <li key={l.label}>
-            <button className="footer-link" onClick={() => onNavigate(l.view)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--slate)', fontSize: 14, padding: 0, fontFamily: 'var(--font-body)' }}>
-              {l.label}
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
 
   return (
     <footer style={{ position: 'relative', zIndex: 1, borderTop: '1px solid var(--glass-border)', padding: mobile ? '36px 0 24px' : '64px 0 36px' }}>
@@ -69,8 +69,8 @@ const Footer = ({ onNavigate }) => {
 
             {/* Products + Agencies side by side */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
-              <LinkColumn title="Products" links={productLinks} />
-              <LinkColumn title="For Agencies" links={agencyLinks} />
+              <LinkColumn title="Products" links={productLinks} mobile={mobile} onNavigate={onNavigate} />
+              <LinkColumn title="For Agencies" links={agencyLinks} mobile={mobile} onNavigate={onNavigate} />
             </div>
 
             {/* Support — inline row */}
@@ -118,8 +118,8 @@ const Footer = ({ onNavigate }) => {
               </div>
             </div>
 
-            <LinkColumn title="Products" links={productLinks} />
-            <LinkColumn title="For Agencies" links={agencyLinks} />
+            <LinkColumn title="Products" links={productLinks} mobile={mobile} onNavigate={onNavigate} />
+            <LinkColumn title="For Agencies" links={agencyLinks} mobile={mobile} onNavigate={onNavigate} />
 
             <div>
               <h4 style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, marginBottom: 18, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.04em' }}>Support</h4>

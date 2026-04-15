@@ -46,8 +46,8 @@ const AgenciesPage = ({ onNavigate }) => {
   const { mobile, tablet } = useResponsive();
   const isLoggedIn = !!user;
   const isAgent = role === 'agent' || role === 'administrator';
-  const today = new Date().toISOString().split('T')[0];
-  const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+  const [today] = useState(() => new Date().toISOString().split('T')[0]);
+  const [nextWeek] = useState(() => new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]);
 
   return (
     <div style={{ paddingTop: 90 }}>
@@ -185,7 +185,7 @@ const AgenciesPage = ({ onNavigate }) => {
           <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(3,1fr)', gap: 32, marginTop: 48, position: 'relative' }}>
             {/* connecting line */}
             {!mobile && <div style={{ position: 'absolute', top: 36, left: '15%', right: '15%', height: 1, background: 'linear-gradient(90deg,transparent,rgba(49,99,49,0.5),transparent)', pointerEvents: 'none' }} />}
-            {STEPS.map((s, i) => (
+            {STEPS.map((s) => (
               <div key={s.n} style={{ textAlign: 'center', padding: '0 16px' }}>
                 <div style={{ width: 72, height: 72, borderRadius: '50%', background: `linear-gradient(135deg,var(--indigo),var(--indigo-glow))`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: 20, fontFamily: 'var(--font-display)', fontWeight: 800, color: '#fff', boxShadow: '0 0 30px rgba(49,99,49,0.4)', border: '2px solid rgba(49,99,49,0.5)' }}>{s.n}</div>
                 <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 700, marginBottom: 10 }}>{s.title}</h3>

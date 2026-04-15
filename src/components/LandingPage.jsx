@@ -9,10 +9,7 @@ import PolicyShowcase from './PolicyShowcase';
 import FAQSection from './FAQSection';
 import TrustedPartners from './TrustedPartners';
 
-const parseTags = (str) => {
-  if (!str) return [];
-  return str.split(',').map(t => t.trim()).filter(Boolean);
-};
+
 
 const fmtPrice = (price, currency = 'KES') => {
   if (price === null || price === undefined) return null;
@@ -149,8 +146,8 @@ const SectionRow = ({ label, cols, accent }) => (
 /* Date picker shown before opening Compare Modal */
 const CompareDatePicker = ({ onConfirm, onSkip, onClose }) => {
   const { mobile } = useResponsive();
-  const today = new Date().toISOString().split('T')[0];
-  const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+  const [today] = useState(() => new Date().toISOString().split('T')[0]);
+  const [nextWeek] = useState(() => new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]);
   const [dep, setDep] = useState(today);
   const [ret, setRet] = useState(nextWeek);
   const [pax, setPax] = useState(1);
@@ -229,50 +226,44 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
   const allBenefitLists = selected.map(p => parseBenefits(p.policyBenefits));
   const commonBenefits  = findCommonBenefits(allBenefitLists);
 
-  const uniqueBenefits = allBenefitLists.map(list =>
-    list.filter(b => !commonBenefits.some(c => {
-      const ck = keyWords(c), bk = keyWords(b);
-      return ck.filter(w => bk.includes(w)).length >= Math.ceil(ck.length * 0.5);
-    })).slice(0, 8)
-  );
+  const allExclusions = selected.map(p => parseBenefits(p.policyNotCovered));
 
-  const priceRange = (p) => {
-    const prem = p.policyDayPremiums;
-    if (!prem || prem.length === 0) return 'N/A';
+  const days = compareDates?.departure && compareDates?.returnDate
+    ? tripDays(compareDates.departure, compareDates.returnDate)
+    : 0;
+  const passengers = compareDates?.passengers || 1;
+
+  const getPremium = (p) => {
     const cur = p.policyCurrency || 'KES';
-    if (compareDates?.departure && compareDates?.returnDate) {
-      const d = tripDays(compareDates.departure, compareDates.returnDate);
-      const perPerson = bracketPremium(prem, d);
+    const prem = p.policyDayPremiums;
+    if (!prem || !prem.length) return { perPerson: null, total: null, cur, label: 'N/A' };
+    if (days > 0) {
+      const perPerson = bracketPremium(prem, days);
       if (perPerson !== null) {
-        const total = perPerson * (compareDates.passengers || 1);
-        return (
-          <div>
-            <div style={{ fontWeight: 700, fontSize: mobile ? 16 : 15, color: '#86efac' }}>
-              {cur} {total.toLocaleString('en-KE')} total
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--slate)', marginTop: 2 }}>
-              {cur} {perPerson.toLocaleString('en-KE')}/person &middot; {d} days
-            </div>
-          </div>
-        );
+        return { perPerson, total: perPerson * passengers, cur, label: `${cur} ${(perPerson * passengers).toLocaleString('en-KE')}` };
       }
     }
     const prices = prem.map(b => Number(b.premium)).filter(n => !isNaN(n));
-    if (prices.length === 0) return 'N/A';
+    if (!prices.length) return { perPerson: null, total: null, cur, label: 'N/A' };
     const min = Math.min(...prices), max = Math.max(...prices);
-    if (min === max) return fmtPrice(min, cur);
-    return `${cur} ${min.toLocaleString('en-KE')} \u2013 ${max.toLocaleString('en-KE')}`;
+    return { perPerson: null, total: null, cur, label: min === max ? fmtPrice(min, cur) : `${cur} ${min.toLocaleString('en-KE')} \u2013 ${max.toLocaleString('en-KE')}` };
   };
 
+  const premiums = selected.map(getPremium);
+  const cheapestTotal = Math.min(...premiums.map(p => p.total ?? Infinity));
+
   /* ── Mobile: stacked card layout ─────────────────────────────── */
-  const MobileLayout = () => (
+  const mobileLayout = (
     <div style={{ padding: '16px 16px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
       {selected.map((p, idx) => {
         const regions = p.regions?.nodes?.map(r => r.name).filter(Boolean) || [];
-        const tags = getDisplayFeatures(p);
-        const uBenefits = uniqueBenefits[idx] || [];
+        const countries = p.policyCountries || [];
+        const prem = premiums[idx];
+        const exclusions = allExclusions[idx] || [];
+        const isCheapest = prem.total !== null && prem.total === cheapestTotal && selected.length > 1;
         return (
-          <div key={p.id} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border-bright)', borderRadius: 16, padding: '20px 16px', width: '100%', boxSizing: 'border-box' }}>
+          <div key={p.id} style={{ background: 'var(--glass-bg)', border: `1px solid ${isCheapest ? 'rgba(34,197,94,0.5)' : 'var(--glass-border-bright)'}`, borderRadius: 16, padding: '20px 16px', width: '100%', boxSizing: 'border-box', position: 'relative' }}>
+            {isCheapest && <div style={{ position: 'absolute', top: -10, right: 14, background: '#22c55e', color: '#000', fontSize: 10, fontWeight: 800, padding: '3px 10px', borderRadius: 6, letterSpacing: '0.06em' }}>BEST PRICE</div>}
             {/* Policy header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
               {p.policyInsurerLogo && (
@@ -284,10 +275,19 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
               </div>
             </div>
 
-            {/* Price */}
+            {/* Premium */}
             <div style={{ marginBottom: 14, padding: '10px 12px', background: 'rgba(49,99,49,0.08)', borderRadius: 10, border: '1px solid rgba(49,99,49,0.2)' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>Price</div>
-              <div style={{ fontWeight: 700, fontSize: 16, color: '#86efac' }}>{priceRange(p)}</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>
+                {days > 0 ? `Premium \u00b7 ${days} days \u00b7 ${passengers} traveller${passengers !== 1 ? 's' : ''}` : 'Price Range'}
+              </div>
+              {prem.total !== null ? (
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 18, color: '#86efac' }}>{prem.cur} {prem.total.toLocaleString('en-KE')}</div>
+                  {passengers > 1 && <div style={{ fontSize: 11, color: 'var(--slate)', marginTop: 2 }}>{prem.cur} {prem.perPerson.toLocaleString('en-KE')}/person</div>}
+                </div>
+              ) : (
+                <div style={{ fontWeight: 700, fontSize: 16, color: '#86efac' }}>{prem.label}</div>
+              )}
             </div>
 
             {/* Destinations */}
@@ -300,35 +300,35 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
               </div>
             )}
 
-            {/* Coverage tags */}
-            {tags.length > 0 && (
+            {/* Countries */}
+            {countries.length > 0 && (
               <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Coverage</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                  {tags.map(t => <span key={t} style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 6, padding: '3px 8px', fontSize: 11, fontWeight: 600, color: '#86efac' }}>{t}</span>)}
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Covered Countries</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>
+                  {Array.isArray(countries) ? countries.join(', ') : countries}
                 </div>
               </div>
             )}
 
-            {/* Unique benefits */}
-            {uBenefits.length > 0 && (
+            {/* Benefits Overview */}
+            {allBenefitLists[idx].length > 0 && (
               <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Unique Benefits</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {uBenefits.map((b, i) => (
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Benefits Overview</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  {allBenefitLists[idx].slice(0, 10).map((b, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-                      <span style={{ color: '#60a5fa', fontSize: 12, lineHeight: 1.5, flexShrink: 0 }}>{'\u25c6'}</span>
-                      <span style={{ color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, fontSize: 12 }}>{b}</span>
+                      <span style={{ color: '#22c55e', fontSize: 12, lineHeight: 1.5, flexShrink: 0 }}>{'\u2713'}</span>
+                      <span style={{ color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, fontSize: 12 }}>{b.length > 60 ? b.slice(0, 57) + '\u2026' : b}</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Coverage checks */}
+            {/* Coverage Presence Check */}
             {commonBenefits.length > 0 && (
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Coverage Check</div>
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Coverage Presence Check</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                   {commonBenefits.slice(0, 8).map((benefit, i) => {
                     const has = policyHasBenefit(p, benefit);
@@ -339,6 +339,36 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
                       </div>
                     );
                   })}
+                </div>
+              </div>
+            )}
+
+            {/* Not Covered / Exclusions */}
+            {exclusions.length > 0 && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#f87171', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Not Covered</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  {exclusions.slice(0, 6).map((ex, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                      <span style={{ color: '#f87171', fontSize: 12, lineHeight: 1.5, flexShrink: 0 }}>{'\u2717'}</span>
+                      <span style={{ color: 'rgba(255,255,255,0.55)', lineHeight: 1.5, fontSize: 12 }}>{ex.length > 60 ? ex.slice(0, 57) + '\u2026' : ex}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Day-bracket pricing table */}
+            {p.policyDayPremiums?.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Day Brackets</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3 }}>
+                  {p.policyDayPremiums.map((b, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'rgba(255,255,255,0.65)', background: days >= b.from && days <= b.to ? 'rgba(49,99,49,0.18)' : 'transparent', borderRadius: 4, padding: '2px 6px' }}>
+                      <span>{b.from}\u2013{b.to}d</span>
+                      <span style={{ fontWeight: 600, color: days >= b.from && days <= b.to ? '#86efac' : 'rgba(255,255,255,0.65)' }}>{prem.cur} {Number(b.premium).toLocaleString('en-KE')}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -363,33 +393,54 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
   const cellBase = { padding: '11px 16px', verticalAlign: 'top', fontSize: 13, borderBottom: '1px solid rgba(255,255,255,0.05)' };
   const labelCell = { ...cellBase, width: '15%', color: 'var(--slate)', fontWeight: 600, whiteSpace: 'nowrap', fontSize: 12 };
 
-  const DesktopLayout = () => (
+  const desktopLayout = (
     <div style={{ overflowX: 'auto', padding: '20px 0 28px' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
         <thead>
           <tr style={{ borderBottom: '2px solid rgba(49,99,49,0.4)' }}>
-            <th style={{ width: '15%', padding: '14px 16px' }} />
-            {selected.map(p => (
-              <th key={p.id} style={{ width: colW, padding: '14px 16px', textAlign: 'left', verticalAlign: 'bottom' }}>
-                {p.policyInsurerLogo && (
-                  <img src={p.policyInsurerLogo} alt={p.policyInsurerName || ''} style={{ height: 28, maxWidth: 80, objectFit: 'contain', display: 'block', marginBottom: 8, filter: 'brightness(1.1)' }} />
-                )}
-                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, lineHeight: 1.3, marginBottom: 4 }}>{p.title}</div>
-                {p.policyInsurerName && <div style={{ fontSize: 11, color: 'var(--slate)' }}>{p.policyInsurerName}</div>}
-              </th>
-            ))}
+            <th style={{ width: '15%', padding: '14px 16px', textAlign: 'left', verticalAlign: 'bottom', fontSize: 11, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Details</th>
+            {selected.map((p, idx) => {
+              const prem = premiums[idx];
+              const isCheapest = prem.total !== null && prem.total === cheapestTotal && selected.length > 1;
+              return (
+                <th key={p.id} style={{ width: colW, padding: '14px 16px', textAlign: 'left', verticalAlign: 'bottom', position: 'relative' }}>
+                  {isCheapest && <span style={{ position: 'absolute', top: 6, right: 12, background: '#22c55e', color: '#000', fontSize: 9, fontWeight: 800, padding: '2px 8px', borderRadius: 4, letterSpacing: '0.06em' }}>BEST PRICE</span>}
+                  {p.policyInsurerLogo && (
+                    <img src={p.policyInsurerLogo} alt={p.policyInsurerName || ''} style={{ height: 28, maxWidth: 80, objectFit: 'contain', display: 'block', marginBottom: 8, filter: 'brightness(1.1)' }} />
+                  )}
+                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, lineHeight: 1.3, marginBottom: 4 }}>{p.title}</div>
+                  {p.policyInsurerName && <div style={{ fontSize: 11, color: 'var(--slate)' }}>{p.policyInsurerName}</div>}
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
+          {/* ── At a Glance ── */}
           <SectionRow label="At a Glance" cols={selected.length} />
+
+          {/* Premium */}
           <tr>
-            <td style={labelCell}>Price Range</td>
-            {selected.map(p => (
-              <td key={p.id} style={{ ...cellBase, width: colW }}>
-                <span style={{ fontWeight: 700, fontSize: 14, color: '#86efac' }}>{priceRange(p)}</span>
-              </td>
-            ))}
+            <td style={labelCell}>{days > 0 ? 'Premium' : 'Price Range'}</td>
+            {selected.map((p, idx) => {
+              const prem = premiums[idx];
+              return (
+                <td key={p.id} style={{ ...cellBase, width: colW }}>
+                  {prem.total !== null ? (
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 16, color: '#86efac' }}>{prem.cur} {prem.total.toLocaleString('en-KE')}</div>
+                      {passengers > 1 && <div style={{ fontSize: 11, color: 'var(--slate)', marginTop: 2 }}>{prem.cur} {prem.perPerson.toLocaleString('en-KE')}/person</div>}
+                      <div style={{ fontSize: 10, color: 'var(--slate)', marginTop: 1 }}>{days} days &middot; {passengers} traveller{passengers !== 1 ? 's' : ''}</div>
+                    </div>
+                  ) : (
+                    <span style={{ fontWeight: 700, fontSize: 14, color: '#86efac' }}>{prem.label}</span>
+                  )}
+                </td>
+              );
+            })}
           </tr>
+
+          {/* Destinations */}
           <tr>
             <td style={labelCell}>Destinations</td>
             {selected.map(p => {
@@ -406,6 +457,23 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
               );
             })}
           </tr>
+
+          {/* Covered Countries */}
+          {selected.some(p => p.policyCountries?.length > 0) && (
+            <tr>
+              <td style={labelCell}>Countries</td>
+              {selected.map(p => {
+                const c = p.policyCountries || [];
+                return (
+                  <td key={p.id} style={{ ...cellBase, width: colW, fontSize: 11, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>
+                    {c.length > 0 ? (Array.isArray(c) ? c.join(', ') : c) : <span style={{ color: 'var(--slate)' }}>{'\u2014'}</span>}
+                  </td>
+                );
+              })}
+            </tr>
+          )}
+
+          {/* Coverage tags */}
           <tr>
             <td style={labelCell}>Coverage</td>
             {selected.map(p => {
@@ -423,23 +491,58 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
             })}
           </tr>
 
-          {uniqueBenefits.some(l => l.length > 0) && (() => {
-            const maxRows = Math.max(...uniqueBenefits.map(l => l.length), 1);
+          {/* Day-bracket pricing */}
+          {selected.some(p => p.policyDayPremiums?.length > 1) && (() => {
+            const allBrackets = new Set();
+            selected.forEach(p => (p.policyDayPremiums || []).forEach(b => allBrackets.add(`${b.from}-${b.to}`)));
+            const brackets = Array.from(allBrackets).sort((a, b) => Number(a.split('-')[0]) - Number(b.split('-')[0]));
             return (
               <>
-                <SectionRow label="Unique Coverage" cols={selected.length} />
-                {Array.from({ length: maxRows }, (_, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                    <td style={labelCell} />
+                <SectionRow label="Day-Bracket Pricing (per person)" cols={selected.length} />
+                {brackets.map((bk, i) => {
+                  const [from, to] = bk.split('-').map(Number);
+                  const isActive = days >= from && days <= to;
+                  return (
+                    <tr key={bk} style={{ background: isActive ? 'rgba(49,99,49,0.12)' : (i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent'), borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                      <td style={{ ...labelCell, fontSize: 11, color: isActive ? '#86efac' : 'var(--slate)' }}>{from}\u2013{to} days{isActive ? ' \u2190' : ''}</td>
+                      {selected.map(p => {
+                        const match = (p.policyDayPremiums || []).find(b => b.from === from && b.to === to);
+                        const cur = p.policyCurrency || 'KES';
+                        return (
+                          <td key={p.id} style={{ ...cellBase, width: colW, fontWeight: 600, color: isActive ? '#86efac' : 'rgba(255,255,255,0.7)' }}>
+                            {match ? `${cur} ${Number(match.premium).toLocaleString('en-KE')}` : '\u2014'}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </>
+            );
+          })()}
+
+          {/* ── Benefits Overview ── */}
+          {(() => {
+            const maxBenefits = Math.max(...allBenefitLists.map(l => l.length), 0);
+            if (maxBenefits === 0) return null;
+            const rows = Math.min(maxBenefits, 12);
+            return (
+              <>
+                <SectionRow label="Benefits Overview" cols={selected.length} accent />
+                {Array.from({ length: rows }, (_, i) => (
+                  <tr key={`ben-${i}`} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                    <td style={{ ...labelCell, fontSize: 11, color: 'var(--slate)' }}>{i + 1}</td>
                     {selected.map((p, pi) => {
-                      const item = uniqueBenefits[pi]?.[i];
+                      const item = allBenefitLists[pi]?.[i];
                       return (
                         <td key={p.id} style={{ ...cellBase, width: colW }}>
-                          {item && (
-                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
-                              <span style={{ color: '#60a5fa', fontSize: 14, lineHeight: 1.4, flexShrink: 0 }}>{'\u25c6'}</span>
-                              <span style={{ color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, fontSize: 12 }}>{item}</span>
+                          {item ? (
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                              <span style={{ color: '#22c55e', fontSize: 13, lineHeight: 1.4, flexShrink: 0 }}>{'\u2713'}</span>
+                              <span style={{ color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, fontSize: 12 }}>{item.length > 70 ? item.slice(0, 67) + '\u2026' : item}</span>
                             </div>
+                          ) : (
+                            <span style={{ color: 'rgba(255,255,255,0.12)' }}>{'\u2014'}</span>
                           )}
                         </td>
                       );
@@ -450,6 +553,7 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
             );
           })()}
 
+          {/* ── Coverage Presence Check ── */}
           {commonBenefits.length > 0 && selected.length > 1 && (() => {
             const checkItems = commonBenefits.slice(0, 10);
             return (
@@ -477,6 +581,38 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
             );
           })()}
 
+          {/* ── Not Covered / Exclusions ── */}
+          {allExclusions.some(l => l.length > 0) && (() => {
+            const maxExcl = Math.max(...allExclusions.map(l => l.length), 0);
+            const rows = Math.min(maxExcl, 8);
+            return (
+              <>
+                <SectionRow label="Not Covered (Exclusions)" cols={selected.length} />
+                {Array.from({ length: rows }, (_, i) => (
+                  <tr key={`excl-${i}`} style={{ background: i % 2 === 0 ? 'rgba(248,113,113,0.03)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                    <td style={{ ...labelCell, fontSize: 11, color: '#f87171' }}>{i + 1}</td>
+                    {selected.map((p, pi) => {
+                      const item = allExclusions[pi]?.[i];
+                      return (
+                        <td key={p.id} style={{ ...cellBase, width: colW }}>
+                          {item ? (
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                              <span style={{ color: '#f87171', fontSize: 13, lineHeight: 1.4, flexShrink: 0 }}>{'\u2717'}</span>
+                              <span style={{ color: 'rgba(255,255,255,0.55)', lineHeight: 1.5, fontSize: 12 }}>{item.length > 70 ? item.slice(0, 67) + '\u2026' : item}</span>
+                            </div>
+                          ) : (
+                            <span style={{ color: 'rgba(255,255,255,0.12)' }}>{'\u2014'}</span>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </>
+            );
+          })()}
+
+          {/* ── Actions ── */}
           <tr style={{ borderTop: '2px solid rgba(49,99,49,0.3)', background: 'rgba(8,14,39,0.5)' }}>
             <td style={{ ...labelCell, verticalAlign: 'middle', paddingTop: 20, paddingBottom: 20, fontSize: 11, color: 'var(--slate)' }}>Actions</td>
             {selected.map(p => (
@@ -520,7 +656,7 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
           <button onClick={onClose} aria-label="Close comparison" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--slate)', fontSize: 18, borderRadius: 8, padding: '4px 12px', cursor: 'pointer', flexShrink: 0 }}>&times;</button>
         </div>
 
-        {mobile ? <MobileLayout /> : <DesktopLayout />}
+        {mobile ? mobileLayout : desktopLayout}
 
         <div style={{ padding: mobile ? '0 16px 20px' : '0 28px 20px' }}>
           <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', lineHeight: 1.6, textAlign: 'center' }}>
@@ -795,3 +931,4 @@ const LandingPage = ({ onStartWizard, onNavigate }) => {
 };
 
 export default LandingPage;
+export { CompareBar, CompareModal, CompareDatePicker };

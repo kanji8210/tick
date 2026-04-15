@@ -136,7 +136,7 @@ const AboutPage = ({ onNavigate }) => {
               { n: '02', icon: '📄', title: 'Receive Certificate', desc: 'Your PDF certificate arrives instantly with a unique verification code embedded.' },
               { n: '03', icon: '🏛️', title: 'Share with Embassy', desc: 'Embassy officer visits verify.maljani.co.ke and enters your policy number + passport.' },
               { n: '04', icon: '✅', title: 'Verified in 3 Seconds', desc: 'Our system returns: insured name, coverage dates, region, and active status. Instantly.' },
-            ].map((step, i) => (
+            ].map((step) => (
               <div key={step.n} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-lg)', padding: '32px 24px', textAlign: 'center', position: 'relative' }}>
                 <div style={{ position: 'absolute', top: -18, left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg,var(--indigo),var(--indigo-glow))', color: '#fff', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 13, padding: '4px 14px', borderRadius: 99, letterSpacing: '0.05em' }}>{step.n}</div>
                 <div style={{ fontSize: 36, margin: '10px 0 14px' }}>{step.icon}</div>

@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+﻿import React, { useState } from 'react';
 import { useQuery } from 'urql';
 import { useResponsive } from '../lib/useResponsive';
 
@@ -74,8 +74,8 @@ const bracketPremium = (brackets, days) => {
 
 const PolicyDetail = ({ policyId, searchData, onBack, onStartWizard }) => {
   const { mobile, tablet } = useResponsive();
-  const today    = new Date().toISOString().split('T')[0];
-  const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+  const [today]    = useState(() => new Date().toISOString().split('T')[0]);
+  const [nextWeek] = useState(() => new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]);
 
   const [departure,  setDeparture]  = useState(searchData?.departure  || today);
   const [returnDate, setReturnDate] = useState(searchData?.returnDate || nextWeek);

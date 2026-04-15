@@ -16,7 +16,7 @@ const getAuthHeaders = () => {
       const { token } = JSON.parse(saved);
       if (token) headers['Authorization'] = `Bearer ${token}`;
     }
-  } catch (_) {
+  } catch {
     // localStorage unavailable or corrupted — continue without auth header
   }
 

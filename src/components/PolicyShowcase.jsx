@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery } from 'urql';
 import { useResponsive } from '../lib/useResponsive';
 
@@ -18,9 +18,11 @@ const GET_POLICIES = `
         policyDescription
         policyBenefits
         policyCoverDetails
+        policyNotCovered
         policyFeatureTags
         policyInsurerName
         policyInsurerLogo
+        policyCountries
         policyDayPremiums {
           from
           to
@@ -193,11 +195,12 @@ const BenefitModal = ({ policy, onClose, onNavigate }) => {
 
 const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [], onAddCompare, onRemoveCompare }) => {
   const { mobile } = useResponsive();
-  const [activeFilter, setActiveFilter] = useState(null);
+  const activeFilterRef = useRef(null);
+
+  useEffect(() => { if (searchParams?.region) activeFilterRef.current = searchParams.region; }, [searchParams?.region]);
+  const [activeFilter, setActiveFilter] = useState(() => searchParams?.region ?? null);
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [selectedInsurerPolicy, setSelectedInsurerPolicy] = useState(null);
-
-  useEffect(() => { if (searchParams?.region) setActiveFilter(searchParams.region); }, [searchParams?.region]);
 
   const effectiveRegion = activeFilter;
   const [{ data, fetching, error }] = useQuery({ query: GET_POLICIES, variables: {} });
@@ -245,7 +248,7 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
       <InsurerProfileModal policy={selectedInsurerPolicy} onClose={() => setSelectedInsurerPolicy(null)} />
 
       <div className="container">
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 36, flexWrap: 'wrap', gap: mobile ? 12 : 20, flexDirection: mobile ? 'column' : 'row', alignItems: mobile ? 'stretch' : 'flex-end' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 36, flexWrap: 'wrap', gap: mobile ? 12 : 20, flexDirection: mobile ? 'column' : 'row', alignItems: mobile ? 'stretch' : 'flex-end' }}>
           <div>
             <p className="section-label">Compare & Buy</p>
             <h2 className="section-title" style={{ fontSize: 'clamp(28px,3vw,44px)' }}>

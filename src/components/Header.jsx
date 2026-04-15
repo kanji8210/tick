@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '../lib/AuthContext';
 
 const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onForward }) => {
-  const { user, role, logout, loading } = useAuth();
+  const { user, logout, loading } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [compact, setCompact] = useState(window.innerWidth <= 1024);
   const [mobile, setMobile] = useState(window.innerWidth <= 768);
@@ -45,6 +45,7 @@ const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onFor
 
   // Close mobile menu on resize to non-mobile
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!mobile) setMenuOpen(false);
   }, [mobile]);
 
@@ -65,7 +66,7 @@ const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onFor
     }
 
     return links;
-  }, [role, user]);
+  }, [user]);
 
   const handleDropdownToggle = useCallback(() => {
     setDropdownOpen((prev) => !prev);

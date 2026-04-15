@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation } from 'urql';
 import { useAuth } from '../lib/AuthContext';
@@ -122,8 +123,8 @@ const StepBar = ({ step }) => (
 const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initialStep = 1, onNavigate }) => {
   const { user, loading: authLoading, role, login, register, error: authError } = useAuth();
   const { mobile } = useResponsive();
-  const today = new Date().toISOString().split('T')[0];
-  const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+  const [today] = useState(() => new Date().toISOString().split('T')[0]);
+  const [nextWeek] = useState(() => new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]);
 
   const [step, setStep] = useState(initialStep ?? 1);
   const [form, setForm] = useState({
@@ -145,7 +146,11 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
   const [{ data: regData }] = useQuery({ query: GET_REGIONS });
   const [{ data, fetching, error }] = useQuery({ query: GET_POLICIES });
   const [saleResult, submitSale] = useMutation(SUBMIT_SALE);
-  const [accountCreated, setAccountCreated] = useState(false);
+
+  const regions = regData?.regions?.nodes || [];
+  const selectedRegionName = regions.find(r => r.slug === form.destinationRegion)?.name || '';
+
+  const [accountCreated] = useState(false);
   const [isLoginMode, setIsLoginMode] = useState(false);
   const [regFetching, setRegFetching] = useState(false);
 
@@ -186,7 +191,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
     if (searchData.destinationRegion || searchData.departure !== today) {
       localStorage.setItem('maljani_last_search', JSON.stringify(searchData));
     }
-  }, [form.destinationRegion, form.departure, form.returnDate, form.passengers, today]);
+  }, [form.destinationRegion, form.departure, form.returnDate, form.passengers, today, selectedRegionName]);
 
   // Sync initial policy and smart jump
   useEffect(() => {
@@ -235,7 +240,6 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
   };
 
   const isLoggedIn = !!user;
-  const isClientAccount = role === 'client' && isLoggedIn;
   const effectiveName = user?.name || form.name;
   const effectiveEmail = user?.email || form.email;
   const accountEmail = user?.email || form.email;
@@ -246,9 +250,6 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
   const days = tripDays(form.departure, form.returnDate);
-
-  const regions = regData?.regions?.nodes || [];
-  const selectedRegionName = regions.find(r => r.slug === form.destinationRegion)?.name || '';
 
   /* Filter + annotate policies */
   const eligiblePolicies = useMemo(() => {
@@ -264,10 +265,6 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
 
   // Always derive compareList from eligiblePolicies so computedPremium is always current
   const compareList = eligiblePolicies.filter(p => compareIds.has(String(p.databaseId)));
-
-  const totalPremium = form.selectedPolicy
-    ? (bracketPremium(form.selectedPolicy.policyDayPremiums, days) ?? null) * form.passengers
-    : null;
 
   const saleData = saleResult.data?.submitPolicySale;
   const saleId = saleData?.saleId;
