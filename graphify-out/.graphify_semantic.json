@@ -1,0 +1,26 @@
+{"nodes":[
+  {"id":"aar_insurance","label":"AAR Insurance","file_type":"image","source_file":"src/assets/logos/aar_logo.png"},
+  {"id":"britam_insurance","label":"Britam Insurance","file_type":"image","source_file":"src/assets/logos/britam_logo.png"},
+  {"id":"cic_insurance","label":"CIC Group","file_type":"image","source_file":"src/assets/logos/cic_logo.png"},
+  {"id":"heritage_insurance","label":"Heritage Insurance","file_type":"image","source_file":"src/assets/logos/heritage_logo.png"},
+  {"id":"jubilee_insurance","label":"Jubilee Insurance","file_type":"image","source_file":"src/assets/logos/jubilee_logo.png"},
+  {"id":"orient_insurance","label":"Orient Insurance","file_type":"image","source_file":"src/assets/logos/orient_logo.png"},
+  {"id":"resolution_insurance","label":"Resolution Insurance","file_type":"image","source_file":"src/assets/logos/resolution_logo.png"},
+  {"id":"uap_insurance","label":"UAP Old Mutual","file_type":"image","source_file":"src/assets/logos/uap_logo.png"},
+  {"id":"insurance_partners","label":"Insurance Partners","file_type":"document","source_file":"src/components/TrustedPartners.jsx"},
+  {"id":"maljani_hero","label":"Maljani Hero Banner","file_type":"image","source_file":"src/assets/hero.png"},
+  {"id":"react_framework","label":"React Framework","file_type":"image","source_file":"src/assets/react.svg"},
+  {"id":"vite_bundler","label":"Vite Build Tool","file_type":"image","source_file":"src/assets/vite.svg"}
+],"edges":[
+  {"source":"aar_insurance","target":"insurance_partners","relation":"member_of","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"src/components/TrustedPartners.jsx","weight":1.0},
+  {"source":"britam_insurance","target":"insurance_partners","relation":"member_of","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"src/components/TrustedPartners.jsx","weight":1.0},
+  {"source":"cic_insurance","target":"insurance_partners","relation":"member_of","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"src/components/TrustedPartners.jsx","weight":1.0},
+  {"source":"heritage_insurance","target":"insurance_partners","relation":"member_of","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"src/components/TrustedPartners.jsx","weight":1.0},
+  {"source":"jubilee_insurance","target":"insurance_partners","relation":"member_of","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"src/components/TrustedPartners.jsx","weight":1.0},
+  {"source":"orient_insurance","target":"insurance_partners","relation":"member_of","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"src/components/TrustedPartners.jsx","weight":1.0},
+  {"source":"resolution_insurance","target":"insurance_partners","relation":"member_of","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"src/components/TrustedPartners.jsx","weight":1.0},
+  {"source":"uap_insurance","target":"insurance_partners","relation":"member_of","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"src/components/TrustedPartners.jsx","weight":1.0},
+  {"source":"maljani_hero","target":"insurance_partners","relation":"conceptually_related_to","confidence":"INFERRED","confidence_score":0.7,"source_file":"src/assets/hero.png","weight":0.7}
+],"hyperedges":[
+  {"id":"kenyan_insurers","label":"Kenyan Insurance Partners","nodes":["aar_insurance","britam_insurance","cic_insurance","heritage_insurance","jubilee_insurance","orient_insurance","resolution_insurance","uap_insurance"],"relation":"participate_in","confidence":"EXTRACTED","confidence_score":1.0,"source_file":"src/components/TrustedPartners.jsx"}
+],"input_tokens":0,"output_tokens":0}

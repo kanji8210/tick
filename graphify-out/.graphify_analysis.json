@@ -1,0 +1,326 @@
+{
+  "communities": {
+    "0": [
+      "aboutpage_aboutpage",
+      "assignclientmodal_assignclientmodal",
+      "categoryfilters_categoryfilters",
+      "faqsection_faqsection",
+      "footer_footer",
+      "policyeditmodal_policyeditmodal",
+      "processsection_processsection",
+      "src_components_aboutpage_jsx",
+      "src_components_assignclientmodal_jsx",
+      "src_components_categoryfilters_jsx",
+      "src_components_faqsection_jsx",
+      "src_components_footer_jsx",
+      "src_components_policyeditmodal_jsx",
+      "src_components_processsection_jsx",
+      "src_components_trustedpartners_jsx",
+      "src_components_trustsection_jsx",
+      "src_lib_useresponsive_js",
+      "trustedpartners_trustedpartners",
+      "trustsection_trustsection",
+      "useresponsive_getbreakpoints",
+      "useresponsive_useresponsive"
+    ],
+    "1": [
+      "agenciespage_agenciespage",
+      "authcontext_authprovider",
+      "authcontext_useauth",
+      "dashboard_dashboard",
+      "header_header",
+      "hero_hero",
+      "landingpage_landingpage",
+      "login_login",
+      "messaging_messaging",
+      "profileeditmodal_profileeditmodal",
+      "register_register",
+      "src_components_agenciespage_jsx",
+      "src_components_dashboard_jsx",
+      "src_components_header_jsx",
+      "src_components_hero_jsx",
+      "src_components_login_jsx",
+      "src_components_messaging_jsx",
+      "src_components_profileeditmodal_jsx",
+      "src_components_register_jsx",
+      "src_lib_authcontext_jsx"
+    ],
+    "2": [
+      "landingpage_bracketpremium",
+      "landingpage_comparebar",
+      "landingpage_comparedatepicker",
+      "landingpage_comparemodal",
+      "landingpage_findcommonbenefits",
+      "landingpage_fmtprice",
+      "landingpage_getdisplayfeatures",
+      "landingpage_keywords",
+      "landingpage_normalizebenefit",
+      "landingpage_parsebenefits",
+      "landingpage_parsetags",
+      "landingpage_policyhasbenefit",
+      "landingpage_sectionrow",
+      "landingpage_tripdays",
+      "src_components_landingpage_jsx"
+    ],
+    "3": [
+      "insureddashboard_fmtdate",
+      "insureddashboard_fmtkes",
+      "insureddashboard_getpay",
+      "insureddashboard_getps",
+      "insureddashboard_insureddashboard",
+      "policydetail_bracketpremium",
+      "policydetail_policydetail",
+      "policydetail_section",
+      "policydetail_striphtml",
+      "policydetail_tolines",
+      "policydetail_tripdays",
+      "src_components_insureddashboard_jsx",
+      "src_components_policydetail_jsx"
+    ],
+    "4": [
+      "agentdashboard_agentdashboard",
+      "agentdashboard_badge",
+      "agentdashboard_barchart",
+      "agentdashboard_donutchart",
+      "agentdashboard_fmtdate",
+      "agentdashboard_fmtkes",
+      "agentdashboard_fmtmonth",
+      "agentdashboard_getcomm",
+      "agentdashboard_getpay",
+      "agentdashboard_getps",
+      "src_components_agentdashboard_jsx"
+    ],
+    "5": [
+      "policyshowcase_benefitmodal",
+      "policyshowcase_bracketpremium",
+      "policyshowcase_fmtprice",
+      "policyshowcase_insurerlogo",
+      "policyshowcase_insurerprofilemodal",
+      "policyshowcase_minpremium",
+      "policyshowcase_parsetags",
+      "policyshowcase_policyshowcase",
+      "policyshowcase_striphtml",
+      "policyshowcase_tripdays",
+      "src_components_policyshowcase_jsx"
+    ],
+    "6": [
+      "aar_insurance",
+      "britam_insurance",
+      "cic_insurance",
+      "heritage_insurance",
+      "insurance_partners",
+      "jubilee_insurance",
+      "maljani_hero",
+      "orient_insurance",
+      "resolution_insurance",
+      "uap_insurance"
+    ],
+    "7": [
+      "quotewizard_bracketpremium",
+      "quotewizard_coversregion",
+      "quotewizard_fmt",
+      "quotewizard_quotewizard",
+      "quotewizard_stepbar",
+      "quotewizard_striphtml",
+      "quotewizard_tripdays",
+      "src_components_quotewizard_jsx"
+    ],
+    "8": [
+      "notificationpanel_meta",
+      "notificationpanel_notificationpanel",
+      "notificationpanel_timeago",
+      "src_components_notificationpanel_jsx"
+    ],
+    "9": [
+      "app_app",
+      "app_appcontent",
+      "src_app_jsx"
+    ],
+    "10": [
+      "src_components_verifypolicy_jsx",
+      "verifypolicy_getstatusmeta",
+      "verifypolicy_verifypolicy"
+    ],
+    "11": [
+      "catalog_catalog",
+      "src_components_catalog_jsx"
+    ],
+    "12": [
+      "graphql_getauthheaders",
+      "src_lib_graphql_js"
+    ],
+    "13": [
+      "src_main_jsx"
+    ],
+    "14": [
+      "react_framework"
+    ],
+    "15": [
+      "vite_bundler"
+    ]
+  },
+  "cohesion": {
+    "0": 0.1,
+    "1": 0.1,
+    "2": 0.19,
+    "3": 0.19,
+    "4": 0.2,
+    "5": 0.25,
+    "6": 0.2,
+    "7": 0.36,
+    "8": 0.5,
+    "9": 0.67,
+    "10": 1.0,
+    "11": 1.0,
+    "12": 1.0,
+    "13": 1.0,
+    "14": 1.0,
+    "15": 1.0
+  },
+  "gods": [
+    {
+      "id": "useresponsive_useresponsive",
+      "label": "useResponsive()",
+      "edges": 25
+    },
+    {
+      "id": "authcontext_useauth",
+      "label": "useAuth()",
+      "edges": 14
+    },
+    {
+      "id": "insurance_partners",
+      "label": "Insurance Partners",
+      "edges": 9
+    },
+    {
+      "id": "policydetail_policydetail",
+      "label": "PolicyDetail()",
+      "edges": 6
+    },
+    {
+      "id": "policyshowcase_benefitmodal",
+      "label": "BenefitModal()",
+      "edges": 6
+    },
+    {
+      "id": "quotewizard_quotewizard",
+      "label": "QuoteWizard()",
+      "edges": 6
+    },
+    {
+      "id": "agentdashboard_agentdashboard",
+      "label": "AgentDashboard()",
+      "edges": 4
+    },
+    {
+      "id": "landingpage_comparemodal",
+      "label": "CompareModal()",
+      "edges": 4
+    },
+    {
+      "id": "agenciespage_agenciespage",
+      "label": "AgenciesPage()",
+      "edges": 3
+    },
+    {
+      "id": "hero_hero",
+      "label": "Hero()",
+      "edges": 3
+    }
+  ],
+  "surprises": [
+    {
+      "source": "CompareBar()",
+      "target": "useResponsive()",
+      "source_files": [
+        "src\\components\\LandingPage.jsx",
+        "src\\lib\\useResponsive.js"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities; peripheral node `CompareBar()` unexpectedly reaches hub `useResponsive()`"
+    },
+    {
+      "source": "InsurerProfileModal()",
+      "target": "useResponsive()",
+      "source_files": [
+        "src\\components\\PolicyShowcase.jsx",
+        "src\\lib\\useResponsive.js"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities; peripheral node `InsurerProfileModal()` unexpectedly reaches hub `useResponsive()`"
+    },
+    {
+      "source": "PolicyShowcase()",
+      "target": "useResponsive()",
+      "source_files": [
+        "src\\components\\PolicyShowcase.jsx",
+        "src\\lib\\useResponsive.js"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities; peripheral node `PolicyShowcase()` unexpectedly reaches hub `useResponsive()`"
+    },
+    {
+      "source": "AboutPage()",
+      "target": "useResponsive()",
+      "source_files": [
+        "src\\components\\AboutPage.jsx",
+        "src\\lib\\useResponsive.js"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; peripheral node `AboutPage()` unexpectedly reaches hub `useResponsive()`"
+    },
+    {
+      "source": "AgenciesPage()",
+      "target": "useResponsive()",
+      "source_files": [
+        "src\\components\\AgenciesPage.jsx",
+        "src\\lib\\useResponsive.js"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `useResponsive()` connect `Community 0` to `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 7`, `Community 8`?",
+      "why": "High betweenness centrality (0.489) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `useAuth()` connect `Community 1` to `Community 8`, `Community 3`, `Community 4`, `Community 7`?",
+      "why": "High betweenness centrality (0.188) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `AgentDashboard()` connect `Community 4` to `Community 0`, `Community 1`?",
+      "why": "High betweenness centrality (0.127) - this node is a cross-community bridge."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 24 inferred relationships involving `useResponsive()` (e.g. with `AboutPage()` and `AgenciesPage()`) actually correct?",
+      "why": "`useResponsive()` has 24 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 13 inferred relationships involving `useAuth()` (e.g. with `AgenciesPage()` and `AgentDashboard()`) actually correct?",
+      "why": "`useAuth()` has 13 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 2 inferred relationships involving `PolicyDetail()` (e.g. with `useResponsive()` and `fmtKES()`) actually correct?",
+      "why": "`PolicyDetail()` has 2 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `AAR Insurance`, `Britam Insurance`, `CIC Group` to the rest of the system?",
+      "why": "11 weakly-connected nodes found - possible documentation gaps or missing edges."
+    }
+  ]
+}

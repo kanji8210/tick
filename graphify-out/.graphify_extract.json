@@ -1,0 +1,3249 @@
+{
+  "nodes": [
+    {
+      "id": "src_app_jsx",
+      "label": "App.jsx",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_appcontent",
+      "label": "AppContent()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L18"
+    },
+    {
+      "id": "app_app",
+      "label": "App()",
+      "file_type": "code",
+      "source_file": "src\\App.jsx",
+      "source_location": "L160"
+    },
+    {
+      "id": "src_main_jsx",
+      "label": "main.jsx",
+      "file_type": "code",
+      "source_file": "src\\main.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "src_components_aboutpage_jsx",
+      "label": "AboutPage.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\AboutPage.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "aboutpage_aboutpage",
+      "label": "AboutPage()",
+      "file_type": "code",
+      "source_file": "src\\components\\AboutPage.jsx",
+      "source_location": "L27"
+    },
+    {
+      "id": "src_components_agenciespage_jsx",
+      "label": "AgenciesPage.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\AgenciesPage.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "agenciespage_agenciespage",
+      "label": "AgenciesPage()",
+      "file_type": "code",
+      "source_file": "src\\components\\AgenciesPage.jsx",
+      "source_location": "L44"
+    },
+    {
+      "id": "src_components_agentdashboard_jsx",
+      "label": "AgentDashboard.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "agentdashboard_fmtkes",
+      "label": "fmtKES()",
+      "file_type": "code",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L48"
+    },
+    {
+      "id": "agentdashboard_fmtdate",
+      "label": "fmtDate()",
+      "file_type": "code",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L49"
+    },
+    {
+      "id": "agentdashboard_fmtmonth",
+      "label": "fmtMonth()",
+      "file_type": "code",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L50"
+    },
+    {
+      "id": "agentdashboard_getps",
+      "label": "getPS()",
+      "file_type": "code",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L66"
+    },
+    {
+      "id": "agentdashboard_getcomm",
+      "label": "getComm()",
+      "file_type": "code",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L74"
+    },
+    {
+      "id": "agentdashboard_getpay",
+      "label": "getPay()",
+      "file_type": "code",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L81"
+    },
+    {
+      "id": "agentdashboard_barchart",
+      "label": "BarChart()",
+      "file_type": "code",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L87"
+    },
+    {
+      "id": "agentdashboard_donutchart",
+      "label": "DonutChart()",
+      "file_type": "code",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L120"
+    },
+    {
+      "id": "agentdashboard_badge",
+      "label": "Badge()",
+      "file_type": "code",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L166"
+    },
+    {
+      "id": "agentdashboard_agentdashboard",
+      "label": "AgentDashboard()",
+      "file_type": "code",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L190"
+    },
+    {
+      "id": "src_components_assignclientmodal_jsx",
+      "label": "AssignClientModal.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\AssignClientModal.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "assignclientmodal_assignclientmodal",
+      "label": "AssignClientModal()",
+      "file_type": "code",
+      "source_file": "src\\components\\AssignClientModal.jsx",
+      "source_location": "L19"
+    },
+    {
+      "id": "src_components_catalog_jsx",
+      "label": "Catalog.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\Catalog.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "catalog_catalog",
+      "label": "Catalog()",
+      "file_type": "code",
+      "source_file": "src\\components\\Catalog.jsx",
+      "source_location": "L4"
+    },
+    {
+      "id": "src_components_categoryfilters_jsx",
+      "label": "CategoryFilters.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\CategoryFilters.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "categoryfilters_categoryfilters",
+      "label": "CategoryFilters()",
+      "file_type": "code",
+      "source_file": "src\\components\\CategoryFilters.jsx",
+      "source_location": "L15"
+    },
+    {
+      "id": "src_components_dashboard_jsx",
+      "label": "Dashboard.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\Dashboard.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "dashboard_dashboard",
+      "label": "Dashboard()",
+      "file_type": "code",
+      "source_file": "src\\components\\Dashboard.jsx",
+      "source_location": "L6"
+    },
+    {
+      "id": "src_components_faqsection_jsx",
+      "label": "FAQSection.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\FAQSection.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "faqsection_faqsection",
+      "label": "FAQSection()",
+      "file_type": "code",
+      "source_file": "src\\components\\FAQSection.jsx",
+      "source_location": "L13"
+    },
+    {
+      "id": "src_components_footer_jsx",
+      "label": "Footer.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\Footer.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "footer_footer",
+      "label": "Footer()",
+      "file_type": "code",
+      "source_file": "src\\components\\Footer.jsx",
+      "source_location": "L4"
+    },
+    {
+      "id": "src_components_header_jsx",
+      "label": "Header.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\Header.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "header_header",
+      "label": "Header()",
+      "file_type": "code",
+      "source_file": "src\\components\\Header.jsx",
+      "source_location": "L4"
+    },
+    {
+      "id": "src_components_hero_jsx",
+      "label": "Hero.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\Hero.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "hero_hero",
+      "label": "Hero()",
+      "file_type": "code",
+      "source_file": "src\\components\\Hero.jsx",
+      "source_location": "L14"
+    },
+    {
+      "id": "src_components_insureddashboard_jsx",
+      "label": "InsuredDashboard.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\InsuredDashboard.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "insureddashboard_getps",
+      "label": "getPS()",
+      "file_type": "code",
+      "source_file": "src\\components\\InsuredDashboard.jsx",
+      "source_location": "L40"
+    },
+    {
+      "id": "insureddashboard_getpay",
+      "label": "getPay()",
+      "file_type": "code",
+      "source_file": "src\\components\\InsuredDashboard.jsx",
+      "source_location": "L47"
+    },
+    {
+      "id": "insureddashboard_fmtdate",
+      "label": "fmtDate()",
+      "file_type": "code",
+      "source_file": "src\\components\\InsuredDashboard.jsx",
+      "source_location": "L49"
+    },
+    {
+      "id": "insureddashboard_fmtkes",
+      "label": "fmtKES()",
+      "file_type": "code",
+      "source_file": "src\\components\\InsuredDashboard.jsx",
+      "source_location": "L50"
+    },
+    {
+      "id": "insureddashboard_insureddashboard",
+      "label": "InsuredDashboard()",
+      "file_type": "code",
+      "source_file": "src\\components\\InsuredDashboard.jsx",
+      "source_location": "L54"
+    },
+    {
+      "id": "src_components_landingpage_jsx",
+      "label": "LandingPage.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "landingpage_parsetags",
+      "label": "parseTags()",
+      "file_type": "code",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L12"
+    },
+    {
+      "id": "landingpage_fmtprice",
+      "label": "fmtPrice()",
+      "file_type": "code",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L17"
+    },
+    {
+      "id": "landingpage_getdisplayfeatures",
+      "label": "getDisplayFeatures()",
+      "file_type": "code",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L22"
+    },
+    {
+      "id": "landingpage_parsebenefits",
+      "label": "parseBenefits()",
+      "file_type": "code",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L35"
+    },
+    {
+      "id": "landingpage_normalizebenefit",
+      "label": "normalizeBenefit()",
+      "file_type": "code",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L48"
+    },
+    {
+      "id": "landingpage_keywords",
+      "label": "keyWords()",
+      "file_type": "code",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L51"
+    },
+    {
+      "id": "landingpage_findcommonbenefits",
+      "label": "findCommonBenefits()",
+      "file_type": "code",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L55"
+    },
+    {
+      "id": "landingpage_policyhasbenefit",
+      "label": "policyHasBenefit()",
+      "file_type": "code",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L71"
+    },
+    {
+      "id": "landingpage_tripdays",
+      "label": "tripDays()",
+      "file_type": "code",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L82"
+    },
+    {
+      "id": "landingpage_bracketpremium",
+      "label": "bracketPremium()",
+      "file_type": "code",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L89"
+    },
+    {
+      "id": "landingpage_comparebar",
+      "label": "CompareBar()",
+      "file_type": "code",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L100"
+    },
+    {
+      "id": "landingpage_sectionrow",
+      "label": "SectionRow()",
+      "file_type": "code",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L133"
+    },
+    {
+      "id": "landingpage_comparedatepicker",
+      "label": "CompareDatePicker()",
+      "file_type": "code",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L150"
+    },
+    {
+      "id": "landingpage_comparemodal",
+      "label": "CompareModal()",
+      "file_type": "code",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L225"
+    },
+    {
+      "id": "landingpage_landingpage",
+      "label": "LandingPage()",
+      "file_type": "code",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L541"
+    },
+    {
+      "id": "src_components_login_jsx",
+      "label": "Login.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\Login.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "login_login",
+      "label": "Login()",
+      "file_type": "code",
+      "source_file": "src\\components\\Login.jsx",
+      "source_location": "L4"
+    },
+    {
+      "id": "src_components_messaging_jsx",
+      "label": "Messaging.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\Messaging.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "messaging_messaging",
+      "label": "Messaging()",
+      "file_type": "code",
+      "source_file": "src\\components\\Messaging.jsx",
+      "source_location": "L8"
+    },
+    {
+      "id": "src_components_notificationpanel_jsx",
+      "label": "NotificationPanel.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\NotificationPanel.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "notificationpanel_meta",
+      "label": "meta()",
+      "file_type": "code",
+      "source_file": "src\\components\\NotificationPanel.jsx",
+      "source_location": "L37"
+    },
+    {
+      "id": "notificationpanel_timeago",
+      "label": "timeAgo()",
+      "file_type": "code",
+      "source_file": "src\\components\\NotificationPanel.jsx",
+      "source_location": "L39"
+    },
+    {
+      "id": "notificationpanel_notificationpanel",
+      "label": "NotificationPanel()",
+      "file_type": "code",
+      "source_file": "src\\components\\NotificationPanel.jsx",
+      "source_location": "L49"
+    },
+    {
+      "id": "src_components_policydetail_jsx",
+      "label": "PolicyDetail.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\PolicyDetail.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "policydetail_striphtml",
+      "label": "stripHtml()",
+      "file_type": "code",
+      "source_file": "src\\components\\PolicyDetail.jsx",
+      "source_location": "L31"
+    },
+    {
+      "id": "policydetail_tolines",
+      "label": "toLines()",
+      "file_type": "code",
+      "source_file": "src\\components\\PolicyDetail.jsx",
+      "source_location": "L46"
+    },
+    {
+      "id": "policydetail_section",
+      "label": "Section()",
+      "file_type": "code",
+      "source_file": "src\\components\\PolicyDetail.jsx",
+      "source_location": "L52"
+    },
+    {
+      "id": "policydetail_tripdays",
+      "label": "tripDays()",
+      "file_type": "code",
+      "source_file": "src\\components\\PolicyDetail.jsx",
+      "source_location": "L62"
+    },
+    {
+      "id": "policydetail_bracketpremium",
+      "label": "bracketPremium()",
+      "file_type": "code",
+      "source_file": "src\\components\\PolicyDetail.jsx",
+      "source_location": "L69"
+    },
+    {
+      "id": "policydetail_policydetail",
+      "label": "PolicyDetail()",
+      "file_type": "code",
+      "source_file": "src\\components\\PolicyDetail.jsx",
+      "source_location": "L75"
+    },
+    {
+      "id": "src_components_policyeditmodal_jsx",
+      "label": "PolicyEditModal.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\PolicyEditModal.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "policyeditmodal_policyeditmodal",
+      "label": "PolicyEditModal()",
+      "file_type": "code",
+      "source_file": "src\\components\\PolicyEditModal.jsx",
+      "source_location": "L23"
+    },
+    {
+      "id": "src_components_policyshowcase_jsx",
+      "label": "PolicyShowcase.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "policyshowcase_minpremium",
+      "label": "minPremium()",
+      "file_type": "code",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L35"
+    },
+    {
+      "id": "policyshowcase_tripdays",
+      "label": "tripDays()",
+      "file_type": "code",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L41"
+    },
+    {
+      "id": "policyshowcase_bracketpremium",
+      "label": "bracketPremium()",
+      "file_type": "code",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L48"
+    },
+    {
+      "id": "policyshowcase_parsetags",
+      "label": "parseTags()",
+      "file_type": "code",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L55"
+    },
+    {
+      "id": "policyshowcase_fmtprice",
+      "label": "fmtPrice()",
+      "file_type": "code",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L61"
+    },
+    {
+      "id": "policyshowcase_striphtml",
+      "label": "stripHtml()",
+      "file_type": "code",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L67"
+    },
+    {
+      "id": "policyshowcase_insurerlogo",
+      "label": "InsurerLogo()",
+      "file_type": "code",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L72"
+    },
+    {
+      "id": "policyshowcase_insurerprofilemodal",
+      "label": "InsurerProfileModal()",
+      "file_type": "code",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L89"
+    },
+    {
+      "id": "policyshowcase_benefitmodal",
+      "label": "BenefitModal()",
+      "file_type": "code",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L110"
+    },
+    {
+      "id": "policyshowcase_policyshowcase",
+      "label": "PolicyShowcase()",
+      "file_type": "code",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L194"
+    },
+    {
+      "id": "src_components_processsection_jsx",
+      "label": "ProcessSection.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\ProcessSection.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "processsection_processsection",
+      "label": "ProcessSection()",
+      "file_type": "code",
+      "source_file": "src\\components\\ProcessSection.jsx",
+      "source_location": "L10"
+    },
+    {
+      "id": "src_components_profileeditmodal_jsx",
+      "label": "ProfileEditModal.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\ProfileEditModal.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "profileeditmodal_profileeditmodal",
+      "label": "ProfileEditModal()",
+      "file_type": "code",
+      "source_file": "src\\components\\ProfileEditModal.jsx",
+      "source_location": "L13"
+    },
+    {
+      "id": "src_components_quotewizard_jsx",
+      "label": "QuoteWizard.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "quotewizard_tripdays",
+      "label": "tripDays()",
+      "file_type": "code",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L48"
+    },
+    {
+      "id": "quotewizard_bracketpremium",
+      "label": "bracketPremium()",
+      "file_type": "code",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L55"
+    },
+    {
+      "id": "quotewizard_fmt",
+      "label": "fmt()",
+      "file_type": "code",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L61"
+    },
+    {
+      "id": "quotewizard_striphtml",
+      "label": "stripHtml()",
+      "file_type": "code",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L66"
+    },
+    {
+      "id": "quotewizard_coversregion",
+      "label": "coversRegion()",
+      "file_type": "code",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L69"
+    },
+    {
+      "id": "quotewizard_stepbar",
+      "label": "StepBar()",
+      "file_type": "code",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L91"
+    },
+    {
+      "id": "quotewizard_quotewizard",
+      "label": "QuoteWizard()",
+      "file_type": "code",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L122"
+    },
+    {
+      "id": "src_components_register_jsx",
+      "label": "Register.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\Register.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "register_register",
+      "label": "Register()",
+      "file_type": "code",
+      "source_file": "src\\components\\Register.jsx",
+      "source_location": "L4"
+    },
+    {
+      "id": "src_components_trustedpartners_jsx",
+      "label": "TrustedPartners.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\TrustedPartners.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "trustedpartners_trustedpartners",
+      "label": "TrustedPartners()",
+      "file_type": "code",
+      "source_file": "src\\components\\TrustedPartners.jsx",
+      "source_location": "L6"
+    },
+    {
+      "id": "src_components_trustsection_jsx",
+      "label": "TrustSection.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\TrustSection.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "trustsection_trustsection",
+      "label": "TrustSection()",
+      "file_type": "code",
+      "source_file": "src\\components\\TrustSection.jsx",
+      "source_location": "L13"
+    },
+    {
+      "id": "src_components_verifypolicy_jsx",
+      "label": "VerifyPolicy.jsx",
+      "file_type": "code",
+      "source_file": "src\\components\\VerifyPolicy.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "verifypolicy_getstatusmeta",
+      "label": "getStatusMeta()",
+      "file_type": "code",
+      "source_file": "src\\components\\VerifyPolicy.jsx",
+      "source_location": "L14"
+    },
+    {
+      "id": "verifypolicy_verifypolicy",
+      "label": "VerifyPolicy()",
+      "file_type": "code",
+      "source_file": "src\\components\\VerifyPolicy.jsx",
+      "source_location": "L17"
+    },
+    {
+      "id": "src_lib_authcontext_jsx",
+      "label": "AuthContext.jsx",
+      "file_type": "code",
+      "source_file": "src\\lib\\AuthContext.jsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "authcontext_authprovider",
+      "label": "AuthProvider()",
+      "file_type": "code",
+      "source_file": "src\\lib\\AuthContext.jsx",
+      "source_location": "L47"
+    },
+    {
+      "id": "authcontext_useauth",
+      "label": "useAuth()",
+      "file_type": "code",
+      "source_file": "src\\lib\\AuthContext.jsx",
+      "source_location": "L229"
+    },
+    {
+      "id": "src_lib_graphql_js",
+      "label": "graphql.js",
+      "file_type": "code",
+      "source_file": "src\\lib\\graphql.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "graphql_getauthheaders",
+      "label": "getAuthHeaders()",
+      "file_type": "code",
+      "source_file": "src\\lib\\graphql.js",
+      "source_location": "L7"
+    },
+    {
+      "id": "src_lib_useresponsive_js",
+      "label": "useResponsive.js",
+      "file_type": "code",
+      "source_file": "src\\lib\\useResponsive.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "useresponsive_getbreakpoints",
+      "label": "getBreakpoints()",
+      "file_type": "code",
+      "source_file": "src\\lib\\useResponsive.js",
+      "source_location": "L3"
+    },
+    {
+      "id": "useresponsive_useresponsive",
+      "label": "useResponsive()",
+      "file_type": "code",
+      "source_file": "src\\lib\\useResponsive.js",
+      "source_location": "L9"
+    },
+    {
+      "id": "aar_insurance",
+      "label": "AAR Insurance",
+      "file_type": "image",
+      "source_file": "src/assets/logos/aar_logo.png"
+    },
+    {
+      "id": "britam_insurance",
+      "label": "Britam Insurance",
+      "file_type": "image",
+      "source_file": "src/assets/logos/britam_logo.png"
+    },
+    {
+      "id": "cic_insurance",
+      "label": "CIC Group",
+      "file_type": "image",
+      "source_file": "src/assets/logos/cic_logo.png"
+    },
+    {
+      "id": "heritage_insurance",
+      "label": "Heritage Insurance",
+      "file_type": "image",
+      "source_file": "src/assets/logos/heritage_logo.png"
+    },
+    {
+      "id": "jubilee_insurance",
+      "label": "Jubilee Insurance",
+      "file_type": "image",
+      "source_file": "src/assets/logos/jubilee_logo.png"
+    },
+    {
+      "id": "orient_insurance",
+      "label": "Orient Insurance",
+      "file_type": "image",
+      "source_file": "src/assets/logos/orient_logo.png"
+    },
+    {
+      "id": "resolution_insurance",
+      "label": "Resolution Insurance",
+      "file_type": "image",
+      "source_file": "src/assets/logos/resolution_logo.png"
+    },
+    {
+      "id": "uap_insurance",
+      "label": "UAP Old Mutual",
+      "file_type": "image",
+      "source_file": "src/assets/logos/uap_logo.png"
+    },
+    {
+      "id": "insurance_partners",
+      "label": "Insurance Partners",
+      "file_type": "document",
+      "source_file": "src/components/TrustedPartners.jsx"
+    },
+    {
+      "id": "maljani_hero",
+      "label": "Maljani Hero Banner",
+      "file_type": "image",
+      "source_file": "src/assets/hero.png"
+    },
+    {
+      "id": "react_framework",
+      "label": "React Framework",
+      "file_type": "image",
+      "source_file": "src/assets/react.svg"
+    },
+    {
+      "id": "vite_bundler",
+      "label": "Vite Build Tool",
+      "file_type": "image",
+      "source_file": "src/assets/vite.svg"
+    }
+  ],
+  "edges": [
+    {
+      "source": "src_app_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "urql",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_lib_graphql",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_lib_authcontext",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_components_landingpage",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_components_quotewizard",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_components_header",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_components_footer",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_components_login",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_components_register",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_components_dashboard",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_components_policydetail",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_components_catalog",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_components_verifypolicy",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_components_aboutpage",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "src_components_agenciespage",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "app_appcontent",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L18",
+      "weight": 1.0
+    },
+    {
+      "source": "src_app_jsx",
+      "target": "app_app",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\App.jsx",
+      "source_location": "L160",
+      "weight": 1.0
+    },
+    {
+      "source": "src_main_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\main.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_main_jsx",
+      "target": "client",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\main.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_main_jsx",
+      "target": "src_index_css",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\main.jsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_main_jsx",
+      "target": "src_app_tsx",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\main.jsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_aboutpage_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AboutPage.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_aboutpage_jsx",
+      "target": "src_components_lib_useresponsive",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AboutPage.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_aboutpage_jsx",
+      "target": "aboutpage_aboutpage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AboutPage.jsx",
+      "source_location": "L27",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agenciespage_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgenciesPage.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agenciespage_jsx",
+      "target": "src_components_lib_authcontext",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgenciesPage.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agenciespage_jsx",
+      "target": "src_components_lib_useresponsive",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgenciesPage.jsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agenciespage_jsx",
+      "target": "agenciespage_agenciespage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgenciesPage.jsx",
+      "source_location": "L44",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agentdashboard_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agentdashboard_jsx",
+      "target": "urql",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agentdashboard_jsx",
+      "target": "src_components_lib_authcontext",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agentdashboard_jsx",
+      "target": "src_components_lib_useresponsive",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agentdashboard_jsx",
+      "target": "src_components_profileeditmodal",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agentdashboard_jsx",
+      "target": "src_components_notificationpanel",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agentdashboard_jsx",
+      "target": "src_components_policyeditmodal",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agentdashboard_jsx",
+      "target": "src_components_assignclientmodal",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agentdashboard_jsx",
+      "target": "agentdashboard_fmtkes",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L48",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agentdashboard_jsx",
+      "target": "agentdashboard_fmtdate",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L49",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agentdashboard_jsx",
+      "target": "agentdashboard_fmtmonth",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L50",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agentdashboard_jsx",
+      "target": "agentdashboard_getps",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L66",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agentdashboard_jsx",
+      "target": "agentdashboard_getcomm",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L74",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agentdashboard_jsx",
+      "target": "agentdashboard_getpay",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L81",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agentdashboard_jsx",
+      "target": "agentdashboard_barchart",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L87",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agentdashboard_jsx",
+      "target": "agentdashboard_donutchart",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L120",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agentdashboard_jsx",
+      "target": "agentdashboard_badge",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L166",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_agentdashboard_jsx",
+      "target": "agentdashboard_agentdashboard",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L190",
+      "weight": 1.0
+    },
+    {
+      "source": "agentdashboard_agentdashboard",
+      "target": "agentdashboard_fmtkes",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L628",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_assignclientmodal_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AssignClientModal.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_assignclientmodal_jsx",
+      "target": "urql",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AssignClientModal.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_assignclientmodal_jsx",
+      "target": "src_components_lib_useresponsive",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AssignClientModal.jsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_assignclientmodal_jsx",
+      "target": "assignclientmodal_assignclientmodal",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\AssignClientModal.jsx",
+      "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_catalog_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Catalog.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_catalog_jsx",
+      "target": "src_components_policyshowcase",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Catalog.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_catalog_jsx",
+      "target": "catalog_catalog",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Catalog.jsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_categoryfilters_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\CategoryFilters.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_categoryfilters_jsx",
+      "target": "urql",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\CategoryFilters.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_categoryfilters_jsx",
+      "target": "src_components_lib_useresponsive",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\CategoryFilters.jsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_categoryfilters_jsx",
+      "target": "categoryfilters_categoryfilters",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\CategoryFilters.jsx",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_dashboard_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Dashboard.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_dashboard_jsx",
+      "target": "src_components_lib_authcontext",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Dashboard.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_dashboard_jsx",
+      "target": "src_components_insureddashboard",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Dashboard.jsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_dashboard_jsx",
+      "target": "src_components_agentdashboard",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Dashboard.jsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_dashboard_jsx",
+      "target": "dashboard_dashboard",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Dashboard.jsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_faqsection_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\FAQSection.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_faqsection_jsx",
+      "target": "src_components_lib_useresponsive",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\FAQSection.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_faqsection_jsx",
+      "target": "faqsection_faqsection",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\FAQSection.jsx",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_footer_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Footer.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_footer_jsx",
+      "target": "src_components_lib_useresponsive",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Footer.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_footer_jsx",
+      "target": "footer_footer",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Footer.jsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_header_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Header.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_header_jsx",
+      "target": "src_components_lib_authcontext",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Header.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_header_jsx",
+      "target": "header_header",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Header.jsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_hero_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Hero.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_hero_jsx",
+      "target": "urql",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Hero.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_hero_jsx",
+      "target": "src_components_lib_authcontext",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Hero.jsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_hero_jsx",
+      "target": "src_components_lib_useresponsive",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Hero.jsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_hero_jsx",
+      "target": "hero_hero",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Hero.jsx",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_insureddashboard_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\InsuredDashboard.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_insureddashboard_jsx",
+      "target": "urql",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\InsuredDashboard.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_insureddashboard_jsx",
+      "target": "src_components_lib_authcontext",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\InsuredDashboard.jsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_insureddashboard_jsx",
+      "target": "src_components_lib_useresponsive",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\InsuredDashboard.jsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_insureddashboard_jsx",
+      "target": "src_components_profileeditmodal",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\InsuredDashboard.jsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_insureddashboard_jsx",
+      "target": "src_components_notificationpanel",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\InsuredDashboard.jsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_insureddashboard_jsx",
+      "target": "insureddashboard_getps",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\InsuredDashboard.jsx",
+      "source_location": "L40",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_insureddashboard_jsx",
+      "target": "insureddashboard_getpay",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\InsuredDashboard.jsx",
+      "source_location": "L47",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_insureddashboard_jsx",
+      "target": "insureddashboard_fmtdate",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\InsuredDashboard.jsx",
+      "source_location": "L49",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_insureddashboard_jsx",
+      "target": "insureddashboard_fmtkes",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\InsuredDashboard.jsx",
+      "source_location": "L50",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_insureddashboard_jsx",
+      "target": "src_components_messaging",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\InsuredDashboard.jsx",
+      "source_location": "L52",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_insureddashboard_jsx",
+      "target": "insureddashboard_insureddashboard",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\InsuredDashboard.jsx",
+      "source_location": "L54",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "src_components_lib_authcontext",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "src_components_lib_useresponsive",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "src_components_hero",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "src_components_categoryfilters",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "src_components_trustsection",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "src_components_processsection",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "src_components_policyshowcase",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "src_components_faqsection",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "src_components_trustedpartners",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "landingpage_parsetags",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "landingpage_fmtprice",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "landingpage_getdisplayfeatures",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L22",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "landingpage_parsebenefits",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L35",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "landingpage_normalizebenefit",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L48",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "landingpage_keywords",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L51",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "landingpage_findcommonbenefits",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L55",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "landingpage_policyhasbenefit",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L71",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "landingpage_tripdays",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L82",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "landingpage_bracketpremium",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L89",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "landingpage_comparebar",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L100",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "landingpage_sectionrow",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L133",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "landingpage_comparedatepicker",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L150",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "landingpage_comparemodal",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L225",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_landingpage_jsx",
+      "target": "landingpage_landingpage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L541",
+      "weight": 1.0
+    },
+    {
+      "source": "landingpage_keywords",
+      "target": "landingpage_normalizebenefit",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L52",
+      "weight": 1.0
+    },
+    {
+      "source": "landingpage_policyhasbenefit",
+      "target": "landingpage_keywords",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L72",
+      "weight": 1.0
+    },
+    {
+      "source": "landingpage_policyhasbenefit",
+      "target": "landingpage_normalizebenefit",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L74",
+      "weight": 1.0
+    },
+    {
+      "source": "landingpage_comparedatepicker",
+      "target": "landingpage_tripdays",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L157",
+      "weight": 1.0
+    },
+    {
+      "source": "landingpage_comparemodal",
+      "target": "landingpage_findcommonbenefits",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L230",
+      "weight": 1.0
+    },
+    {
+      "source": "landingpage_comparemodal",
+      "target": "landingpage_tripdays",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L515",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_login_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Login.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_login_jsx",
+      "target": "src_components_lib_authcontext",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Login.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_login_jsx",
+      "target": "login_login",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Login.jsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_messaging_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Messaging.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_messaging_jsx",
+      "target": "src_components_lib_authcontext",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Messaging.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_messaging_jsx",
+      "target": "messaging_messaging",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Messaging.jsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_notificationpanel_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\NotificationPanel.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_notificationpanel_jsx",
+      "target": "urql",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\NotificationPanel.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_notificationpanel_jsx",
+      "target": "src_components_lib_authcontext",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\NotificationPanel.jsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_notificationpanel_jsx",
+      "target": "src_components_lib_useresponsive",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\NotificationPanel.jsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_notificationpanel_jsx",
+      "target": "notificationpanel_meta",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\NotificationPanel.jsx",
+      "source_location": "L37",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_notificationpanel_jsx",
+      "target": "notificationpanel_timeago",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\NotificationPanel.jsx",
+      "source_location": "L39",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_notificationpanel_jsx",
+      "target": "notificationpanel_notificationpanel",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\NotificationPanel.jsx",
+      "source_location": "L49",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policydetail_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyDetail.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policydetail_jsx",
+      "target": "urql",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyDetail.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policydetail_jsx",
+      "target": "src_components_lib_useresponsive",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyDetail.jsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policydetail_jsx",
+      "target": "policydetail_striphtml",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyDetail.jsx",
+      "source_location": "L31",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policydetail_jsx",
+      "target": "policydetail_tolines",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyDetail.jsx",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policydetail_jsx",
+      "target": "policydetail_section",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyDetail.jsx",
+      "source_location": "L52",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policydetail_jsx",
+      "target": "policydetail_tripdays",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyDetail.jsx",
+      "source_location": "L62",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policydetail_jsx",
+      "target": "policydetail_bracketpremium",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyDetail.jsx",
+      "source_location": "L69",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policydetail_jsx",
+      "target": "policydetail_policydetail",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyDetail.jsx",
+      "source_location": "L75",
+      "weight": 1.0
+    },
+    {
+      "source": "policydetail_policydetail",
+      "target": "policydetail_tolines",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyDetail.jsx",
+      "source_location": "L110",
+      "weight": 1.0
+    },
+    {
+      "source": "policydetail_policydetail",
+      "target": "policydetail_tripdays",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyDetail.jsx",
+      "source_location": "L118",
+      "weight": 1.0
+    },
+    {
+      "source": "policydetail_policydetail",
+      "target": "policydetail_bracketpremium",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyDetail.jsx",
+      "source_location": "L119",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policyeditmodal_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyEditModal.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policyeditmodal_jsx",
+      "target": "urql",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyEditModal.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policyeditmodal_jsx",
+      "target": "src_components_lib_useresponsive",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyEditModal.jsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policyeditmodal_jsx",
+      "target": "policyeditmodal_policyeditmodal",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyEditModal.jsx",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policyshowcase_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policyshowcase_jsx",
+      "target": "urql",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policyshowcase_jsx",
+      "target": "src_components_lib_useresponsive",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policyshowcase_jsx",
+      "target": "policyshowcase_minpremium",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L35",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policyshowcase_jsx",
+      "target": "policyshowcase_tripdays",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L41",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policyshowcase_jsx",
+      "target": "policyshowcase_bracketpremium",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L48",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policyshowcase_jsx",
+      "target": "policyshowcase_parsetags",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L55",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policyshowcase_jsx",
+      "target": "policyshowcase_fmtprice",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L61",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policyshowcase_jsx",
+      "target": "policyshowcase_striphtml",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L67",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policyshowcase_jsx",
+      "target": "policyshowcase_insurerlogo",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L72",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policyshowcase_jsx",
+      "target": "policyshowcase_insurerprofilemodal",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L89",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policyshowcase_jsx",
+      "target": "policyshowcase_benefitmodal",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L110",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_policyshowcase_jsx",
+      "target": "policyshowcase_policyshowcase",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L194",
+      "weight": 1.0
+    },
+    {
+      "source": "policyshowcase_benefitmodal",
+      "target": "policyshowcase_parsetags",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L113",
+      "weight": 1.0
+    },
+    {
+      "source": "policyshowcase_benefitmodal",
+      "target": "policyshowcase_minpremium",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L114",
+      "weight": 1.0
+    },
+    {
+      "source": "policyshowcase_benefitmodal",
+      "target": "policyshowcase_striphtml",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L121",
+      "weight": 1.0
+    },
+    {
+      "source": "policyshowcase_benefitmodal",
+      "target": "policyshowcase_fmtprice",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L144",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_processsection_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\ProcessSection.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_processsection_jsx",
+      "target": "src_components_lib_useresponsive",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\ProcessSection.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_processsection_jsx",
+      "target": "processsection_processsection",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\ProcessSection.jsx",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_profileeditmodal_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\ProfileEditModal.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_profileeditmodal_jsx",
+      "target": "src_components_lib_authcontext",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\ProfileEditModal.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_profileeditmodal_jsx",
+      "target": "src_components_lib_useresponsive",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\ProfileEditModal.jsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_profileeditmodal_jsx",
+      "target": "profileeditmodal_profileeditmodal",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\ProfileEditModal.jsx",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_quotewizard_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_quotewizard_jsx",
+      "target": "urql",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_quotewizard_jsx",
+      "target": "src_components_lib_authcontext",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_quotewizard_jsx",
+      "target": "src_components_lib_useresponsive",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_quotewizard_jsx",
+      "target": "quotewizard_tripdays",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L48",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_quotewizard_jsx",
+      "target": "quotewizard_bracketpremium",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L55",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_quotewizard_jsx",
+      "target": "quotewizard_fmt",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L61",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_quotewizard_jsx",
+      "target": "quotewizard_striphtml",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L66",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_quotewizard_jsx",
+      "target": "quotewizard_coversregion",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L69",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_quotewizard_jsx",
+      "target": "quotewizard_stepbar",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L91",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_quotewizard_jsx",
+      "target": "quotewizard_quotewizard",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L122",
+      "weight": 1.0
+    },
+    {
+      "source": "quotewizard_quotewizard",
+      "target": "quotewizard_tripdays",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L248",
+      "weight": 1.0
+    },
+    {
+      "source": "quotewizard_quotewizard",
+      "target": "quotewizard_bracketpremium",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L269",
+      "weight": 1.0
+    },
+    {
+      "source": "quotewizard_quotewizard",
+      "target": "quotewizard_fmt",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L666",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_register_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Register.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_register_jsx",
+      "target": "src_components_lib_authcontext",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Register.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_register_jsx",
+      "target": "register_register",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\Register.jsx",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_trustedpartners_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\TrustedPartners.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_trustedpartners_jsx",
+      "target": "src_components_lib_useresponsive",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\TrustedPartners.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_trustedpartners_jsx",
+      "target": "trustedpartners_trustedpartners",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\TrustedPartners.jsx",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_trustsection_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\TrustSection.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_trustsection_jsx",
+      "target": "src_components_lib_useresponsive",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\TrustSection.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_trustsection_jsx",
+      "target": "trustsection_trustsection",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\TrustSection.jsx",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_verifypolicy_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\VerifyPolicy.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_verifypolicy_jsx",
+      "target": "verifypolicy_getstatusmeta",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\VerifyPolicy.jsx",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "src_components_verifypolicy_jsx",
+      "target": "verifypolicy_verifypolicy",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\VerifyPolicy.jsx",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "verifypolicy_verifypolicy",
+      "target": "verifypolicy_getstatusmeta",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\components\\VerifyPolicy.jsx",
+      "source_location": "L50",
+      "weight": 1.0
+    },
+    {
+      "source": "src_lib_authcontext_jsx",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\lib\\AuthContext.jsx",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_lib_authcontext_jsx",
+      "target": "src_lib_graphql",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\lib\\AuthContext.jsx",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "src_lib_authcontext_jsx",
+      "target": "authcontext_authprovider",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\lib\\AuthContext.jsx",
+      "source_location": "L47",
+      "weight": 1.0
+    },
+    {
+      "source": "src_lib_authcontext_jsx",
+      "target": "authcontext_useauth",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\lib\\AuthContext.jsx",
+      "source_location": "L229",
+      "weight": 1.0
+    },
+    {
+      "source": "src_lib_graphql_js",
+      "target": "urql",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\lib\\graphql.js",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_lib_graphql_js",
+      "target": "graphql_getauthheaders",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\lib\\graphql.js",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "src_lib_useresponsive_js",
+      "target": "react",
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\lib\\useResponsive.js",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "src_lib_useresponsive_js",
+      "target": "useresponsive_getbreakpoints",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\lib\\useResponsive.js",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "src_lib_useresponsive_js",
+      "target": "useresponsive_useresponsive",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\lib\\useResponsive.js",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "aboutpage_aboutpage",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\AboutPage.jsx",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "agenciespage_agenciespage",
+      "target": "authcontext_useauth",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\AgenciesPage.jsx",
+      "source_location": "L45",
+      "weight": 1.0
+    },
+    {
+      "source": "agenciespage_agenciespage",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\AgenciesPage.jsx",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "agentdashboard_agentdashboard",
+      "target": "authcontext_useauth",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L191",
+      "weight": 1.0
+    },
+    {
+      "source": "agentdashboard_agentdashboard",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\AgentDashboard.jsx",
+      "source_location": "L192",
+      "weight": 1.0
+    },
+    {
+      "source": "assignclientmodal_assignclientmodal",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\AssignClientModal.jsx",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "categoryfilters_categoryfilters",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\CategoryFilters.jsx",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "dashboard_dashboard",
+      "target": "authcontext_useauth",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\Dashboard.jsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "faqsection_faqsection",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\FAQSection.jsx",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "footer_footer",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\Footer.jsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "header_header",
+      "target": "authcontext_useauth",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\Header.jsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "hero_hero",
+      "target": "authcontext_useauth",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\Hero.jsx",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "hero_hero",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\Hero.jsx",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "insureddashboard_insureddashboard",
+      "target": "authcontext_useauth",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\InsuredDashboard.jsx",
+      "source_location": "L55",
+      "weight": 1.0
+    },
+    {
+      "source": "insureddashboard_insureddashboard",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\InsuredDashboard.jsx",
+      "source_location": "L56",
+      "weight": 1.0
+    },
+    {
+      "source": "landingpage_comparebar",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L101",
+      "weight": 1.0
+    },
+    {
+      "source": "landingpage_comparedatepicker",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L151",
+      "weight": 1.0
+    },
+    {
+      "source": "landingpage_comparemodal",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L226",
+      "weight": 1.0
+    },
+    {
+      "source": "landingpage_landingpage",
+      "target": "authcontext_useauth",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L542",
+      "weight": 1.0
+    },
+    {
+      "source": "landingpage_landingpage",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\LandingPage.jsx",
+      "source_location": "L543",
+      "weight": 1.0
+    },
+    {
+      "source": "login_login",
+      "target": "authcontext_useauth",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\Login.jsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "messaging_messaging",
+      "target": "authcontext_useauth",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\Messaging.jsx",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "notificationpanel_notificationpanel",
+      "target": "authcontext_useauth",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\NotificationPanel.jsx",
+      "source_location": "L50",
+      "weight": 1.0
+    },
+    {
+      "source": "notificationpanel_notificationpanel",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\NotificationPanel.jsx",
+      "source_location": "L51",
+      "weight": 1.0
+    },
+    {
+      "source": "policydetail_policydetail",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\PolicyDetail.jsx",
+      "source_location": "L76",
+      "weight": 1.0
+    },
+    {
+      "source": "policydetail_policydetail",
+      "target": "insureddashboard_fmtkes",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\PolicyDetail.jsx",
+      "source_location": "L310",
+      "weight": 1.0
+    },
+    {
+      "source": "policyeditmodal_policyeditmodal",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\PolicyEditModal.jsx",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "policyshowcase_insurerprofilemodal",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L90",
+      "weight": 1.0
+    },
+    {
+      "source": "policyshowcase_benefitmodal",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L111",
+      "weight": 1.0
+    },
+    {
+      "source": "policyshowcase_policyshowcase",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\PolicyShowcase.jsx",
+      "source_location": "L195",
+      "weight": 1.0
+    },
+    {
+      "source": "processsection_processsection",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\ProcessSection.jsx",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "profileeditmodal_profileeditmodal",
+      "target": "authcontext_useauth",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\ProfileEditModal.jsx",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "profileeditmodal_profileeditmodal",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\ProfileEditModal.jsx",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "quotewizard_quotewizard",
+      "target": "authcontext_useauth",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L123",
+      "weight": 1.0
+    },
+    {
+      "source": "quotewizard_quotewizard",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\QuoteWizard.jsx",
+      "source_location": "L124",
+      "weight": 1.0
+    },
+    {
+      "source": "register_register",
+      "target": "authcontext_useauth",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\Register.jsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "trustedpartners_trustedpartners",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\TrustedPartners.jsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "trustsection_trustsection",
+      "target": "useresponsive_useresponsive",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\components\\TrustSection.jsx",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "aar_insurance",
+      "target": "insurance_partners",
+      "relation": "member_of",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/TrustedPartners.jsx",
+      "weight": 1.0
+    },
+    {
+      "source": "britam_insurance",
+      "target": "insurance_partners",
+      "relation": "member_of",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/TrustedPartners.jsx",
+      "weight": 1.0
+    },
+    {
+      "source": "cic_insurance",
+      "target": "insurance_partners",
+      "relation": "member_of",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/TrustedPartners.jsx",
+      "weight": 1.0
+    },
+    {
+      "source": "heritage_insurance",
+      "target": "insurance_partners",
+      "relation": "member_of",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/TrustedPartners.jsx",
+      "weight": 1.0
+    },
+    {
+      "source": "jubilee_insurance",
+      "target": "insurance_partners",
+      "relation": "member_of",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/TrustedPartners.jsx",
+      "weight": 1.0
+    },
+    {
+      "source": "orient_insurance",
+      "target": "insurance_partners",
+      "relation": "member_of",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/TrustedPartners.jsx",
+      "weight": 1.0
+    },
+    {
+      "source": "resolution_insurance",
+      "target": "insurance_partners",
+      "relation": "member_of",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/TrustedPartners.jsx",
+      "weight": 1.0
+    },
+    {
+      "source": "uap_insurance",
+      "target": "insurance_partners",
+      "relation": "member_of",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/TrustedPartners.jsx",
+      "weight": 1.0
+    },
+    {
+      "source": "maljani_hero",
+      "target": "insurance_partners",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.7,
+      "source_file": "src/assets/hero.png",
+      "weight": 0.7
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "kenyan_insurers",
+      "label": "Kenyan Insurance Partners",
+      "nodes": [
+        "aar_insurance",
+        "britam_insurance",
+        "cic_insurance",
+        "heritage_insurance",
+        "jubilee_insurance",
+        "orient_insurance",
+        "resolution_insurance",
+        "uap_insurance"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/TrustedPartners.jsx"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}
