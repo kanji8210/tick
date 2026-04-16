@@ -67,20 +67,36 @@ const InsuredDashboard = ({ user, onNavigate }) => {
   const WP_REST_BASE = import.meta.env.VITE_GRAPHQL_URL
     ? import.meta.env.VITE_GRAPHQL_URL.replace(/\/graphql$/, '') + '/wp-json'
     : '/wp-json';
+  const APP_SECRET = import.meta.env.VITE_APP_SECRET ?? '';
+  const restHeaders = () => {
+    const h = { 'Accept': 'application/json', 'X-Maljani-App-Secret': APP_SECRET };
+    if (authUser?.token) h['Authorization'] = `Bearer ${authUser.token}`;
+    return h;
+  };
 
   /** Open invoice in a new tab */
   const handleViewInvoice = async (saleId) => {
     setActionLoading(saleId);
     try {
       const res = await fetch(`${WP_REST_BASE}/maljani/v1/invoice/${saleId}?doc_type=invoice`, {
-        headers: { Authorization: `Bearer ${authUser.token}` },
+        headers: restHeaders(),
       });
-      if (!res.ok) throw new Error('Failed to load invoice');
+      if (!res.ok) {
+        const errBody = await res.text().catch(() => '');
+        console.error('Invoice error:', res.status, errBody);
+        throw new Error(`Server returned ${res.status}`);
+      }
       const data = await res.json();
-      const win = window.open('', '_blank');
-      if (win) { win.document.write(data.html); win.document.close(); }
-    } catch {
-      alert('Could not load the invoice. Please try again.');
+      if (data.html) {
+        const win = window.open('', '_blank');
+        if (win) { win.document.write(data.html); win.document.close(); }
+      } else if (data.url) {
+        window.open(data.url, '_blank');
+      } else {
+        throw new Error('No invoice content returned');
+      }
+    } catch (e) {
+      alert(`Could not load the invoice. ${e.message}`);
     } finally {
       setActionLoading(null);
     }
@@ -92,10 +108,7 @@ const InsuredDashboard = ({ user, onNavigate }) => {
     try {
       const res = await fetch(`${WP_REST_BASE}/maljani/v1/initiate-payment`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${authUser.token}`,
-        },
+        headers: { ...restHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ saleId }),
       });
       const data = await res.json();

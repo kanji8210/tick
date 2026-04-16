@@ -140,12 +140,13 @@ const Hero = ({ onStart, onNavigate }) => {
                     <em style={{ color: "#22c55e", fontStyle: "normal" }}>{t[0]}</em>{t.slice(1)}
                   </span>
                 ))}
-                <button
-                  onClick={() => onNavigate?.('verify')}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--gold)', fontWeight: 600, padding: 0, textDecoration: 'underline', textUnderlineOffset: 3 }}
+                <a
+                  href="#verify"
+                  onClick={(e) => { e.preventDefault(); onNavigate?.('verify'); }}
+                  style={{ fontSize: 13, color: 'var(--gold)', fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 3 }}
                 >
                   Verify a certificate →
-                </button>
+                </a>
               </div>
             </div>
           )}
@@ -153,7 +154,7 @@ const Hero = ({ onStart, onNavigate }) => {
           {/* ── Right column ── */}
           {isAgent ? (
             /* Agency dashboard mockup */
-            <div className="reveal reveal-delay-2" style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", borderRadius: "var(--radius-lg)", padding: 24, fontFamily: "var(--font-body)", animation: "float 7s ease-in-out infinite" }}>
+            <div className="reveal reveal-delay-2" style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", borderRadius: "var(--radius-lg)", padding: 24, fontFamily: "var(--font-body)", animation: "float 7s ease-in-out infinite", display: mobile ? 'none' : undefined }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
                 {["#ff5f57","#febc2e","#28c840"].map(c => <div key={c} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />)}
                 <span style={{ fontSize: 11, color: "var(--slate)", marginLeft: 8 }}>Agency Dashboard</span>
@@ -169,13 +170,13 @@ const Hero = ({ onStart, onNavigate }) => {
               </div>
             </div>
           ) : (
-            /* Consumer quote wizard card */
-            <div className="reveal reveal-delay-2">
+            /* Consumer quote wizard card — hidden on mobile */
+            <div className="reveal reveal-delay-2" style={{ display: mobile ? 'none' : undefined }}>
               <div style={{
                 background: "var(--glass-bg-md)", border: "1px solid var(--glass-border-bright)",
-                borderRadius: mobile ? "var(--radius-lg)" : "var(--radius-xl)", padding: mobile ? 20 : 32, backdropFilter: "blur(24px)",
+                borderRadius: "var(--radius-xl)", padding: 32, backdropFilter: "blur(24px)",
                 boxShadow: "var(--shadow-card), inset 0 1px 0 rgba(255,255,255,0.08)",
-                position: "relative", overflow: "hidden", animation: mobile ? "none" : "float 7s ease-in-out infinite",
+                position: "relative", overflow: "hidden", animation: "float 7s ease-in-out infinite",
               }} role="form" aria-label="Get an insurance quote">
                 <div style={{ position: "absolute", top: -1, left: 20, right: 20, height: 2, background: "linear-gradient(90deg,transparent,var(--indigo-glow),transparent)", borderRadius: 2 }} />
                 <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, marginBottom: 6 }}>Get Your Quote</h2>

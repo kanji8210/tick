@@ -244,8 +244,8 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
   const effectiveEmail = user?.email || form.email;
   const accountEmail = user?.email || form.email;
   const accountName = user?.name || form.name;
-  const shouldAskName = isLoggedIn && !effectiveName;
-  const shouldAskEmail = isLoggedIn && !effectiveEmail;
+  const shouldAskName = !isLoggedIn || !effectiveName;
+  const shouldAskEmail = !isLoggedIn || !effectiveEmail;
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
