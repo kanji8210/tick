@@ -77,10 +77,11 @@ const InsuredDashboard = ({ user, onNavigate }) => {
   /** Open invoice in a new tab */
   const handleViewInvoice = async (saleId) => {
     setActionLoading(saleId);
+    const url = `${WP_REST_BASE}/maljani/v1/invoice/${saleId}?doc_type=invoice`;
+    const hdrs = restHeaders();
+    console.log('Invoice fetch:', url, 'hasToken:', !!hdrs.Authorization);
     try {
-      const res = await fetch(`${WP_REST_BASE}/maljani/v1/invoice/${saleId}?doc_type=invoice`, {
-        headers: restHeaders(),
-      });
+      const res = await fetch(url, { headers: hdrs });
       if (!res.ok) {
         const errBody = await res.text().catch(() => '');
         console.error('Invoice error:', res.status, errBody);
