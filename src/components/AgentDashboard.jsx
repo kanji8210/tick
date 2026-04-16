@@ -383,7 +383,7 @@ const AgentDashboard = ({ user, onNavigate }) => {
         paddingBottom: 0,
       }}>
         {TABS.map(t => (
-          <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
+          <button key={t.id} onClick={() => { setActiveTab(t.id); setSelectedSale(null); }} style={{
             background: 'none', border: 'none', cursor: 'pointer',
             padding: mobile ? '0.6rem 0.7rem' : '0.7rem 1.1rem',
             fontSize: mobile ? '0.72rem' : '0.78rem', fontWeight: 600,
