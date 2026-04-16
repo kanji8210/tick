@@ -88,10 +88,13 @@ const inputStyle = {
 
 /* ─── Step indicators ─────────────────────────────────────────────────────── */
 const STEPS = ['Trip Details', 'Choose Plan', 'Your Info', 'Confirmed'];
+const STEPS_AGENT = ['Client Trip', 'Choose Plan', 'Client Info', 'Confirmed'];
 
-const StepBar = ({ step }) => (
+const StepBar = ({ step, isAgent }) => {
+  const steps = isAgent ? STEPS_AGENT : STEPS;
+  return (
   <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 28 }}>
-    {STEPS.map((label, i) => {
+    {steps.map((label, i) => {
       const active  = i + 1 === step;
       const done    = i + 1 < step;
       return (
@@ -110,14 +113,15 @@ const StepBar = ({ step }) => (
               {label}
             </span>
           </div>
-          {i < STEPS.length - 1 && (
+          {i < steps.length - 1 && (
             <div style={{ flex: 1, height: 2, background: done ? 'var(--gold)' : 'var(--glass-border)', marginBottom: 20, maxWidth: 40 }} />
           )}
         </React.Fragment>
       );
     })}
   </div>
-);
+  );
+};
 
 /* ─── Component ───────────────────────────────────────────────────────────── */
 const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initialStep = 1, onNavigate }) => {
@@ -349,9 +353,9 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
   /* ── Step 1 — Trip Details ── */
   if (step === 1) return (
     <div className="glass-card fade-in" style={{ padding: '2rem' }}>
-      <StepBar step={1} />
+      <StepBar step={1} isAgent={isAgent} />
       <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, marginBottom: 24 }}>
-        Your Trip <span style={{ color: 'var(--gold)' }}>Details</span>
+        {isAgent ? "Client's Travel" : 'Your Trip'} <span style={{ color: 'var(--gold)' }}>Details</span>
       </h3>
 
       <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 16 }}>
@@ -433,7 +437,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
   /* ── Step 2 — Choose Plan ── */
   if (step === 2) return (
     <div className="glass-card fade-in" style={{ padding: '2rem' }}>
-      <StepBar step={2} />
+      <StepBar step={2} isAgent={isAgent} />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
         <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, margin: 0 }}>
           Available <span style={{ color: 'var(--gold)' }}>Plans</span>
@@ -608,6 +612,19 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
                   )}
                   <button
                     type="button"
+                    onClick={e => { e.stopPropagation(); e.preventDefault(); set('selectedPolicy', policy); setStep(3); }}
+                    style={{
+                      padding: '6px 16px', borderRadius: 100, fontSize: 11, fontWeight: 800, cursor: 'pointer',
+                      border: 'none',
+                      background: 'linear-gradient(135deg, var(--gold), #b8941f)',
+                      color: '#0f172a',
+                      transition: 'all 0.15s',
+                      whiteSpace: 'nowrap',
+                    }}>
+                    Get This →
+                  </button>
+                  <button
+                    type="button"
                     onClick={e => { e.stopPropagation(); e.preventDefault(); toggleCompare(policy.databaseId); }}
                     style={{
                       padding: '5px 13px', borderRadius: 100, fontSize: 11, fontWeight: 700, cursor: 'pointer',
@@ -652,9 +669,9 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
     const total = prem !== null ? prem * form.passengers : null;
     return (
       <div className="glass-card fade-in" style={{ padding: '2rem' }}>
-        <StepBar step={3} />
+        <StepBar step={3} isAgent={isAgent} />
         <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, marginBottom: 6 }}>
-          Your <span style={{ color: 'var(--gold)' }}>Details</span>
+          {isAgent ? 'Client' : 'Your'} <span style={{ color: 'var(--gold)' }}>Details</span>
         </h3>
 
         {/* Summary strip — editable dates */}
