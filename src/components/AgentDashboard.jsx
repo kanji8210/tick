@@ -191,6 +191,14 @@ const TABS = [
  *  MAIN COMPONENT
  * ═══════════════════════════════════════════════════════════════════ */
 
+/** Extract numeric DB id from a WPGraphQL global id (base64) or plain number */
+const toNumericId = (id) => {
+  if (/^\d+$/.test(String(id))) return String(id);
+  try { return atob(String(id)).split(':').pop(); } catch { return String(id); }
+};
+
+const WP_REST_BASE = '/wp-json';
+
 const AgentDashboard = ({ user, onNavigate }) => {
   const { user: authUser } = useAuth();
   const { mobile } = useResponsive();
@@ -198,10 +206,48 @@ const AgentDashboard = ({ user, onNavigate }) => {
   const [clientSearch, setClientSearch] = useState('');
   const [policyFilter, setPolicyFilter] = useState('all');
   const [commFilter, setCommFilter] = useState('all');
+  const [selectedSale, setSelectedSale] = useState(null);
+  const [actionLoading, setActionLoading] = useState(null);
   const [showProfileEdit, setShowProfileEdit] = useState(false);
   const [editPolicy, setEditPolicy] = useState(null);
   const [assignPolicy, setAssignPolicy] = useState(null);
   const [clientActions, setClientActions] = useState({}); // { email: 'signalled' | 'archived' }
+
+  const APP_SECRET = import.meta.env.VITE_APP_SECRET ?? '';
+  const restHeaders = () => {
+    const h = { 'Accept': 'application/json', 'X-Maljani-App-Secret': APP_SECRET };
+    if (authUser?.token) h['Authorization'] = `Bearer ${authUser.token}`;
+    return h;
+  };
+
+  const handleViewInvoice = async (saleId) => {
+    setActionLoading(saleId);
+    const numId = toNumericId(saleId);
+    try {
+      const res = await fetch(`${WP_REST_BASE}/maljani/v1/invoice/${numId}?doc_type=invoice`, { headers: restHeaders() });
+      if (!res.ok) throw new Error(`Server returned ${res.status}`);
+      const data = await res.json();
+      if (data.html) { const w = window.open('', '_blank'); if (w) { w.document.write(data.html); w.document.close(); } }
+      else if (data.url) window.open(data.url, '_blank');
+      else throw new Error('No invoice content returned');
+    } catch (e) { alert(`Could not load invoice. ${e.message}`); }
+    finally { setActionLoading(null); }
+  };
+
+  const handleProceedToPayment = async (saleId) => {
+    setActionLoading(saleId);
+    try {
+      const res = await fetch(`${WP_REST_BASE}/maljani/v1/initiate-payment`, {
+        method: 'POST',
+        headers: { ...restHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ saleId: toNumericId(saleId) }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Payment initiation failed');
+      if (data.paymentUrl) window.location.href = data.paymentUrl;
+    } catch (e) { alert(e.message || 'Could not start payment.'); }
+    finally { setActionLoading(null); }
+  };
 
   const [dashResult] = useQuery({ query: AGENCY_DASHBOARD, pause: !authUser?.token });
   const [polResult]  = useQuery({ query: MY_POLICIES, pause: !authUser?.token });
@@ -350,8 +396,140 @@ const AgentDashboard = ({ user, onNavigate }) => {
         ))}
       </div>
 
+      {/* ═══════════════════════════════════════════════════
+       *  SALE DETAIL PANEL (replaces tab content when a sale is selected)
+       * ═══════════════════════════════════════════════════ */}
+      {selectedSale && (() => {
+        const s = selectedSale;
+        const ps = getPS(s.policyStatus);
+        const pay = getPay(s.paymentStatus);
+        const cm = getComm(s.agentCommissionStatus);
+        const isUnpaid = s.paymentStatus !== 'confirmed';
+        const isSelf = authUser?.email && s.insuredEmail?.toLowerCase() === authUser.email.toLowerCase();
+        const loading = actionLoading === s.id;
+
+        const InfoRow = ({ label, value, accent }) => (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>{label}</span>
+            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: accent || 'white', textAlign: 'right', maxWidth: '60%', wordBreak: 'break-word' }}>{value || '—'}</span>
+          </div>
+        );
+
+        const SectionCard = ({ title, children }) => (
+          <div style={{ ...cardStyle, padding: mobile ? '1.25rem' : '1.5rem' }}>
+            <div style={{ color: 'var(--text-muted)', fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '0.8rem', textTransform: 'uppercase' }}>{title}</div>
+            {children}
+          </div>
+        );
+
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {/* Back + header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+              <button onClick={() => setSelectedSale(null)} style={{
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: '8px', padding: '0.45rem 0.9rem', color: 'var(--text-muted)', cursor: 'pointer',
+                fontSize: '0.78rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem',
+              }}>← Back</button>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: mobile ? '1.1rem' : '1.3rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                  <span style={{ color: 'var(--gold)' }}>{s.policyNumber || '—'}</span>
+                  <Badge {...ps} />
+                </h3>
+                <p style={{ margin: '0.2rem 0 0', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+                  {s.policyTitle || 'Policy'} · {s.region || '—'} · Created {fmtDate(s.createdAt)}
+                </p>
+              </div>
+            </div>
+
+            {/* Actions bar */}
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              {isUnpaid && (
+                <button onClick={() => { setEditPolicy(s); }} style={{
+                  background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)',
+                  borderRadius: '8px', padding: '0.5rem 1rem', cursor: 'pointer',
+                  color: '#60a5fa', fontSize: '0.78rem', fontWeight: 700,
+                }}>✎ Edit Details</button>
+              )}
+              {isUnpaid && isSelf && (
+                <button onClick={() => { setAssignPolicy(s); }} style={{
+                  background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)',
+                  borderRadius: '8px', padding: '0.5rem 1rem', cursor: 'pointer',
+                  color: '#22c55e', fontSize: '0.78rem', fontWeight: 700,
+                }}>→ Assign to Client</button>
+              )}
+              {isUnpaid && (
+                <button disabled={loading} onClick={() => handleProceedToPayment(s.id)} style={{
+                  background: 'linear-gradient(135deg, var(--gold), #b8941f)',
+                  border: 'none', borderRadius: '8px', padding: '0.5rem 1.2rem', cursor: loading ? 'wait' : 'pointer',
+                  color: '#0f172a', fontSize: '0.78rem', fontWeight: 800, opacity: loading ? 0.6 : 1,
+                }}>{loading ? 'Processing…' : '💳 Launch Payment'}</button>
+              )}
+              {!isUnpaid && (
+                <button disabled={loading} onClick={() => handleViewInvoice(s.id)} style={{
+                  background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)',
+                  borderRadius: '8px', padding: '0.5rem 1rem', cursor: loading ? 'wait' : 'pointer',
+                  color: '#22c55e', fontSize: '0.78rem', fontWeight: 700, opacity: loading ? 0.6 : 1,
+                }}>{loading ? 'Loading…' : '📄 View Invoice'}</button>
+              )}
+              <button onClick={() => onNavigate?.('policy-detail', s.policyId)} style={{
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: '8px', padding: '0.5rem 1rem', cursor: 'pointer',
+                color: 'var(--text-muted)', fontSize: '0.78rem', fontWeight: 600,
+              }}>View Product Page</button>
+            </div>
+
+            {/* Info grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(2, 1fr)', gap: '1.25rem' }}>
+              {/* Buyer / Client */}
+              <SectionCard title="Buyer / Client">
+                <InfoRow label="Full Name" value={s.insuredNames} />
+                <InfoRow label="Email" value={s.insuredEmail} />
+                <InfoRow label="Phone" value={s.insuredPhone} />
+                <InfoRow label="Date of Birth" value={fmtDate(s.insuredDob)} />
+                <InfoRow label="Passport" value={s.passportNumber} />
+                <InfoRow label="National ID" value={s.nationalId} />
+                <InfoRow label="Address" value={s.insuredAddress} />
+                <InfoRow label="Country of Origin" value={s.countryOfOrigin} />
+                {isSelf && (
+                  <div style={{ marginTop: '0.5rem', padding: '0.4rem 0.8rem', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '6px', fontSize: '0.72rem', color: '#f59e0b', fontWeight: 600 }}>
+                    ⚑ Self-policy — you are the agent and the insured
+                  </div>
+                )}
+              </SectionCard>
+
+              {/* Travel Details */}
+              <SectionCard title="Travel Details">
+                <InfoRow label="Departure" value={fmtDate(s.departure)} />
+                <InfoRow label="Return" value={fmtDate(s.returnDate)} />
+                <InfoRow label="Duration" value={s.days ? `${s.days} day${s.days > 1 ? 's' : ''}` : '—'} />
+                <InfoRow label="Passengers" value={s.passengers} />
+                <InfoRow label="Region" value={s.region} />
+              </SectionCard>
+
+              {/* Financial */}
+              <SectionCard title="Financials">
+                <InfoRow label="Premium" value={fmtKES(s.premium)} accent="var(--gold)" />
+                <InfoRow label="Amount Paid" value={fmtKES(s.amountPaid)} accent={isUnpaid ? '#f59e0b' : '#22c55e'} />
+                <InfoRow label="Payment Status" value={pay.label} accent={pay.color} />
+                {(s.serviceFeeAmount > 0) && <InfoRow label="Service Fee" value={fmtKES(s.serviceFeeAmount)} />}
+                {(s.netToInsurer > 0) && <InfoRow label="Net to Insurer" value={fmtKES(s.netToInsurer)} />}
+              </SectionCard>
+
+              {/* Status & Commission */}
+              <SectionCard title="Status & Commission">
+                <InfoRow label="Policy Status" value={<Badge {...ps} />} />
+                <InfoRow label="Workflow" value={s.workflowStatus || '—'} />
+                <InfoRow label="Commission" value={fmtKES(s.agentCommissionAmount)} accent="var(--gold)" />
+                <InfoRow label="Commission Status" value={<Badge label={cm.label} color={cm.color} bg={cm.bg} />} />
+              </SectionCard>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── KPI ROW ───────────────────────────────────── */}
-      {(activeTab === 'overview' || activeTab === 'analytics') && (
+      {!selectedSale && (activeTab === 'overview' || activeTab === 'analytics') && (
         <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(${mobile ? '140px' : '160px'}, 1fr))`, gap: '1rem' }}>
           {[
             { label: 'TOTAL POLICIES', value: stats?.totalPolicies || 0, fmt: v => v },
@@ -372,7 +550,7 @@ const AgentDashboard = ({ user, onNavigate }) => {
       {/* ═══════════════════════════════════════════════════
        *  TAB: OVERVIEW
        * ═══════════════════════════════════════════════════ */}
-      {activeTab === 'overview' && (
+      {!selectedSale && activeTab === 'overview' && (
         <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '2fr 1fr', gap: '1.5rem' }}>
           {/* Recent policies */}
           <div style={{ ...cardStyle, padding: mobile ? '1.25rem' : '1.75rem' }}>
@@ -388,7 +566,7 @@ const AgentDashboard = ({ user, onNavigate }) => {
                   {policies.slice(0, 6).map(p => {
                     const ps = getPS(p.policyStatus);
                     return (
-                      <tr key={p.id} style={{ cursor: 'pointer' }} onClick={() => onNavigate?.('policy-detail', p.id)}>
+                      <tr key={p.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedSale(p)}>
                         <td style={tdStyle}>{p.insuredNames || '—'}</td>
                         <td style={tdStyle}><span style={{ color: 'var(--gold)', fontWeight: 600 }}>{p.policyNumber}</span></td>
                         <td style={tdStyle}>{fmtDate(p.departure)}</td>
@@ -457,7 +635,7 @@ const AgentDashboard = ({ user, onNavigate }) => {
       {/* ═══════════════════════════════════════════════════
        *  TAB: CLIENTS CRM
        * ═══════════════════════════════════════════════════ */}
-      {activeTab === 'clients' && (
+      {!selectedSale && activeTab === 'clients' && (
         <div style={{ ...cardStyle, padding: mobile ? '1.25rem' : '1.75rem' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
             <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>
@@ -539,7 +717,7 @@ const AgentDashboard = ({ user, onNavigate }) => {
       {/* ═══════════════════════════════════════════════════
        *  TAB: POLICIES
        * ═══════════════════════════════════════════════════ */}
-      {activeTab === 'policies' && (
+      {!selectedSale && activeTab === 'policies' && (
         <div style={{ ...cardStyle, padding: mobile ? '1.25rem' : '1.75rem' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
             <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>
@@ -570,7 +748,7 @@ const AgentDashboard = ({ user, onNavigate }) => {
                   const isSelf = authUser?.email && p.insuredEmail?.toLowerCase() === authUser.email.toLowerCase();
                   const isUnpaid = p.paymentStatus !== 'confirmed';
                   return (
-                    <tr key={p.id} style={{ cursor: 'pointer', background: isSelf ? 'rgba(245,158,11,0.04)' : 'transparent' }} onClick={() => onNavigate?.('policy-detail', p.id)}>
+                    <tr key={p.id} style={{ cursor: 'pointer', background: isSelf ? 'rgba(245,158,11,0.04)' : 'transparent' }} onClick={() => setSelectedSale(p)}>
                       <td style={tdStyle}><span style={{ color: 'var(--gold)', fontWeight: 600, fontSize: '0.78rem' }}>{p.policyNumber}</span></td>
                       <td style={tdStyle}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -624,7 +802,7 @@ const AgentDashboard = ({ user, onNavigate }) => {
       {/* ═══════════════════════════════════════════════════
        *  TAB: COMMISSIONS
        * ═══════════════════════════════════════════════════ */}
-      {activeTab === 'commissions' && (
+      {!selectedSale && activeTab === 'commissions' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {/* Commission summary cards */}
           <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(${mobile ? '140px' : '180px'}, 1fr))`, gap: '1rem' }}>
@@ -689,7 +867,7 @@ const AgentDashboard = ({ user, onNavigate }) => {
       {/* ═══════════════════════════════════════════════════
        *  TAB: ANALYTICS
        * ═══════════════════════════════════════════════════ */}
-      {activeTab === 'analytics' && (
+      {!selectedSale && activeTab === 'analytics' && (
         <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', gap: '1.5rem' }}>
           {/* Revenue chart */}
           <div style={{ ...cardStyle, padding: '1.5rem' }}>
