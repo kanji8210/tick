@@ -123,6 +123,7 @@ const StepBar = ({ step }) => (
 const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initialStep = 1, onNavigate }) => {
   const { user, loading: authLoading, role, login, register, error: authError } = useAuth();
   const { mobile } = useResponsive();
+  const isAgent = role === 'agent' || role === 'administrator';
   const [today] = useState(() => new Date().toISOString().split('T')[0]);
   const [nextWeek] = useState(() => new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]);
 
@@ -208,9 +209,9 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
     }
   }, [data, initialPolicyId, initialSearchData?.departure, initialSearchData?.returnDate]);
 
-  // Auto-fill personal info for logged-in users
+  // Auto-fill personal info for logged-in insured users (not agents)
   useEffect(() => {
-    if (user && !authLoading) { // Wait until AuthContext loading state is finishized
+    if (user && !authLoading && !isAgent) { // Agents enter client details — skip auto-fill
       setForm(f => {
         // Only update fields that are currently empty to avoid overwriting user input
         const next = { ...f };
@@ -240,12 +241,12 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
   };
 
   const isLoggedIn = !!user;
-  const effectiveName = user?.name || form.name;
-  const effectiveEmail = user?.email || form.email;
-  const accountEmail = user?.email || form.email;
-  const accountName = user?.name || form.name;
-  const shouldAskName = !isLoggedIn || !effectiveName;
-  const shouldAskEmail = !isLoggedIn || !effectiveEmail;
+  const effectiveName = (isAgent ? form.name : user?.name) || form.name;
+  const effectiveEmail = (isAgent ? form.email : user?.email) || form.email;
+  const accountEmail = isAgent ? form.email : (user?.email || form.email);
+  const accountName = isAgent ? form.name : (user?.name || form.name);
+  const shouldAskName = isAgent || !isLoggedIn || !effectiveName;
+  const shouldAskEmail = isAgent || !isLoggedIn || !effectiveEmail;
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
@@ -698,7 +699,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
         </div>
 
         {/* Pre-fill notice for logged-in users */}
-        {isLoggedIn && (
+        {isLoggedIn && !isAgent && (
           <div style={{
             marginBottom: 20,
             padding: '16px 18px',

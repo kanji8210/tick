@@ -51,6 +51,12 @@ const fmtKES  = (n) => `KES ${Number(n || 0).toLocaleString('en-KE')}`;
 
 import Messaging from './Messaging';
 
+/** Extract numeric DB id from a WPGraphQL global id (base64) or plain number */
+const toNumericId = (id) => {
+  if (/^\d+$/.test(String(id))) return String(id);
+  try { return atob(String(id)).split(':').pop(); } catch { return String(id); }
+};
+
 const InsuredDashboard = ({ user, onNavigate }) => {
   const { user: authUser } = useAuth();
   const { mobile } = useResponsive();
@@ -77,7 +83,8 @@ const InsuredDashboard = ({ user, onNavigate }) => {
   /** Open invoice in a new tab */
   const handleViewInvoice = async (saleId) => {
     setActionLoading(saleId);
-    const url = `${WP_REST_BASE}/maljani/v1/invoice/${saleId}?doc_type=invoice`;
+    const numId = toNumericId(saleId);
+    const url = `${WP_REST_BASE}/maljani/v1/invoice/${numId}?doc_type=invoice`;
     const hdrs = restHeaders();
     console.log('Invoice fetch:', url, 'hasToken:', !!hdrs.Authorization);
     try {
@@ -110,7 +117,7 @@ const InsuredDashboard = ({ user, onNavigate }) => {
       const res = await fetch(`${WP_REST_BASE}/maljani/v1/initiate-payment`, {
         method: 'POST',
         headers: { ...restHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ saleId }),
+        body: JSON.stringify({ saleId: toNumericId(saleId) }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Payment initiation failed');

@@ -16,39 +16,34 @@ import AboutPage from './components/AboutPage'
 import AgenciesPage from './components/AgenciesPage'
 
 function AppContent() {
-  const STORAGE_KEY = 'maljani_app_navigation';
+  /* ── URL ↔ view mapping ─────────────────────────────────────── */
+  const VIEW_PATHS = {
+    landing:       '/',
+    wizard:        '/quote',
+    login:         '/login',
+    register:      '/register',
+    dashboard:     '/dashboard',
+    catalog:       '/catalog',
+    verify:        '/verify',
+    about:         '/about',
+    agencies:      '/agencies',
+    'policy-detail': '/policy',
+  };
+  const PATH_VIEWS = Object.fromEntries(Object.entries(VIEW_PATHS).map(([v, p]) => [p, v]));
 
-  const loadStoredNavigation = () => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { history: [{ view: 'landing', policyId: null, searchData: null, forceStep: null }], idx: 0 };
-      const parsed = JSON.parse(raw);
-      if (!parsed || !Array.isArray(parsed.history) || typeof parsed.idx !== 'number') {
-        return { history: [{ view: 'landing', policyId: null, searchData: null, forceStep: null }], idx: 0 };
-      }
-      const idx = Math.min(Math.max(parsed.idx, 0), parsed.history.length - 1);
-      return { history: parsed.history, idx };
-    } catch {
-      return { history: [{ view: 'landing', policyId: null, searchData: null, forceStep: null }], idx: 0 };
-    }
+  const urlToEntry = () => {
+    const path = window.location.pathname;
+    const view = PATH_VIEWS[path] || 'landing';
+    return { view, policyId: null, searchData: null, forceStep: null };
   };
 
-  const stored = loadStoredNavigation();
-  const [history, setHistory] = React.useState(stored.history);
-  const [historyIdx, setHistoryIdx] = React.useState(stored.idx);
+  const [history, setHistory] = React.useState([urlToEntry()]);
+  const [historyIdx, setHistoryIdx] = React.useState(0);
 
-  const activeView    = history[historyIdx].view;
+  const activeView       = history[historyIdx].view;
   const selectedPolicyId = history[historyIdx].policyId;
-  const canGoBack     = historyIdx > 0;
-  const canGoForward  = historyIdx < history.length - 1;
-
-  const persistNavigation = (historyArray, idx) => {
-    try {
-      localStorage.setItem('maljani_app_navigation', JSON.stringify({ history: historyArray, idx }));
-    } catch {
-      // ignore localStorage failures
-    }
-  };
+  const canGoBack        = historyIdx > 0;
+  const canGoForward     = historyIdx < history.length - 1;
 
   const handleNavigate = (view, policyId = null, searchData = null, forceStep = null) => {
     const entry = { view, policyId, searchData, forceStep };
@@ -57,25 +52,34 @@ function AppContent() {
 
     setHistory(nextHistory);
     setHistoryIdx(nextIdx);
-    persistNavigation(nextHistory, nextIdx);
+    window.history.pushState({ idx: nextIdx }, '', VIEW_PATHS[view] || '/');
     window.scrollTo(0, 0);
   };
 
   const handleBack = () => {
     if (!canGoBack) return;
-    const nextIdx = historyIdx - 1;
-    setHistoryIdx(nextIdx);
-    persistNavigation(history, nextIdx);
-    window.scrollTo(0, 0);
+    window.history.back();
   };
 
   const handleForward = () => {
     if (!canGoForward) return;
-    const nextIdx = historyIdx + 1;
-    setHistoryIdx(nextIdx);
-    persistNavigation(history, nextIdx);
-    window.scrollTo(0, 0);
+    window.history.forward();
   };
+
+  // Listen to browser back/forward buttons
+  React.useEffect(() => {
+    const onPop = () => {
+      const entry = urlToEntry();
+      setHistory(h => {
+        const next = [...h, entry];
+        setHistoryIdx(next.length - 1);
+        return next;
+      });
+      window.scrollTo(0, 0);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  });
 
   const renderView = () => {
     switch(activeView) {

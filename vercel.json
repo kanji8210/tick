@@ -7,6 +7,10 @@
     {
       "source": "/wp-json/:path*",
       "destination": "https://mtj.ivk.mybluehost.me/website_e48ea083/wp-json/:path*"
+    },
+    {
+      "source": "/((?!assets/).*)",
+      "destination": "/index.html"
     }
   ]
 }
