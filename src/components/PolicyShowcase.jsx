@@ -202,6 +202,18 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [selectedInsurerPolicy, setSelectedInsurerPolicy] = useState(null);
 
+  /* ── Local travel dates (used when no searchParams, or to override) ── */
+  const [today] = useState(() => new Date().toISOString().split('T')[0]);
+  const [localDates, setLocalDates] = useState({
+    departure: searchParams?.departure || '',
+    returnDate: searchParams?.returnDate || '',
+    passengers: searchParams?.passengers || 1,
+  });
+
+  const hasDates = localDates.departure && localDates.returnDate;
+  const localDays = hasDates ? tripDays(localDates.departure, localDates.returnDate) : 0;
+  const localPax = localDates.passengers || 1;
+
   const effectiveRegion = activeFilter;
   const [{ data, fetching, error }] = useQuery({ query: GET_POLICIES, variables: {} });
 
@@ -248,42 +260,56 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
       <InsurerProfileModal policy={selectedInsurerPolicy} onClose={() => setSelectedInsurerPolicy(null)} />
 
       <div className="container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 36, flexWrap: 'wrap', gap: mobile ? 12 : 20, flexDirection: mobile ? 'column' : 'row', alignItems: mobile ? 'stretch' : 'flex-end' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: mobile ? 12 : 20, flexDirection: mobile ? 'column' : 'row', alignItems: mobile ? 'stretch' : 'flex-end' }}>
           <div>
             <p className="section-label">Compare & Buy</p>
             <h2 className="section-title" style={{ fontSize: 'clamp(28px,3vw,44px)' }}>
               Available Policies
             </h2>
           </div>
-          {searchParams?.departure && searchParams?.returnDate && (
-            <div className="fade-in" style={{ 
-              background: 'rgba(49,99,49,0.1)', 
-              border: '1px solid rgba(49,99,49,0.3)', 
-              borderRadius: 'var(--radius-md)', 
-              padding: mobile ? '10px 14px' : '12px 20px', 
-              display: 'flex', 
-              alignItems: mobile ? 'flex-start' : 'center',
-              flexDirection: mobile ? 'column' : 'row', 
-              gap: mobile ? 8 : 16,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-            }}>
-              <div style={{ fontSize: mobile ? 12 : 13, color: 'rgba(255,255,255,0.9)', lineHeight: 1.5 }}>
-                <span style={{ color: 'var(--slate)', marginRight: 6 }}>Search:</span>
-                <strong style={{ color: 'var(--gold)' }}>{searchParams?.region || 'All Regions'}</strong>
-                <span style={{ margin: '0 8px', opacity: 0.3 }}>|</span>
-                <strong>{searchParams.departure}</strong> to <strong>{searchParams.returnDate}</strong>
-              </div>
-              <button 
-                className="btn btn--sm btn--ghost" 
-                style={{ padding: '6px 12px', fontSize: 11, borderRadius: 8 }}
-                onClick={() => document.getElementById('hero-top')?.scrollIntoView({ behavior: 'smooth' })}
-              >
-                ✎ Edit Search
-              </button>
+          <span style={{ fontSize: 13, color: 'var(--slate)' }}>Select up to 3 to compare side-by-side</span>
+        </div>
+
+        {/* ── Travel dates bar ── */}
+        <div style={{
+          background: 'var(--glass-bg)', border: '1px solid var(--glass-border-bright)', borderRadius: 'var(--radius-md)',
+          padding: mobile ? '14px 16px' : '14px 24px', marginBottom: mobile ? 24 : 32,
+          display: 'flex', alignItems: mobile ? 'stretch' : 'center', flexDirection: mobile ? 'column' : 'row',
+          gap: mobile ? 12 : 16, flexWrap: 'wrap',
+        }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>
+            {hasDates ? '\u2713 Prices calculated' : 'Enter dates for exact prices'}
+          </span>
+          <div style={{ display: 'flex', gap: 10, flex: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+            <input
+              type="date" className="form-input"
+              value={localDates.departure} min={today}
+              onChange={e => setLocalDates(d => ({ ...d, departure: e.target.value }))}
+              style={{ flex: 1, minWidth: 130, padding: '8px 12px', fontSize: 13 }}
+              aria-label="Departure date"
+            />
+            <span style={{ color: 'var(--slate)', fontSize: 13 }}>to</span>
+            <input
+              type="date" className="form-input"
+              value={localDates.returnDate} min={localDates.departure || today}
+              onChange={e => setLocalDates(d => ({ ...d, returnDate: e.target.value }))}
+              style={{ flex: 1, minWidth: 130, padding: '8px 12px', fontSize: 13 }}
+              aria-label="Return date"
+            />
+            <select
+              className="form-input"
+              value={localDates.passengers}
+              onChange={e => setLocalDates(d => ({ ...d, passengers: Number(e.target.value) }))}
+              style={{ width: mobile ? '100%' : 100, padding: '8px 12px', fontSize: 13 }}
+              aria-label="Number of travellers"
+            >
+              {[1,2,3,4,5,6,7,8,9,10].map(n => <option key={n} value={n}>{n} {n === 1 ? 'traveller' : 'travellers'}</option>)}
+            </select>
+          </div>
+          {hasDates && (
+            <div style={{ fontSize: 12, color: '#86efac', fontWeight: 600, whiteSpace: 'nowrap' }}>
+              {localDays} day{localDays !== 1 ? 's' : ''} &middot; {localPax} traveller{localPax !== 1 ? 's' : ''}
             </div>
-          )}
-          {!searchParams?.departure && (
-            <span style={{ fontSize: 13, color: 'var(--slate)' }}>Select up to 3 to compare side-by-side</span>
           )}
         </div>
 
@@ -334,19 +360,17 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                     <h3 style={{ fontFamily: 'var(--font-display)', fontSize: mobile ? 16 : 18, fontWeight: 700, marginBottom: 10, lineHeight: 1.3 }}>{policy.title}</h3>
 
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 16 }}>
-                      {searchParams?.departure && searchParams?.returnDate ? (
+                      {hasDates ? (
                         <>
                           <span style={{ fontSize: 11, color: 'var(--slate)', marginBottom: 2 }}>your trip</span>
                           <span style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 800, color: '#86efac' }}>
                             {(() => {
-                              const d = tripDays(searchParams.departure, searchParams.returnDate);
-                              const p = bracketPremium(policy.policyDayPremiums, d);
-                              const pax = searchParams.passengers || 1;
-                              return p ? fmtPrice(p * pax, policy.policyCurrency) : 'N/A';
+                              const p = bracketPremium(policy.policyDayPremiums, localDays);
+                              return p ? fmtPrice(p * localPax, policy.policyCurrency) : 'N/A';
                             })()}
                           </span>
                           <span style={{ fontSize: 13, color: 'var(--slate)' }}>
-                            /{tripDays(searchParams.departure, searchParams.returnDate)} days{searchParams.passengers > 1 ? ` · ${searchParams.passengers} pax` : ''}
+                            /{localDays} days{localPax > 1 ? ` · ${localPax} pax` : ''}
                           </span>
                         </>
                       ) : (

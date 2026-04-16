@@ -44,6 +44,21 @@ const parseBenefits = (html) => {
 
 /* Parse benefit HTML table into grouped categories:
    [{ category: "MEDICAL & EMERGENCY", items: [{ name, limit, deductible }] }, …] */
+
+/* Normalise category names so differently-worded groups from different
+   insurers align under the same heading in the comparison table. */
+const CATEGORY_MAP = [
+  { match: /medical|covid|emergency.*med|med.*emergency|dental|hospital/i,  label: 'MEDICAL & EMERGENCY' },
+  { match: /trip.*disrupt|cancel|curtail|delay|depart|hijack|connect/i,     label: 'TRIP DISRUPTION' },
+  { match: /baggage|luggage|document|passport|belonging/i,                  label: 'BAGGAGE & DOCUMENTS' },
+  { match: /liabil|legal|civil|bail|defence/i,                             label: 'LIABILITY & LEGAL' },
+  { match: /evacuat|repatri|mortal|remains|family|companion|children|accident|death|disab|logistic/i, label: 'ACCIDENT, EVACUATION & REPATRIATION' },
+];
+const normalizeCategory = (raw) => {
+  const found = CATEGORY_MAP.find(c => c.match.test(raw));
+  return found ? found.label : raw;
+};
+
 const parseBenefitsTable = (html) => {
   if (!html) return [];
   const decode = (s) => s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
@@ -69,14 +84,20 @@ const parseBenefitsTable = (html) => {
     const deductible = cells[2] ? strip(cells[2]) : '';
 
     // Category row: bold text in first cell, empty limit & deductible
-    const isCategoryRow = /<b[^>]*>/.test(cells[0]) && !limit && !deductible;
+    const isCategoryRow = (/<b[^>]*>/.test(cells[0]) || /<strong[^>]*>/.test(cells[0])) && !limit && !deductible;
     if (isCategoryRow && name) {
-      current = { category: name, items: [] };
-      groups.push(current);
+      const normalized = normalizeCategory(name);
+      // Merge into existing group with same normalized name
+      const existing = groups.find(g => g.category === normalized);
+      if (existing) {
+        current = existing;
+      } else {
+        current = { category: normalized, items: [] };
+        groups.push(current);
+      }
     } else if (name && current) {
       current.items.push({ name, limit: limit || '\u2014', deductible: deductible || '' });
     } else if (name && !current) {
-      // Benefits before any category header — create a default group
       current = { category: 'Benefits', items: [] };
       groups.push(current);
       current.items.push({ name, limit: limit || '\u2014', deductible: deductible || '' });
@@ -357,7 +378,10 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
             {/* Benefits Overview — grouped by category */}
             {allBenefitGroups[idx]?.length > 0 && (
               <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Benefits Overview</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Benefits Overview</div>
+                  <div style={{ fontSize: 9, color: 'var(--slate)', fontStyle: 'italic', opacity: 0.7 }}>All figures in USD</div>
+                </div>
                 {allBenefitGroups[idx].map((group, gi) => (
                   <div key={gi} style={{ marginBottom: 10 }}>
                     <div style={{ fontSize: 10, fontWeight: 800, color: '#86efac', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, padding: '4px 0', borderBottom: '1px solid rgba(134,239,172,0.15)' }}>{group.category}</div>
@@ -535,7 +559,7 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
             if (allCats.length === 0) return null;
             return (
               <>
-                <SectionRow label="Benefits Overview" cols={selected.length} accent />
+                <SectionRow label="Benefits Overview  •  All figures in USD" cols={selected.length} accent />
                 {allCats.map((cat) => {
                   // Collect all unique item names for this category across all policies
                   const allItems = [];
