@@ -62,7 +62,7 @@ const Footer = ({ onNavigate }) => {
               </p>
               <div style={{ display: 'flex', gap: 8 }}>
                 {['𝕏', 'in', 'f', '◻'].map((s, i) => (
-                  <a key={i} href="#" style={{ width: 34, height: 34, borderRadius: 8, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: 'var(--slate)', textDecoration: 'none' }} aria-label="Social">{s}</a>
+                  <a key={i} href="#" style={{ width: 44, height: 44, borderRadius: 8, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: 'var(--slate)', textDecoration: 'none' }} aria-label="Social">{s}</a>
                 ))}
               </div>
             </div>
@@ -84,7 +84,7 @@ const Footer = ({ onNavigate }) => {
                     onClick={() => onNavigate(l.view)}
                     style={{
                       background: 'var(--glass-bg)', border: '1px solid var(--glass-border)',
-                      borderRadius: 100, padding: '7px 14px',
+                      borderRadius: 100, padding: '10px 16px',
                       cursor: 'pointer', color: 'var(--slate)', fontSize: 13, fontFamily: 'var(--font-body)',
                       transition: 'all 0.2s',
                     }}
@@ -113,7 +113,7 @@ const Footer = ({ onNavigate }) => {
               </p>
               <div style={{ display: 'flex', gap: 9 }}>
                 {['𝕏', 'in', 'f', '◻'].map((s, i) => (
-                  <a key={i} href="#" style={{ width: 35, height: 35, borderRadius: 8, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: 'var(--slate)', textDecoration: 'none', transition: 'all 0.2s' }} aria-label="Social">{s}</a>
+                  <a key={i} href="#" style={{ width: 44, height: 44, borderRadius: 8, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: 'var(--slate)', textDecoration: 'none', transition: 'all 0.2s' }} aria-label="Social">{s}</a>
                 ))}
               </div>
             </div>

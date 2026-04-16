@@ -75,7 +75,7 @@ const Hero = ({ onStart, onNavigate }) => {
       <style>{`@keyframes spin-slow { to { transform: translateY(-50%) rotate(360deg); } } @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }`}</style>
 
       <div className="container">
-        <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr" : tablet ? "1fr 380px" : "1fr 460px", gap: mobile ? 32 : tablet ? 48 : 72, alignItems: "center" }}>
+        <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr" : tablet ? "1fr minmax(320px, 380px)" : "1fr minmax(380px, 460px)", gap: mobile ? 32 : tablet ? 48 : 72, alignItems: "center" }}>
 
           {/* ── Left column ── */}
           {isAgent ? (

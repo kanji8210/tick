@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '../lib/AuthContext';
+import { useResponsive } from '../lib/useResponsive';
 
 const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onForward }) => {
   const { user, logout, loading } = useAuth();
+  const { mobile, tablet } = useResponsive();
+  const compact = mobile || tablet;
   const [scrolled, setScrolled] = useState(false);
-  const [compact, setCompact] = useState(window.innerWidth <= 1024);
-  const [mobile, setMobile] = useState(window.innerWidth <= 768);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -13,16 +14,8 @@ const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onFor
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
-    const onResize = () => {
-      setCompact(window.innerWidth <= 1024);
-      setMobile(window.innerWidth <= 768);
-    };
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onResize);
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onResize);
-    };
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   // Close dropdown / mobile menu on outside click
@@ -180,7 +173,7 @@ const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onFor
                     style={{
                       background: menuOpen ? 'rgba(255,255,255,0.1)' : 'none',
                       border: '1px solid rgba(255,255,255,0.15)',
-                      borderRadius: 8, width: 38, height: 38,
+                      borderRadius: 8, width: 44, height: 44,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       cursor: 'pointer', color: 'rgba(255,255,255,0.85)',
                       transition: 'all 0.25s ease', flexShrink: 0,
@@ -251,7 +244,7 @@ const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onFor
                     aria-label="User menu"
                     aria-expanded={dropdownOpen}
                     style={{
-                      width: 38, height: 38, borderRadius: '50%',
+                      width: 44, height: 44, borderRadius: '50%',
                       background: user ? 'var(--gold, #d4a053)' : 'rgba(255,255,255,0.12)',
                       border: '2px solid rgba(255,255,255,0.2)',
                       color: user ? '#0a0e1a' : 'rgba(255,255,255,0.6)',

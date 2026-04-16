@@ -13,13 +13,6 @@ const Catalog = ({ onNavigate }) => {
 
   return (
     <div className="fade-in" style={{ padding: '6rem 0' }}>
-      <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-        <span style={{ color: 'var(--gold)', letterSpacing: '0.4em', fontSize: '0.8rem', fontWeight: '800' }}>ELITE COVERAGE CATALOG</span>
-        <h1 className="serif" style={{ fontSize: '3.5rem', marginTop: '1rem' }}>Our Global <span className="gold-text">Underwriting.</span></h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginTop: '1rem', maxWidth: '700px', margin: '0 auto' }}>
-          Browse our curated selection of travel insurance plans, designed for the discerning global citizen.
-        </p>
-      </div>
 
       <PolicyShowcase
         onNavigate={onNavigate}

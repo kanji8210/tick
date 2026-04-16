@@ -42,6 +42,49 @@ const parseBenefits = (html) => {
     .filter(s => s.length > 5 && s.length < 220);
 };
 
+/* Parse benefit HTML table into grouped categories:
+   [{ category: "MEDICAL & EMERGENCY", items: [{ name, limit, deductible }] }, …] */
+const parseBenefitsTable = (html) => {
+  if (!html) return [];
+  const decode = (s) => s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
+  const strip = (s) => decode(s.replace(/<[^>]+>/g, '')).trim();
+
+  const groups = [];
+  const rowRx = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+  let m;
+  let current = null;
+  let isHeader = true;
+
+  while ((m = rowRx.exec(html)) !== null) {
+    if (isHeader) { isHeader = false; continue; } // skip thead row
+    const cells = [];
+    const cellRx = /<td[^>]*>([\s\S]*?)<\/td>/gi;
+    let c;
+    while ((c = cellRx.exec(m[1])) !== null) cells.push(c[1]);
+    if (cells.length < 1) continue;
+
+    const name = strip(cells[0]);
+    const limit = cells[1] ? strip(cells[1]) : '';
+    const deductible = cells[2] ? strip(cells[2]) : '';
+
+    // Category row: bold text in first cell, empty limit & deductible
+    const isCategoryRow = /<b[^>]*>/.test(cells[0]) && !limit && !deductible;
+    if (isCategoryRow && name) {
+      current = { category: name, items: [] };
+      groups.push(current);
+    } else if (name && current) {
+      current.items.push({ name, limit: limit || '\u2014', deductible: deductible || '' });
+    } else if (name && !current) {
+      // Benefits before any category header — create a default group
+      current = { category: 'Benefits', items: [] };
+      groups.push(current);
+      current.items.push({ name, limit: limit || '\u2014', deductible: deductible || '' });
+    }
+  }
+  return groups;
+};
+
 const normalizeBenefit = (s) =>
   s.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
 
@@ -224,6 +267,7 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
   if (!selected.length) return null;
 
   const allBenefitLists = selected.map(p => parseBenefits(p.policyBenefits));
+  const allBenefitGroups = selected.map(p => parseBenefitsTable(p.policyBenefits));
   const commonBenefits  = findCommonBenefits(allBenefitLists);
 
   const allExclusions = selected.map(p => parseBenefits(p.policyNotCovered));
@@ -310,18 +354,23 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
               </div>
             )}
 
-            {/* Benefits Overview */}
-            {allBenefitLists[idx].length > 0 && (
+            {/* Benefits Overview — grouped by category */}
+            {allBenefitGroups[idx]?.length > 0 && (
               <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Benefits Overview</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  {allBenefitLists[idx].slice(0, 10).map((b, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-                      <span style={{ color: '#22c55e', fontSize: 12, lineHeight: 1.5, flexShrink: 0 }}>{'\u2713'}</span>
-                      <span style={{ color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, fontSize: 12 }}>{b.length > 60 ? b.slice(0, 57) + '\u2026' : b}</span>
-                    </div>
-                  ))}
-                </div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Benefits Overview</div>
+                {allBenefitGroups[idx].map((group, gi) => (
+                  <div key={gi} style={{ marginBottom: 10 }}>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: '#86efac', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, padding: '4px 0', borderBottom: '1px solid rgba(134,239,172,0.15)' }}>{group.category}</div>
+                    {group.items.map((item, ii) => (
+                      <div key={ii} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, padding: '3px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                        <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12, lineHeight: 1.4, flex: 1, minWidth: 0 }}>{item.name}</span>
+                        <span style={{ color: '#86efac', fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', textAlign: 'right' }}>
+                          {item.limit}{item.deductible && item.deductible !== 'Nil' ? <span style={{ color: 'var(--slate)', fontWeight: 400, fontSize: 10 }}> ({item.deductible})</span> : null}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ))}
               </div>
             )}
 
@@ -352,21 +401,6 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
                     <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
                       <span style={{ color: '#f87171', fontSize: 12, lineHeight: 1.5, flexShrink: 0 }}>{'\u2717'}</span>
                       <span style={{ color: 'rgba(255,255,255,0.55)', lineHeight: 1.5, fontSize: 12 }}>{ex.length > 60 ? ex.slice(0, 57) + '\u2026' : ex}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Day-bracket pricing table */}
-            {p.policyDayPremiums?.length > 0 && (
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>Day Brackets</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3 }}>
-                  {p.policyDayPremiums.map((b, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'rgba(255,255,255,0.65)', background: days >= b.from && days <= b.to ? 'rgba(49,99,49,0.18)' : 'transparent', borderRadius: 4, padding: '2px 6px' }}>
-                      <span>{b.from}\u2013{b.to}d</span>
-                      <span style={{ fontWeight: 600, color: days >= b.from && days <= b.to ? '#86efac' : 'rgba(255,255,255,0.65)' }}>{prem.cur} {Number(b.premium).toLocaleString('en-KE')}</span>
                     </div>
                   ))}
                 </div>
@@ -491,64 +525,57 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
             })}
           </tr>
 
-          {/* Day-bracket pricing */}
-          {selected.some(p => p.policyDayPremiums?.length > 1) && (() => {
-            const allBrackets = new Set();
-            selected.forEach(p => (p.policyDayPremiums || []).forEach(b => allBrackets.add(`${b.from}-${b.to}`)));
-            const brackets = Array.from(allBrackets).sort((a, b) => Number(a.split('-')[0]) - Number(b.split('-')[0]));
-            return (
-              <>
-                <SectionRow label="Day-Bracket Pricing (per person)" cols={selected.length} />
-                {brackets.map((bk, i) => {
-                  const [from, to] = bk.split('-').map(Number);
-                  const isActive = days >= from && days <= to;
-                  return (
-                    <tr key={bk} style={{ background: isActive ? 'rgba(49,99,49,0.12)' : (i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent'), borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                      <td style={{ ...labelCell, fontSize: 11, color: isActive ? '#86efac' : 'var(--slate)' }}>{from}\u2013{to} days{isActive ? ' \u2190' : ''}</td>
-                      {selected.map(p => {
-                        const match = (p.policyDayPremiums || []).find(b => b.from === from && b.to === to);
-                        const cur = p.policyCurrency || 'KES';
-                        return (
-                          <td key={p.id} style={{ ...cellBase, width: colW, fontWeight: 600, color: isActive ? '#86efac' : 'rgba(255,255,255,0.7)' }}>
-                            {match ? `${cur} ${Number(match.premium).toLocaleString('en-KE')}` : '\u2014'}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
-              </>
-            );
-          })()}
-
-          {/* ── Benefits Overview ── */}
+          {/* ── Benefits Overview — grouped by category ── */}
           {(() => {
-            const maxBenefits = Math.max(...allBenefitLists.map(l => l.length), 0);
-            if (maxBenefits === 0) return null;
-            const rows = Math.min(maxBenefits, 12);
+            // Collect all unique category names across policies in order
+            const allCats = [];
+            allBenefitGroups.forEach(groups => {
+              groups.forEach(g => { if (!allCats.includes(g.category)) allCats.push(g.category); });
+            });
+            if (allCats.length === 0) return null;
             return (
               <>
                 <SectionRow label="Benefits Overview" cols={selected.length} accent />
-                {Array.from({ length: rows }, (_, i) => (
-                  <tr key={`ben-${i}`} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                    <td style={{ ...labelCell, fontSize: 11, color: 'var(--slate)' }}>{i + 1}</td>
-                    {selected.map((p, pi) => {
-                      const item = allBenefitLists[pi]?.[i];
-                      return (
-                        <td key={p.id} style={{ ...cellBase, width: colW }}>
-                          {item ? (
-                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-                              <span style={{ color: '#22c55e', fontSize: 13, lineHeight: 1.4, flexShrink: 0 }}>{'\u2713'}</span>
-                              <span style={{ color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, fontSize: 12 }}>{item.length > 70 ? item.slice(0, 67) + '\u2026' : item}</span>
-                            </div>
-                          ) : (
-                            <span style={{ color: 'rgba(255,255,255,0.12)' }}>{'\u2014'}</span>
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
+                {allCats.map((cat) => {
+                  // Collect all unique item names for this category across all policies
+                  const allItems = [];
+                  allBenefitGroups.forEach(groups => {
+                    const g = groups.find(x => x.category === cat);
+                    if (g) g.items.forEach(it => { if (!allItems.find(a => a.name === it.name)) allItems.push(it); });
+                  });
+                  return (
+                    <React.Fragment key={cat}>
+                      {/* Category header row */}
+                      <tr style={{ background: 'rgba(134,239,172,0.06)', borderBottom: '1px solid rgba(134,239,172,0.15)' }}>
+                        <td colSpan={1 + selected.length} style={{ padding: '8px 16px', fontSize: 11, fontWeight: 800, color: '#86efac', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{cat}</td>
+                      </tr>
+                      {/* Item rows */}
+                      {allItems.map((refItem, ii) => (
+                        <tr key={`${cat}-${ii}`} style={{ background: ii % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                          <td style={{ ...labelCell, fontSize: 11, whiteSpace: 'normal', lineHeight: 1.4 }}>{refItem.name}</td>
+                          {selected.map((p, pi) => {
+                            const group = allBenefitGroups[pi]?.find(x => x.category === cat);
+                            const item = group?.items.find(x => x.name === refItem.name);
+                            return (
+                              <td key={p.id} style={{ ...cellBase, width: colW }}>
+                                {item ? (
+                                  <div>
+                                    <span style={{ fontWeight: 700, fontSize: 12, color: '#86efac' }}>{item.limit}</span>
+                                    {item.deductible && item.deductible !== 'Nil' && (
+                                      <div style={{ fontSize: 10, color: 'var(--slate)', marginTop: 1 }}>Excess: {item.deductible}</div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span style={{ color: 'rgba(255,255,255,0.12)' }}>{'\u2014'}</span>
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </React.Fragment>
+                  );
+                })}
               </>
             );
           })()}
