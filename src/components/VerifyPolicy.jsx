@@ -1,9 +1,6 @@
 import React, { useState, useRef } from 'react';
 
-/* Derive WordPress REST base from the GraphQL URL env var */
-const WP_REST_BASE = import.meta.env.VITE_GRAPHQL_URL
-  ? import.meta.env.VITE_GRAPHQL_URL.replace(/\/graphql$/, '') + '/wp-json'
-  : '/wp-json';
+const WP_REST_BASE = '/wp-json';
 const VERIFY_URL = `${WP_REST_BASE}/maljani/v1/verify`;
 
 const STATUS_META = {

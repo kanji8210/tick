@@ -70,9 +70,7 @@ const InsuredDashboard = ({ user, onNavigate }) => {
   const fetchErr = result.error ? 'Could not load your policies. Please refresh the page.' : null;
   const policies = result.data?.myPolicySales || [];
 
-  const WP_REST_BASE = import.meta.env.VITE_GRAPHQL_URL
-    ? import.meta.env.VITE_GRAPHQL_URL.replace(/\/graphql$/, '') + '/wp-json'
-    : '/wp-json';
+  const WP_REST_BASE = '/wp-json';
   const APP_SECRET = import.meta.env.VITE_APP_SECRET ?? '';
   const restHeaders = () => {
     const h = { 'Accept': 'application/json', 'X-Maljani-App-Secret': APP_SECRET };

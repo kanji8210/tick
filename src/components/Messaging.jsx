@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../lib/AuthContext';
 
-const WP_REST_BASE = import.meta.env.VITE_GRAPHQL_URL
-  ? import.meta.env.VITE_GRAPHQL_URL.replace(/\/graphql$/, '') + '/wp-json'
-  : '/wp-json';
+const WP_REST_BASE = '/wp-json';
 
 const Messaging = ({ initialPolicyId = null }) => {
   const { user, loading: authLoading } = useAuth();
