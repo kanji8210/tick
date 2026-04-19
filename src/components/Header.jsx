@@ -83,39 +83,8 @@ const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onFor
 
           {/* Row 1: Back/Forward + Logo + Actions */}
           <div className="tic-header__row1">
-            {/* Back / Forward + Logo */}
+            {/* Logo */}
             <div style={{ display: 'flex', alignItems: 'center', gap: mobile ? 6 : 10 }}>
-              <button
-                onClick={onBack}
-                disabled={!canGoBack}
-                aria-label="Go back"
-                className="tic-header__arrow"
-                style={{
-                  background: 'none', border: '1px solid',
-                  borderColor: canGoBack ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.07)',
-                  borderRadius: 8, width: mobile ? 44 : 32, height: mobile ? 44 : 32,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: canGoBack ? 'pointer' : 'default',
-                  color: canGoBack ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.2)',
-                  fontSize: mobile ? 14 : 16, lineHeight: 1, transition: 'all 0.2s', flexShrink: 0,
-                }}
-              >←</button>
-              <button
-                onClick={onForward}
-                disabled={!canGoForward}
-                aria-label="Go forward"
-                className="tic-header__arrow"
-                style={{
-                  background: 'none', border: '1px solid',
-                  borderColor: canGoForward ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.07)',
-                  borderRadius: 8, width: mobile ? 44 : 32, height: mobile ? 44 : 32,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: canGoForward ? 'pointer' : 'default',
-                  color: canGoForward ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.2)',
-                  fontSize: mobile ? 14 : 16, lineHeight: 1, transition: 'all 0.2s', flexShrink: 0,
-                }}
-              >→</button>
-
               {/* Logo */}
               <button
                 onClick={() => onNavigate('landing')}
