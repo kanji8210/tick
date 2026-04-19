@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import PolicyShowcase from './PolicyShowcase';
 import { CompareBar, CompareModal, CompareDatePicker } from './LandingPage';
+import { useResponsive } from '../lib/useResponsive';
 
 const Catalog = ({ onNavigate }) => {
+  const { mobile } = useResponsive();
   const [compareSelected, setCompareSelected] = useState([]);
   const [compareOpen, setCompareOpen] = useState(false);
   const [compareDates, setCompareDates] = useState(null);
@@ -12,7 +14,7 @@ const Catalog = ({ onNavigate }) => {
   const onRemoveCompare = (id) => setCompareSelected(prev => prev.filter(p => p.id !== id));
 
   return (
-    <div className="fade-in" style={{ padding: '6rem 0' }}>
+    <div className="fade-in" style={{ padding: mobile ? '5rem 0 2rem' : '6rem 0' }}>
 
       <PolicyShowcase
         onNavigate={onNavigate}

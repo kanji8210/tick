@@ -96,7 +96,7 @@ const InsurerProfileModal = ({ policy, onClose }) => {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: mobile ? 'flex-end' : 'center', justifyContent: 'center', padding: mobile ? 0 : '2rem' }} onClick={onClose}>
       <div className="glass-card" style={{ maxWidth: mobile ? '100%' : 400, width: '100%', padding: mobile ? '2rem 1.5rem' : '2.5rem', position: 'relative', textAlign: 'center', borderRadius: mobile ? '20px 20px 0 0' : undefined }} onClick={e => e.stopPropagation()}>
-        <button type="button" onClick={onClose} style={{ position: 'absolute', top: 14, right: 14, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--slate)', fontSize: 18, borderRadius: 8, padding: '4px 10px', cursor: 'pointer' }}>✕</button>
+        <button type="button" onClick={onClose} aria-label="Close" style={{ position: 'absolute', top: 10, right: 10, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--slate)', fontSize: 18, borderRadius: 8, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>✕</button>
         <div style={{ width: 80, height: 80, margin: '0 auto 1.5rem' }}>
           <InsurerLogo logoUrl={logoUrl} name={name} size={80} />
         </div>
@@ -130,7 +130,7 @@ const BenefitModal = ({ policy, onClose, onNavigate }) => {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)', zIndex: 2000, display: 'flex', alignItems: mobile ? 'flex-end' : 'center', justifyContent: 'center', padding: mobile ? '0' : '2rem' }} onClick={onClose}>
       <div className="glass-card" style={{ maxWidth: 620, width: '100%', padding: mobile ? '1.5rem' : '2.5rem', position: 'relative', maxHeight: mobile ? '92vh' : '80vh', overflowY: 'auto', borderRadius: mobile ? '20px 20px 0 0' : undefined }} onClick={e => e.stopPropagation()}>
-        <button type="button" onClick={onClose} style={{ position: 'absolute', top: 14, right: 14, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--slate)', fontSize: 18, borderRadius: 8, padding: '4px 10px', cursor: 'pointer' }}>✕</button>
+        <button type="button" onClick={onClose} aria-label="Close" style={{ position: 'absolute', top: 10, right: 10, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--slate)', fontSize: 18, borderRadius: 8, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>✕</button>
         <span className="badge badge--indigo" style={{ marginBottom: 14 }}>Plan Details</span>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: '1rem' }}>

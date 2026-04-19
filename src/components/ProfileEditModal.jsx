@@ -41,7 +41,7 @@ const ProfileEditModal = ({ onClose }) => {
       <div className="glass-card fade-in" style={{ maxWidth: 440, width: '100%', padding: mobile ? '1.5rem' : '2.25rem', position: 'relative' }} onClick={e => e.stopPropagation()}>
 
         {/* Close */}
-        <button type="button" onClick={onClose} style={{ position: 'absolute', top: 14, right: 14, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--slate)', fontSize: 18, borderRadius: 8, padding: '4px 10px', cursor: 'pointer' }}>✕</button>
+        <button type="button" onClick={onClose} aria-label="Close" style={{ position: 'absolute', top: 10, right: 10, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--slate)', fontSize: 18, borderRadius: 8, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>✕</button>
 
         {/* Avatar + title */}
         <div style={{ textAlign: 'center', marginBottom: 24 }}>

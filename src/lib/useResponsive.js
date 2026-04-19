@@ -10,9 +10,16 @@ export const useResponsive = () => {
   const [bp, setBp] = useState(getBreakpoints);
 
   useEffect(() => {
-    const handler = () => setBp(getBreakpoints());
+    let timer;
+    const handler = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => setBp(getBreakpoints()), 100);
+    };
     window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', handler);
+    };
   }, []);
 
   return bp;

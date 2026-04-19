@@ -109,7 +109,7 @@ const StepBar = ({ step, isAgent }) => {
             }}>
               {done ? '✓' : i + 1}
             </div>
-            <span style={{ fontSize: 10, color: active ? '#fff' : 'var(--slate)', fontWeight: active ? 700 : 400, whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 10, color: active ? '#fff' : 'var(--slate)', fontWeight: active ? 700 : 400, textAlign: 'center', lineHeight: 1.3, wordBreak: 'break-word' }}>
               {label}
             </span>
           </div>

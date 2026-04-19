@@ -93,7 +93,7 @@ const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onFor
                 style={{
                   background: 'none', border: '1px solid',
                   borderColor: canGoBack ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.07)',
-                  borderRadius: 8, width: mobile ? 28 : 32, height: mobile ? 28 : 32,
+                  borderRadius: 8, width: mobile ? 44 : 32, height: mobile ? 44 : 32,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: canGoBack ? 'pointer' : 'default',
                   color: canGoBack ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.2)',
@@ -108,7 +108,7 @@ const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onFor
                 style={{
                   background: 'none', border: '1px solid',
                   borderColor: canGoForward ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.07)',
-                  borderRadius: 8, width: mobile ? 28 : 32, height: mobile ? 28 : 32,
+                  borderRadius: 8, width: mobile ? 44 : 32, height: mobile ? 44 : 32,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: canGoForward ? 'pointer' : 'default',
                   color: canGoForward ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.2)',

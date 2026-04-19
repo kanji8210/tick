@@ -61,7 +61,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   margin: 0 auto; padding: 0 80px;
 }
 @media (max-width: 1024px) { .container { padding: 0 40px; } }
-@media (max-width: 768px)  { .container { padding: 0 12px; } }
+@media (max-width: 768px)  { .container { padding: 0 16px; } }
 
 /* ── Background effects ── */
 .bg-mesh {
@@ -77,6 +77,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
     linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
   background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
   mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
 }
 
@@ -96,39 +97,45 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
 /* ── Buttons ── */
 .btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; border-radius: var(--radius-md); font-family: var(--font-body); font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.25s ease; border: none; text-decoration: none; line-height: 1; }
 .btn--primary { background: var(--indigo); color: #fff; box-shadow: 0 4px 24px rgba(49,99,49,0.4); }
-.btn--primary:hover { background: var(--indigo-glow); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(49,99,49,0.5); }
 .btn--gold { background: var(--gold); color: var(--navy); font-weight: 700; box-shadow: var(--shadow-gold); }
-.btn--gold:hover { background: #FBBF24; transform: translateY(-2px); }
 .btn--ghost { background: transparent; color: var(--white); border: 1px solid var(--glass-border-bright); }
-.btn--ghost:hover { background: var(--glass-bg-md); border-color: rgba(255,255,255,0.4); }
+@media (hover: hover) {
+  .btn--primary:hover { background: var(--indigo-glow); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(49,99,49,0.5); }
+  .btn--gold:hover { background: #FBBF24; transform: translateY(-2px); }
+  .btn--ghost:hover { background: var(--glass-bg-md); border-color: rgba(255,255,255,0.4); }
+}
 .btn--lg { padding: 18px 36px; font-size: 16px; border-radius: var(--radius-lg); }
 @media (max-width: 768px) { .btn--lg { padding: 15px 24px; font-size: 15px; } }
 .btn--sm { padding: 10px 18px; font-size: 13px; border-radius: var(--radius-sm); }
 
 .glass-card {
   background: var(--glass-bg-md);
-  backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border-bright);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   transition: border-color 0.3s, transform 0.3s;
 }
-.glass-card:hover { border-color: rgba(49,99,49,0.4); }
+@media (hover: hover) {
+  .glass-card:hover { border-color: rgba(49,99,49,0.4); }
+}
 
 /* Policy card hover — CSS-only to avoid React re-render snap */
 .policy-card {
   transition: border-color 0.25s, transform 0.25s ease, box-shadow 0.25s ease;
 }
-.policy-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-card);
+@media (hover: hover) {
+  .policy-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-card);
+  }
 }
 
 .gold-text {
   background: linear-gradient(135deg, var(--gold) 30%, var(--gold-light) 70%);
-  background-clip: text;
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -140,13 +147,15 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   text-transform: uppercase; letter-spacing: 0.08em;
   cursor: pointer; transition: all 0.25s ease;
 }
-.btn-luxury:hover { background: #FBBF24; transform: translateY(-2px); }
+@media (hover: hover) {
+  .btn-luxury:hover { background: #FBBF24; transform: translateY(-2px); }
+}
 
 .form-input, .input-field {
   width: 100%; padding: 12px 14px;
   background: rgba(0,0,0,0.28); border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm); color: var(--white);
-  font-family: var(--font-body); font-size: 14px;
+  font-family: var(--font-body); font-size: 16px; /* ≥16px prevents iOS Safari auto-zoom */
   transition: border-color 0.2s, box-shadow 0.2s; outline: none;
   -webkit-appearance: none; appearance: none;
 }
@@ -166,23 +175,45 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
 .reveal-delay-4 { transition-delay: 0.45s; }
 
 .nav-link-luxury { transition: color 0.2s; position: relative; }
-.nav-link-luxury:hover { color: white !important; }
 .nav-link-luxury::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 1px; background: var(--gold); transition: width 0.3s; }
-.nav-link-luxury:hover::after { width: 100%; }
+@media (hover: hover) {
+  .nav-link-luxury:hover { color: white !important; }
+  .nav-link-luxury:hover::after { width: 100%; }
+}
 
 .gold-border {
   border: 1px solid var(--gold) !important;
 }
 
-.brand-logo:hover { opacity: 0.8; }
 .footer-link { transition: color 0.3s ease; cursor: pointer; }
-.footer-link:hover { color: var(--white) !important; }
+@media (hover: hover) {
+  .brand-logo:hover { opacity: 0.8; }
+  .footer-link:hover { color: var(--white) !important; }
+}
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--navy-mid); }
 ::-webkit-scrollbar-thumb { background: rgba(49,99,49,0.5); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--indigo); }
+@media (hover: hover) {
+  ::-webkit-scrollbar-thumb:hover { background: var(--indigo); }
+}
+
+/* ── Safe area — iPhone notch / Dynamic Island / home bar ── */
+.tic-header {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+body {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .fade-in { animation: none; opacity: 1; transform: none; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .reveal-delay-1, .reveal-delay-2, .reveal-delay-3, .reveal-delay-4 { transition-delay: 0s; }
+  * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
 
 
 /* ── Policy Benefits Table Styles ── */
@@ -289,8 +320,8 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   top: 0; left: 0; right: 0; bottom: 0;
   z-index: 99;
   background: rgba(8,14,39,0.97);
-  backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
   display: flex;
   flex-direction: column;
   padding: 80px 24px 32px;
