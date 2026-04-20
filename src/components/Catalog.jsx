@@ -1,17 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PolicyShowcase from './PolicyShowcase';
-import { CompareBar, CompareModal, CompareDatePicker } from './LandingPage';
 import { useResponsive } from '../lib/useResponsive';
 
-const Catalog = ({ onNavigate }) => {
+const Catalog = ({ onNavigate, compareSelected = [], onAddCompare, onRemoveCompare }) => {
   const { mobile } = useResponsive();
-  const [compareSelected, setCompareSelected] = useState([]);
-  const [compareOpen, setCompareOpen] = useState(false);
-  const [compareDates, setCompareDates] = useState(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const onAddCompare    = (p) => setCompareSelected(prev => prev.length < 3 && !prev.find(x => x.id === p.id) ? [...prev, p] : prev);
-  const onRemoveCompare = (id) => setCompareSelected(prev => prev.filter(p => p.id !== id));
+  const handleAddCompare    = (p)   => onAddCompare?.(p);
+  const handleRemoveCompare = (id)  => onRemoveCompare?.(id);
 
   return (
     <div className="fade-in" style={{ padding: mobile ? '5rem 0 2rem' : '6rem 0' }}>
@@ -19,40 +14,9 @@ const Catalog = ({ onNavigate }) => {
       <PolicyShowcase
         onNavigate={onNavigate}
         compareSelected={compareSelected}
-        onAddCompare={onAddCompare}
-        onRemoveCompare={onRemoveCompare}
+        onAddCompare={handleAddCompare}
+        onRemoveCompare={handleRemoveCompare}
       />
-
-      <CompareBar
-        selected={compareSelected}
-        onRemove={onRemoveCompare}
-        onClear={() => setCompareSelected([])}
-        onCompare={() => setShowDatePicker(true)}
-      />
-
-      {showDatePicker && (
-        <CompareDatePicker
-          onConfirm={(dates) => { setCompareDates(dates); setShowDatePicker(false); setCompareOpen(true); }}
-          onSkip={() => { setCompareDates(null); setShowDatePicker(false); setCompareOpen(true); }}
-          onClose={() => setShowDatePicker(false)}
-        />
-      )}
-
-      {compareOpen && compareSelected.length >= 2 && (
-        <CompareModal
-          selected={compareSelected}
-          compareDates={compareDates}
-          onClose={() => setCompareOpen(false)}
-          onPickPolicy={(p) => {
-            setCompareOpen(false);
-            onNavigate('policy-detail', p.databaseId, compareDates);
-          }}
-          onKeepComparing={(p) => {
-            setCompareSelected([p]);
-            setCompareOpen(false);
-          }}
-        />
-      )}
 
       <div style={{ textAlign: 'center', marginTop: '6rem', padding: '4rem', background: 'rgba(255,255,255,0.02)', borderRadius: '24px' }}>
         <h3 className="serif" style={{ fontSize: '2rem' }}>Need a <span className="gold-text">Custom Quote?</span></h3>
