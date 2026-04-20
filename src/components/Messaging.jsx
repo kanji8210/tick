@@ -12,9 +12,13 @@ const Messaging = ({ initialPolicyId = null }) => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState(null);
+  const [startError, setStartError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
   const [convId, setConvId] = useState(null);
   const [chatToken, setChatToken] = useState(null);
   const scrollRef = useRef(null);
+  const inputRef = useRef(null);
   const lastIdRef = useRef(0);
   const [historyLoading, setHistoryLoading] = useState(false);
 
@@ -44,11 +48,16 @@ const Messaging = ({ initialPolicyId = null }) => {
         if (data.success) {
           setConvId(data.conversation_id);
           setChatToken(data.token);
+        } else {
+          setStartError(data.message || 'Could not start chat session. Please refresh and try again.');
         }
       })
-      .catch(err => console.error('Chat start error:', err))
+      .catch(err => {
+        console.error('Chat start error:', err);
+        setStartError('Network error. Please check your connection and refresh.');
+      })
       .finally(() => setLoading(false));
-  }, [authLoading, token, user?.email, initialPolicyId]);
+  }, [authLoading, token, user?.email, initialPolicyId, retryCount]);
 
   // 2. Poll Messages — use a ref for lastId so `messages` is not a dependency
   // (adding messages to deps would restart the interval on every new message)
@@ -67,12 +76,14 @@ const Messaging = ({ initialPolicyId = null }) => {
           if (data.success && Array.isArray(data.messages)) {
             if (data.messages.length > 0) {
               setMessages(prev => {
-                // Deduplicate: filter out messages that are already in the list (optimistic or previous poll)
-                const newMsgs = data.messages.filter(m => !prev.some(p => p.id === m.id));
+                // Normalise IDs to numbers for reliable dedup
+                const existingIds = new Set(prev.map(p => Number(p.id)));
+                const newMsgs = data.messages
+                  .map(m => ({ ...m, id: Number(m.id) }))
+                  .filter(m => !existingIds.has(m.id));
                 if (newMsgs.length === 0) return prev;
-                
                 const combined = [...prev, ...newMsgs];
-                lastIdRef.current = combined[combined.length - 1].id || lastIdRef.current;
+                lastIdRef.current = Math.max(...combined.map(m => Number(m.id) || 0));
                 return combined;
               });
             }
@@ -100,8 +111,19 @@ const Messaging = ({ initialPolicyId = null }) => {
   const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim() || sending || !convId) return;
-
+    setSendError(null);
+    const optimisticKey = `opt-${Date.now()}`;
+    const text = input;
     setSending(true);
+    // Optimistic UI: add message immediately
+    setMessages(prev => [...prev, {
+      id: optimisticKey,
+      sender_type: 'user',
+      message: text,
+      created_at: new Date().toISOString(),
+      isOptimistic: true,
+    }]);
+    setInput('');
     try {
       const res = await fetch(`${WP_REST_BASE}/maljani-chat/v1/message`, {
         method: 'POST',
@@ -112,28 +134,37 @@ const Messaging = ({ initialPolicyId = null }) => {
         body: JSON.stringify({
           conversation_id: convId,
           token: chatToken,
-          message: input
+          message: text
         })
       });
       const data = await res.json();
       if (data.success) {
-        const newMessage = {
-          id: data.message_id || Date.now(),
-          sender_type: 'user',
-          message: input,
-          created_at: new Date().toISOString(),
-          isOptimistic: true
-        };
-        setMessages(prev => [...prev, newMessage]);
-        setInput('');
+        // Replace optimistic entry with the confirmed server ID so poll dedup works
+        const realId = data.message_id ? Number(data.message_id) : null;
+        if (realId) {
+          setMessages(prev => prev.map(m =>
+            m.id === optimisticKey ? { ...m, id: realId, isOptimistic: false } : m
+          ));
+          // Make sure lastId advances so we don't re-fetch this message
+          if (realId > lastIdRef.current) lastIdRef.current = realId;
+        } else {
+          // No message_id returned — drop optimistic; poll will fetch the confirmed message
+          setMessages(prev => prev.filter(m => m.id !== optimisticKey));
+        }
       } else {
-        alert('Failed to send message: ' + (data.message || 'Unknown error'));
+        // Remove optimistic message and show error inline
+        setMessages(prev => prev.filter(m => m.id !== optimisticKey));
+        setSendError(data.message || 'Failed to send. Please try again.');
+        setInput(text); // Restore typed text
       }
     } catch (err) {
       console.error('Send error:', err);
-      alert('Network error while sending message.');
+      setMessages(prev => prev.filter(m => m.id !== optimisticKey));
+      setSendError('Network error. Please try again.');
+      setInput(text);
     } finally {
       setSending(false);
+      inputRef.current?.focus();
     }
   };
 
@@ -149,6 +180,14 @@ const Messaging = ({ initialPolicyId = null }) => {
       <div style={{ fontSize: 40, marginBottom: 16 }}>🔒</div>
       <p style={{ fontSize: 16, color: '#fff', marginBottom: 8 }}>Please log in to access Live Support</p>
       <p style={{ fontSize: 13, opacity: 0.7 }}>Sign in with your account to chat with our support team.</p>
+    </div>
+  );
+
+  if (startError) return (
+    <div style={{ padding: '60px', textAlign: 'center', color: 'var(--slate)' }}>
+      <div style={{ fontSize: 40, marginBottom: 16 }}>⚠️</div>
+      <p style={{ fontSize: 15, color: '#f87171', marginBottom: 8 }}>{startError}</p>
+      <button className="btn btn--ghost" onClick={() => { setStartError(null); setLoading(true); setRetryCount(c => c + 1); }}>Retry</button>
     </div>
   );
 
@@ -208,36 +247,52 @@ const Messaging = ({ initialPolicyId = null }) => {
       </div>
 
       {/* Input Area */}
-      <form 
-        onSubmit={handleSend}
-        style={{ padding: '20px 24px', borderTop: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.02)', display: 'flex', gap: 12 }}
-      >
-        <input 
-          type="text" 
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message here..."
-          style={{ 
-            flex: 1, 
-            background: 'rgba(0,0,0,0.2)', 
-            border: '1px solid var(--glass-border)', 
-            borderRadius: '12px', 
-            padding: '12px 16px',
-            color: '#fff',
-            fontSize: 14,
-            outline: 'none'
-          }}
-          disabled={sending}
-        />
-        <button 
-          type="submit"
-          className="btn btn--primary"
-          style={{ padding: '12px 24px', borderRadius: '12px', minWidth: '100px' }}
-          disabled={sending || !input.trim()}
+      <div style={{ borderTop: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.02)' }}>
+        {sendError && (
+          <div style={{ padding: '8px 24px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <span style={{ fontSize: 12, color: '#f87171' }}>⚠ {sendError}</span>
+            <button onClick={() => setSendError(null)} style={{ background: 'none', border: 'none', color: 'var(--slate)', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>✕</button>
+          </div>
+        )}
+        {!convId && !startError && (
+          <div style={{ padding: '8px 24px 0', fontSize: 12, color: '#f59e0b' }}>⏳ Connecting to support…</div>
+        )}
+        <form 
+          onSubmit={handleSend}
+          style={{ padding: '16px 24px', display: 'flex', gap: 12 }}
         >
-          {sending ? '...' : 'Send'}
-        </button>
-      </form>
+          <input 
+            ref={inputRef}
+            type="text" 
+            value={input}
+            onChange={(e) => { setInput(e.target.value); setSendError(null); }}
+            placeholder={convId ? 'Type your message here...' : 'Waiting for connection…'}
+            style={{ 
+              flex: 1, 
+              background: 'rgba(0,0,0,0.2)', 
+              border: `1px solid ${sendError ? '#f87171' : 'var(--glass-border)'}`, 
+              borderRadius: '12px', 
+              padding: '12px 16px',
+              color: '#fff',
+              fontSize: 14,
+              outline: 'none'
+            }}
+            disabled={sending || !convId}
+          />
+          <button 
+            type="submit"
+            className="btn btn--primary"
+            style={{ padding: '12px 24px', borderRadius: '12px', minWidth: '100px' }}
+            disabled={sending || !input.trim() || !convId}
+          >
+            {sending ? (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span className="spinner-sm" style={{ width: 14, height: 14, borderWidth: 2 }} />Sending
+              </span>
+            ) : 'Send'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

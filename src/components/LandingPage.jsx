@@ -1065,14 +1065,7 @@ const LandingPage = ({ onStartWizard, onNavigate }) => {
         </div>
       </section>
 
-      {/* Chat bubble */}
-      <button
-        aria-label="Open live chat"
-        onClick={() => onNavigate('catalog')}
-        style={{ position: 'fixed', bottom: compareSelected.length >= 1 ? 88 : 28, right: 28, zIndex: 800, width: 52, height: 52, borderRadius: '50%', background: 'var(--indigo)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, cursor: 'pointer', boxShadow: '0 4px 20px rgba(49,99,49,0.5)', transition: 'bottom 0.3s ease, transform 0.2s' }}
-        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
-        onMouseLeave={e => e.currentTarget.style.transform = 'none'}
-      >💬</button>
+      {/* Chat bubble lives in App.jsx to persist across views */}
     </div>
   );
 };
