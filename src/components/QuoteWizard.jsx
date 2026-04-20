@@ -72,6 +72,13 @@ const coversRegion = (policy, regionSlug) => {
   return (policy.regions?.nodes || []).some(r => r.slug === regionSlug);
 };
 
+/** Format ISO date string (YYYY-MM-DD) into readable form e.g. Mon, 22 Apr 2026 */
+const fmtDateReadable = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('en-KE', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+};
+
 /* ─── Shared field style ───────────────────────────────────────────────────── */
 const fieldStyle = {
   display: 'flex', flexDirection: 'column', gap: 6,
@@ -80,17 +87,19 @@ const labelStyle = {
   fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
   textTransform: 'uppercase', color: 'var(--gold)',
 };
+/* fontSize: 16px is required — prevents iOS auto-zoom on input focus (iPhone 11/12+) */
 const inputStyle = {
-  padding: '10px 14px', borderRadius: 8, border: '1px solid var(--glass-border)',
-  background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 14,
-  fontFamily: 'var(--font-body)', outline: 'none', width: '100%', boxSizing: 'border-box',
+  padding: '12px 14px', borderRadius: 8, border: '1px solid var(--glass-border)',
+  background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 16,
+  fontFamily: 'var(--font-body)', outline: 'none', width: '100%',
+  boxSizing: 'border-box', minHeight: 48, colorScheme: 'dark',
 };
 
 /* ─── Step indicators ─────────────────────────────────────────────────────── */
 const STEPS = ['Trip Details', 'Choose Plan', 'Your Info', 'Confirmed'];
 const STEPS_AGENT = ['Client Trip', 'Choose Plan', 'Client Info', 'Confirmed'];
 
-const StepBar = ({ step, isAgent }) => {
+const StepBar = ({ step, isAgent, mobile }) => {
   const steps = isAgent ? STEPS_AGENT : STEPS;
   return (
   <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 28 }}>
@@ -99,22 +108,25 @@ const StepBar = ({ step, isAgent }) => {
       const done    = i + 1 < step;
       return (
         <React.Fragment key={i}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1, minWidth: 0 }}>
             <div style={{
-              width: 28, height: 28, borderRadius: '50%', display: 'flex',
-              alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800,
+              width: 30, height: 30, borderRadius: '50%', display: 'flex', flexShrink: 0,
+              alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800,
               background: done ? 'var(--gold)' : active ? 'var(--indigo)' : 'var(--glass-bg)',
               border: `2px solid ${done || active ? (done ? 'var(--gold)' : 'var(--indigo)') : 'var(--glass-border)'}`,
               color: done || active ? '#fff' : 'var(--slate)',
             }}>
               {done ? '✓' : i + 1}
             </div>
-            <span style={{ fontSize: 10, color: active ? '#fff' : 'var(--slate)', fontWeight: active ? 700 : 400, textAlign: 'center', lineHeight: 1.3, wordBreak: 'break-word' }}>
-              {label}
-            </span>
+            {/* Hide text labels on very small screens — dots alone are sufficient */}
+            {!mobile && (
+              <span style={{ fontSize: 10, color: active ? '#fff' : 'var(--slate)', fontWeight: active ? 700 : 400, textAlign: 'center', lineHeight: 1.3, wordBreak: 'break-word', maxWidth: 56 }}>
+                {label}
+              </span>
+            )}
           </div>
           {i < steps.length - 1 && (
-            <div style={{ flex: 1, height: 2, background: done ? 'var(--gold)' : 'var(--glass-border)', marginBottom: 20, maxWidth: 40 }} />
+            <div style={{ flex: 1, height: 2, background: done ? 'var(--gold)' : 'var(--glass-border)', marginBottom: mobile ? 0 : 20, maxWidth: mobile ? 24 : 40 }} />
           )}
         </React.Fragment>
       );
@@ -122,6 +134,25 @@ const StepBar = ({ step, isAgent }) => {
   </div>
   );
 };
+
+/* ─── Date input with readable confirmation ───────────────────────────────── */
+const DateInput = ({ label, value, onChange, min }) => (
+  <div style={fieldStyle}>
+    <label style={labelStyle}>{label}</label>
+    <input
+      type="date"
+      style={inputStyle}
+      min={min}
+      value={value}
+      onChange={onChange}
+    />
+    {value && (
+      <span style={{ fontSize: 12, color: 'var(--gold)', fontWeight: 600, marginTop: -2, paddingLeft: 2 }}>
+        {fmtDateReadable(value)}
+      </span>
+    )}
+  </div>
+);
 
 /* ─── Component ───────────────────────────────────────────────────────────── */
 const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initialStep = 1, onNavigate }) => {
@@ -352,8 +383,8 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
 
   /* ── Step 1 — Trip Details ── */
   if (step === 1) return (
-    <div className="glass-card fade-in" style={{ padding: '2rem' }}>
-      <StepBar step={1} isAgent={isAgent} />
+    <div className="glass-card fade-in" style={{ padding: mobile ? '1.25rem' : '2rem' }}>
+      <StepBar step={1} isAgent={isAgent} mobile={mobile} />
       <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, marginBottom: 24 }}>
         {isAgent ? "Client's Travel" : 'Your Trip'} <span style={{ color: 'var(--gold)' }}>Details</span>
       </h3>
@@ -390,18 +421,22 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
             </div>
           )}
         </div>
-        <div style={fieldStyle}>
-          <label style={labelStyle}>Departure Date</label>
-          <input type="date" style={inputStyle} min={today}
-            value={form.departure}
-            onChange={e => set('departure', e.target.value)} />
-        </div>
-        <div style={fieldStyle}>
-          <label style={labelStyle}>Return Date</label>
-          <input type="date" style={inputStyle} min={form.departure}
-            value={form.returnDate}
-            onChange={e => set('returnDate', e.target.value)} />
-        </div>
+        <DateInput
+          label="Departure Date"
+          value={form.departure}
+          min={today}
+          onChange={e => {
+            const dep = e.target.value;
+            set('departure', dep);
+            if (form.returnDate && form.returnDate < dep) set('returnDate', dep);
+          }}
+        />
+        <DateInput
+          label="Return Date"
+          value={form.returnDate}
+          min={form.departure || today}
+          onChange={e => set('returnDate', e.target.value)}
+        />
       </div>
 
       {/* Trip duration indicator */}
@@ -417,16 +452,23 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
       <div style={fieldStyle}>
         <label style={labelStyle}>Number of Travellers</label>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button style={{ ...inputStyle, width: 40, textAlign: 'center', cursor: 'pointer', flexShrink: 0 }}
+          <button
+            type="button"
+            aria-label="Remove traveller"
+            style={{ ...inputStyle, width: 48, height: 48, padding: 0, textAlign: 'center', cursor: 'pointer', flexShrink: 0, fontSize: 22, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             onClick={() => set('passengers', Math.max(1, form.passengers - 1))}>−</button>
-          <span style={{ fontSize: 18, fontWeight: 800, minWidth: 24, textAlign: 'center' }}>{form.passengers}</span>
-          <button style={{ ...inputStyle, width: 40, textAlign: 'center', cursor: 'pointer', flexShrink: 0 }}
+          <span style={{ fontSize: 20, fontWeight: 800, minWidth: 32, textAlign: 'center', color: '#fff' }}>{form.passengers}</span>
+          <button
+            type="button"
+            aria-label="Add traveller"
+            style={{ ...inputStyle, width: 48, height: 48, padding: 0, textAlign: 'center', cursor: 'pointer', flexShrink: 0, fontSize: 22, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             onClick={() => set('passengers', form.passengers + 1)}>+</button>
+          <span style={{ fontSize: 13, color: 'var(--slate)' }}>traveller{form.passengers !== 1 ? 's' : ''}</span>
         </div>
       </div>
 
       <button
-        style={{ marginTop: 24, width: '100%', padding: '13px', borderRadius: 8, background: 'var(--indigo)', border: 'none', color: '#fff', fontSize: 14, fontWeight: 800, cursor: !form.destinationRegion ? 'not-allowed' : 'pointer', opacity: !form.destinationRegion ? 0.5 : 1, letterSpacing: '0.05em' }}
+        style={{ marginTop: 24, width: '100%', padding: '14px', borderRadius: 10, background: 'var(--indigo)', border: 'none', color: '#fff', fontSize: 16, fontWeight: 800, cursor: !form.destinationRegion ? 'not-allowed' : 'pointer', opacity: !form.destinationRegion ? 0.5 : 1, letterSpacing: '0.04em', minHeight: 52 }}
         disabled={!form.destinationRegion}
         onClick={() => setStep(2)}>
         View Available Plans →
@@ -436,8 +478,8 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
 
   /* ── Step 2 — Choose Plan ── */
   if (step === 2) return (
-    <div className="glass-card fade-in" style={{ padding: '2rem' }}>
-      <StepBar step={2} isAgent={isAgent} />
+    <div className="glass-card fade-in" style={{ padding: mobile ? '1.25rem' : '2rem' }}>
+      <StepBar step={2} isAgent={isAgent} mobile={mobile} />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
         <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, margin: 0 }}>
           Available <span style={{ color: 'var(--gold)' }}>Plans</span>
@@ -460,23 +502,22 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
         <div style={{ marginBottom: 20, padding: '16px 18px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,175,55,0.25)' }}>
           <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--gold)' }}>Adjust Trip Dates</p>
           <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr auto', gap: 12, alignItems: 'flex-end' }}>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Departure</label>
-              <input type="date" style={inputStyle} min={today}
-                value={form.departure}
-                onChange={e => {
-                  const dep = e.target.value;
-                  set('departure', dep);
-                  // Push return date forward if it would be before departure
-                  if (form.returnDate < dep) set('returnDate', dep);
-                }} />
-            </div>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Return</label>
-              <input type="date" style={inputStyle} min={form.departure}
-                value={form.returnDate}
-                onChange={e => set('returnDate', e.target.value)} />
-            </div>
+            <DateInput
+              label="Departure"
+              value={form.departure}
+              min={today}
+              onChange={e => {
+                const dep = e.target.value;
+                set('departure', dep);
+                if (form.returnDate < dep) set('returnDate', dep);
+              }}
+            />
+            <DateInput
+              label="Return"
+              value={form.returnDate}
+              min={form.departure || today}
+              onChange={e => set('returnDate', e.target.value)}
+            />
             <div style={{ paddingBottom: 2, textAlign: 'center', minWidth: 80 }}>
               <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--gold)' }}>{days}</div>
               <div style={{ fontSize: 10, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>day{days !== 1 ? 's' : ''}</div>
@@ -668,8 +709,8 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
     const prem  = bracketPremium(form.selectedPolicy?.policyDayPremiums, days);
     const total = prem !== null ? prem * form.passengers : null;
     return (
-      <div className="glass-card fade-in" style={{ padding: '2rem' }}>
-        <StepBar step={3} isAgent={isAgent} />
+      <div className="glass-card fade-in" style={{ padding: mobile ? '1.25rem' : '2rem' }}>
+        <StepBar step={3} isAgent={isAgent} mobile={mobile} />
         <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, marginBottom: 6 }}>
           {isAgent ? 'Client' : 'Your'} <span style={{ color: 'var(--gold)' }}>Details</span>
         </h3>

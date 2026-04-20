@@ -180,17 +180,7 @@ const Hero = ({ onStart, onNavigate }) => {
                 Instant certificates. Zero paperwork. Built for travelers and agencies.
               </p>
               <div className="reveal reveal-delay-3" style={{ display: "flex", alignItems: mobile ? "stretch" : "center", flexDirection: mobile ? "column" : "row", gap: mobile ? 10 : 14, flexWrap: "wrap", marginBottom: 18 }}>
-                <button className="btn btn--primary btn--lg" style={mobile ? { width: '100%', justifyContent: 'center' } : {}} onClick={() => {
-                  if (user) {
-                    // Logged in → skip hero mini-wizard, go straight to full QuoteWizard
-                    onNavigate?.('wizard');
-                  } else {
-                    // Logged out → reveal the hero card mini-wizard
-                    setShowQuote(true);
-                    setStep(1);
-                    setTimeout(() => quoteCardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
-                  }
-                }}>Compare Policies &rarr;</button>
+                <button className="btn btn--primary btn--lg" style={mobile ? { width: '100%', justifyContent: 'center' } : {}} onClick={() => onNavigate?.('wizard')}>Compare Policies &rarr;</button>
                 <button className="btn btn--ghost btn--lg" style={mobile ? { width: '100%', justifyContent: 'center' } : {}} onClick={() => document.getElementById("agencies")?.scrollIntoView({ behavior: "smooth" })}>For Agencies</button>
               </div>
               <div className="reveal reveal-delay-4" style={{ display: "flex", alignItems: "center", gap: mobile ? 8 : 16, flexWrap: "wrap", fontSize: mobile ? 12 : 13, color: "var(--slate-dark)" }}>

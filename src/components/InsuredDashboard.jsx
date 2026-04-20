@@ -202,7 +202,7 @@ const InsuredDashboard = ({ user, onNavigate, initialTab }) => {
                 <button 
                   className="btn btn--primary btn--sm" 
                   style={{ padding: '10px 20px', boxShadow: '0 4px 14px rgba(49,99,49,0.3)' }}
-                  onClick={() => onNavigate('wizard')}
+                  onClick={() => onNavigate('catalog')}
                 >+ GET NEW POLICY</button>
               </div>
 
@@ -226,7 +226,7 @@ const InsuredDashboard = ({ user, onNavigate, initialTab }) => {
                 <div style={{ padding: '52px 24px', textAlign: 'center', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-lg)' }}>
                   <div style={{ fontSize: 42, marginBottom: 14 }}>✈️</div>
                   <p style={{ color: 'var(--slate)', marginBottom: 20, fontSize: 15 }}>You haven't purchased any policies yet.</p>
-                  <button className="btn btn--primary" onClick={() => onNavigate('wizard')}>Browse Policies →</button>
+                  <button className="btn btn--primary" onClick={() => onNavigate('catalog')}>Browse Policies →</button>
                 </div>
               )}
 
