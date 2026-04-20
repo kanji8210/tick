@@ -234,117 +234,106 @@ const Hero = ({ onStart, onNavigate }) => {
 
               {/* ── Client dashboard card ── */}
               {!showQuote && (
-                <div style={{
-                  background: "var(--glass-bg)", border: "1px solid var(--glass-border)",
-                  borderRadius: "var(--radius-lg)", padding: 24, fontFamily: "var(--font-body)",
-                  animation: "float 7s ease-in-out infinite",
-                }}>
-                  {/* Window chrome */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      {["#ff5f57", "#febc2e", "#28c840"].map(c => <div key={c} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />)}
-                      <span style={{ fontSize: 11, color: "var(--slate)", marginLeft: 8 }}>
-                        {user ? (user.name || user.email || "My Dashboard") : "My Dashboard"}
-                      </span>
+                user ? (
+                  /* Logged-in: real live dashboard preview */
+                  <div style={{
+                    background: "var(--glass-bg)", border: "1px solid var(--glass-border)",
+                    borderRadius: "var(--radius-lg)", padding: 24, fontFamily: "var(--font-body)",
+                    animation: "float 7s ease-in-out infinite",
+                  }}>
+                    {/* Window chrome */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        {["#ff5f57", "#febc2e", "#28c840"].map(c => <div key={c} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />)}
+                        <span style={{ fontSize: 11, color: "var(--slate)", marginLeft: 8 }}>{user.name || user.email || "My Dashboard"}</span>
+                      </div>
+                      <span style={{ fontSize: 11, color: "#22c55e", fontWeight: 600 }}>● Live</span>
                     </div>
-                    <span style={{ fontSize: 11, color: user ? "#22c55e" : "var(--slate)", fontWeight: 600 }}>
-                      {user ? "● Live" : "● Preview"}
-                    </span>
+
+                    {polFetching && (
+                      <div style={{ textAlign: "center", padding: "24px 0", color: "var(--slate)", fontSize: 12 }}>
+                        Loading your policies…
+                      </div>
+                    )}
+
+                    {!polFetching && policies.slice(0, 2).map((p, i) => {
+                      const ps = getPS(p.policyStatus);
+                      return (
+                        <div key={p.id} style={{ background: "rgba(0,0,0,0.25)", borderRadius: 10, padding: "12px 14px", marginBottom: 10, border: i === 0 ? "1px solid rgba(49,99,49,0.28)" : undefined }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{p.policyTitle || p.region || "Policy"}</span>
+                            <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 20, background: ps.bg, color: ps.color }}>{ps.label}</span>
+                          </div>
+                          <div style={{ fontSize: 11, color: "var(--slate)", marginBottom: 5 }}>
+                            {p.policyNumber} · {p.passengers || 1} traveler{p.passengers !== 1 ? "s" : ""}
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--slate)" }}>
+                            <span>{fmtDate(p.departure)} – {fmtDate(p.returnDate)}</span>
+                            <span style={{ color: "var(--gold)", fontWeight: 700 }}>{fmtKES(p.amountPaid)}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {!polFetching && policies.length === 0 && (
+                      <div style={{ textAlign: "center", padding: "20px 0", color: "var(--slate)", fontSize: 12, lineHeight: 1.7 }}>
+                        No policies yet.<br />
+                        <span style={{ color: "var(--gold)", fontWeight: 600, cursor: "pointer" }} onClick={() => { setShowQuote(true); setStep(1); }}>Get your first quote →</span>
+                      </div>
+                    )}
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
+                      {[
+                        ["Active Policies", String(activePolicies.length), "#22c55e"],
+                        ["Total Paid", totalPaid > 0 ? fmtKES(totalPaid) : "KES 0", "var(--gold)"],
+                      ].map(([k, v, c]) => (
+                        <div key={k} style={{ padding: "10px 12px", background: "rgba(0,0,0,0.2)", borderRadius: 8, textAlign: "center" }}>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: c, marginBottom: 3 }}>{v}</div>
+                          <div style={{ fontSize: 10, color: "var(--slate)" }}>{k}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button onClick={() => onNavigate?.("dashboard")} style={{ flex: 1, padding: "9px", borderRadius: 8, border: "none", background: "var(--indigo)", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                        ⬇ Download Certificate
+                      </button>
+                      <button onClick={() => onNavigate?.("dashboard")} style={{ padding: "9px 14px", borderRadius: 8, border: "1px solid var(--glass-border)", background: "transparent", color: "var(--slate)", fontSize: 11, cursor: "pointer" }}>
+                        View All
+                      </button>
+                    </div>
                   </div>
-
-                  {/* Loading state */}
-                  {user && polFetching && (
-                    <div style={{ textAlign: "center", padding: "24px 0", color: "var(--slate)", fontSize: 12 }}>
-                      Loading your policies…
-                    </div>
-                  )}
-
-                  {/* Real policies (logged in, data loaded) */}
-                  {user && !polFetching && policies.slice(0, 2).map((p, i) => {
-                    const ps = getPS(p.policyStatus);
-                    return (
-                      <div key={p.id} style={{ background: "rgba(0,0,0,0.25)", borderRadius: 10, padding: "12px 14px", marginBottom: 10, border: i === 0 ? "1px solid rgba(49,99,49,0.28)" : undefined }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{p.policyTitle || p.region || "Policy"}</span>
-                          <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 20, background: ps.bg, color: ps.color }}>{ps.label}</span>
-                        </div>
-                        <div style={{ fontSize: 11, color: "var(--slate)", marginBottom: 5 }}>
-                          {p.policyNumber} · {p.passengers || 1} traveler{p.passengers !== 1 ? "s" : ""}
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--slate)" }}>
-                          <span>{fmtDate(p.departure)} – {fmtDate(p.returnDate)}</span>
-                          <span style={{ color: "var(--gold)", fontWeight: 700 }}>{fmtKES(p.amountPaid)}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  {/* Empty state when logged in but no policies */}
-                  {user && !polFetching && policies.length === 0 && (
-                    <div style={{ textAlign: "center", padding: "20px 0", color: "var(--slate)", fontSize: 12, lineHeight: 1.7 }}>
-                      No policies yet.<br />
-                      <span style={{ color: "var(--gold)", fontWeight: 600, cursor: "pointer" }} onClick={() => { setShowQuote(true); setStep(1); }}>Get your first quote →</span>
-                    </div>
-                  )}
-
-                  {/* Mock policies (logged out) */}
-                  {!user && (<>
-                    <div style={{ background: "rgba(0,0,0,0.25)", borderRadius: 10, padding: "12px 14px", marginBottom: 10, border: "1px solid rgba(49,99,49,0.28)" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>Schengen Travel</span>
-                        <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 20, background: "rgba(34,197,94,0.15)", color: "#22c55e" }}>Active</span>
-                      </div>
-                      <div style={{ fontSize: 11, color: "var(--slate)", marginBottom: 5 }}>MAL-2026-0892 · 14 days · 1 traveler</div>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--slate)" }}>
-                        <span>Apr 22 – May 6, 2026</span>
-                        <span style={{ color: "var(--gold)", fontWeight: 700 }}>KES 8,400</span>
-                      </div>
-                    </div>
-                    <div style={{ background: "rgba(0,0,0,0.25)", borderRadius: 10, padding: "12px 14px", marginBottom: 10 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>East Africa Multi-entry</span>
-                        <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 20, background: "rgba(245,158,11,0.15)", color: "#f59e0b" }}>Pending</span>
-                      </div>
-                      <div style={{ fontSize: 11, color: "var(--slate)", marginBottom: 5 }}>MAL-2026-0901 · 30 days · 2 travelers</div>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--slate)" }}>
-                        <span>May 10 – Jun 9, 2026</span>
-                        <span style={{ color: "var(--gold)", fontWeight: 700 }}>KES 15,200</span>
-                      </div>
-                    </div>
-                  </>)}
-
-                  {/* Summary stats */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
-                    {(user ? [
-                      ["Active Policies", String(activePolicies.length), "#22c55e"],
-                      ["Total Paid", totalPaid > 0 ? fmtKES(totalPaid) : "KES 0", "var(--gold)"],
-                    ] : [
-                      ["Active Policies", "2", "#22c55e"],
-                      ["Total Paid", "KES 23.6K", "var(--gold)"],
-                    ]).map(([k, v, c]) => (
-                      <div key={k} style={{ padding: "10px 12px", background: "rgba(0,0,0,0.2)", borderRadius: 8, textAlign: "center" }}>
-                        <div style={{ fontSize: 15, fontWeight: 700, color: c, marginBottom: 3 }}>{v}</div>
-                        <div style={{ fontSize: 10, color: "var(--slate)" }}>{k}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Actions */}
-                  <div style={{ display: "flex", gap: 8 }}>
+                ) : (
+                  /* Logged-out: CTA only */
+                  <div style={{
+                    background: "var(--glass-bg)", border: "1px solid var(--glass-border)",
+                    borderRadius: "var(--radius-lg)", padding: "40px 28px", fontFamily: "var(--font-body)",
+                    animation: "float 7s ease-in-out infinite", textAlign: "center",
+                  }}>
+                    <div style={{ fontSize: 44, marginBottom: 16 }}>🛡️</div>
+                    <h3 style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 800, margin: "0 0 8px", color: "#fff" }}>
+                      Your Policies, Anytime
+                    </h3>
+                    <p style={{ fontSize: 13, color: "var(--slate)", margin: "0 0 28px", lineHeight: 1.7 }}>
+                      Download certificates, track claim status, and manage all your travel cover from one place.
+                    </p>
                     <button
-                      onClick={() => onNavigate?.(user ? "dashboard" : "login")}
-                      style={{ flex: 1, padding: "9px", borderRadius: 8, border: "none", background: "var(--indigo)", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer" }}
+                      onClick={() => onNavigate?.("login")}
+                      style={{ width: "100%", padding: "13px", borderRadius: 10, border: "none", background: "var(--indigo)", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", letterSpacing: "0.02em", marginBottom: 10 }}
                     >
-                      {user ? "⬇ Download Certificate" : "⬇ Sign in to Download"}
+                      Login for Self-Service Access →
                     </button>
                     <button
-                      onClick={() => onNavigate?.(user ? "dashboard" : "login")}
-                      style={{ padding: "9px 14px", borderRadius: 8, border: "1px solid var(--glass-border)", background: "transparent", color: "var(--slate)", fontSize: 11, cursor: "pointer" }}
+                      onClick={() => onNavigate?.("register")}
+                      style={{ width: "100%", padding: "11px", borderRadius: 10, border: "1px solid var(--glass-border)", background: "transparent", color: "var(--slate)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
                     >
-                      {user ? "View All" : "Login"}
+                      Create a Free Account
                     </button>
+                    <p style={{ marginTop: 18, fontSize: 11, color: "var(--slate)", opacity: 0.6 }}>
+                      ✓ No sign-up needed to compare policies
+                    </p>
                   </div>
-                </div>
+                )
               )}
 
               {/* ── Quote wizard (shown on Compare Policies click) ── */}

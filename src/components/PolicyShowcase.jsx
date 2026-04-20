@@ -339,22 +339,15 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                 >
                   {/* Card header */}
                   <div style={{ padding: '18px 18px 14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                        <InsurerLogo logoUrl={policy.policyInsurerLogo} name={policy.policyInsurerName} size={mobile ? 38 : 44} />
-                        <div style={{ minWidth: 0 }}>
-                          <button type="button" onClick={() => setSelectedInsurerPolicy(policy)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.75)', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: 0, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', display: 'block' }} title="View insurer profile">{policy.policyInsurerName || 'Insurer'}</button>
-                          <div style={{ display: 'flex', gap: 2, marginTop: 2 }}>
-                            {'★★★★★'.split('').map((s, i) => <span key={i} style={{ color: i < 5 ? '#FBBF24' : 'var(--slate-dark)', fontSize: 11 }}>{s}</span>)}
-                            <span style={{ color: 'var(--slate-dark)', fontSize: 11, marginLeft: 3 }}>5.0</span>
-                          </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                      <InsurerLogo logoUrl={policy.policyInsurerLogo} name={policy.policyInsurerName} size={mobile ? 38 : 44} />
+                      <div style={{ minWidth: 0 }}>
+                        <button type="button" onClick={() => setSelectedInsurerPolicy(policy)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.75)', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: 0, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', display: 'block' }} title="View insurer profile">{policy.policyInsurerName || 'Insurer'}</button>
+                        <div style={{ display: 'flex', gap: 2, marginTop: 2 }}>
+                          {'★★★★★'.split('').map((s, i) => <span key={i} style={{ color: i < 5 ? '#FBBF24' : 'var(--slate-dark)', fontSize: 11 }}>{s}</span>)}
+                          <span style={{ color: 'var(--slate-dark)', fontSize: 11, marginLeft: 3 }}>5.0</span>
                         </div>
                       </div>
-                      {/* Compare checkbox — inline, no overlap */}
-                      <label style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: compareSelected.length >= 3 && !checked ? 'not-allowed' : 'pointer', background: checked ? 'rgba(49,99,49,0.25)' : 'rgba(255,255,255,0.04)', border: `1px solid ${checked ? 'var(--indigo-glow)' : 'var(--glass-border)'}`, borderRadius: 8, padding: '5px 10px', fontSize: 11, fontWeight: 600, color: checked ? '#86efac' : 'var(--slate)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                        <input type="checkbox" checked={checked} onChange={() => toggleCompare(policy)} disabled={compareSelected.length >= 3 && !checked} style={{ accentColor: 'var(--indigo)', width: 14, height: 14, cursor: 'pointer' }} />
-                        Compare
-                      </label>
                     </div>
 
                     <h3 style={{ fontFamily: 'var(--font-display)', fontSize: mobile ? 16 : 18, fontWeight: 700, marginBottom: 10, lineHeight: 1.3 }}>{policy.title}</h3>
@@ -397,8 +390,14 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
 
                   {/* Card footer */}
                   <div style={{ borderTop: '1px solid var(--glass-border)', padding: mobile ? '14px 18px' : '16px 22px', display: 'flex', gap: 10 }}>
-                    <button type="button" className="btn btn--primary btn--sm" style={{ flex: 1, justifyContent: 'center' }} onClick={() => onNavigate('policy-detail', policy.databaseId, searchParams)}>View Plan →</button>
-                    <button type="button" className="btn btn--ghost btn--sm" onClick={() => setSelectedPolicy(policy)}>Details</button>
+                    <button type="button" className="btn btn--primary btn--sm" style={{ flex: 1, justifyContent: 'center' }} onClick={() => onNavigate('policy-detail', policy.databaseId, searchParams)}>Pick This →</button>
+                    <button
+                      type="button"
+                      className="btn btn--ghost btn--sm"
+                      disabled={compareSelected.length >= 3 && !checked}
+                      style={{ opacity: compareSelected.length >= 3 && !checked ? 0.45 : 1, background: checked ? 'rgba(49,99,49,0.2)' : undefined, borderColor: checked ? 'rgba(49,99,49,0.6)' : undefined, color: checked ? '#86efac' : undefined }}
+                      onClick={() => toggleCompare(policy)}
+                    >{checked ? '✓ Comparing' : 'Compare'}</button>
                   </div>
                 </div>
               );
