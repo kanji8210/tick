@@ -45,7 +45,7 @@ const Catalog = ({ onNavigate }) => {
           onClose={() => setCompareOpen(false)}
           onPickPolicy={(p) => {
             setCompareOpen(false);
-            onNavigate('wizard', { policyId: p.databaseId, searchData: compareDates });
+            onNavigate('policy-detail', p.databaseId, compareDates);
           }}
           onKeepComparing={(p) => {
             setCompareSelected([p]);

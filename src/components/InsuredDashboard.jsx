@@ -57,10 +57,10 @@ const toNumericId = (id) => {
   try { return atob(String(id)).split(':').pop(); } catch { return String(id); }
 };
 
-const InsuredDashboard = ({ user, onNavigate }) => {
+const InsuredDashboard = ({ user, onNavigate, initialTab }) => {
   const { user: authUser } = useAuth();
   const { mobile } = useResponsive();
-  const [activeTab, setActiveTab] = useState('policies');
+  const [activeTab, setActiveTab] = useState(initialTab || 'policies');
   const [selectedPolicyId, setSelectedPolicyId] = useState(null);
   const [actionLoading, setActionLoading] = useState(null); // tracks which sale ID has a loading action
   const [showProfileEdit, setShowProfileEdit] = useState(false);

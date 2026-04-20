@@ -821,14 +821,11 @@ const TESTIMONIALS = [
   { quote: 'Had a medical emergency in Dubai. Filed a claim through the insurer portal using my policy number. KES 420,000 was approved within 48 hours. Incredible.', name: 'Patricia W.', title: 'Kampala, Uganda', emoji: '\uD83D\uDC69\uD83C\uDFFE\u200D\u2695\uFE0F' },
 ];
 
-const LandingPage = ({ onStartWizard, onNavigate }) => {
+const LandingPage = ({ onStartWizard, onNavigate, compareSelected = [], onAddCompare, onRemoveCompare }) => {
   const { user, role } = useAuth();
   const { mobile } = useResponsive();
   const isAgent = role === 'agent' || role === 'administrator';
   const [searchParams, setSearchParams] = useState(null);
-  const [compareSelected, setCompareSelected] = useState([]);
-  const [compareOpen, setCompareOpen] = useState(false);
-  const [compareDates, setCompareDates] = useState(null);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const touchStartX = useRef(null);
 
@@ -849,11 +846,6 @@ const LandingPage = ({ onStartWizard, onNavigate }) => {
       touchStartX.current = null;
     }
   }, []);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-
-  const onAddCompare    = (p)   => setCompareSelected(prev => prev.length < 3 && !prev.find(x => x.id === p.id) ? [...prev, p] : prev);
-  const onRemoveCompare = (id)  => setCompareSelected(prev => prev.filter(p => p.id !== id));
-
   /* Intersection Observer for reveal animations */
   useEffect(() => {
     const obs = new IntersectionObserver(entries => {
@@ -865,38 +857,6 @@ const LandingPage = ({ onStartWizard, onNavigate }) => {
 
   return (
     <div>
-      {!isAgent && showDatePicker && (
-        <CompareDatePicker
-          onConfirm={(dates) => { setCompareDates(dates); setShowDatePicker(false); setCompareOpen(true); }}
-          onSkip={() => { setCompareDates(null); setShowDatePicker(false); setCompareOpen(true); }}
-          onClose={() => setShowDatePicker(false)}
-        />
-      )}
-      {!isAgent && compareOpen && (
-        <CompareModal
-          selected={compareSelected}
-          onClose={() => setCompareOpen(false)}
-          compareDates={compareDates}
-          onPickPolicy={(p) => {
-            setCompareOpen(false);
-            onStartWizard(p.databaseId, compareDates, null);
-          }}
-          onKeepComparing={(p) => {
-            setCompareSelected([p]);
-            setCompareOpen(false);
-            setTimeout(() => document.getElementById('policy-showcase')?.scrollIntoView({ behavior: 'smooth' }), 80);
-          }}
-        />
-      )}
-      {!isAgent && (
-        <CompareBar
-          selected={compareSelected}
-          onRemove={onRemoveCompare}
-          onClear={() => setCompareSelected([])}
-          onCompare={() => setShowDatePicker(true)}
-        />
-      )}
-
       <Hero onStart={(data) => {
         console.log('LandingPage onStart:', data);
         setSearchParams(data);

@@ -2,7 +2,7 @@ import React from 'react'
 import { Provider } from 'urql'
 import { client } from './lib/graphql'
 import { AuthProvider, useAuth } from './lib/AuthContext'
-import LandingPage from './components/LandingPage'
+import LandingPage, { CompareBar, CompareModal, CompareDatePicker } from './components/LandingPage'
 import QuoteWizard from './components/QuoteWizard'
 import Header from './components/Header'
 import Footer from './components/Footer'
@@ -16,7 +16,19 @@ import AboutPage from './components/AboutPage'
 import AgenciesPage from './components/AgenciesPage'
 
 function AppContent() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
+  const isAgent = role === 'agent' || role === 'administrator';
+
+  /* ── Global compare state ─────────────────────────────────── */
+  const [compareSelected,  setCompareSelected]  = React.useState([]);
+  const [compareOpen,      setCompareOpen]      = React.useState(false);
+  const [compareDates,     setCompareDates]     = React.useState(null);
+  const [showDatePicker,   setShowDatePicker]   = React.useState(false);
+
+  const onAddCompare    = (p)   => setCompareSelected(prev => prev.length < 3 && !prev.find(x => x.id === p.id) ? [...prev, p] : prev);
+  const onRemoveCompare = (id)  => setCompareSelected(prev => prev.filter(p => p.id !== id));
+
+  const compareProps = { compareSelected, onAddCompare, onRemoveCompare };
   /* ── URL ↔ view mapping ─────────────────────────────────────── */
   const VIEW_PATHS = {
     landing:       '/',
@@ -85,7 +97,7 @@ function AppContent() {
   const renderView = () => {
     switch(activeView) {
       case 'dashboard':
-        return <Dashboard onNavigate={handleNavigate} />;
+        return <Dashboard onNavigate={handleNavigate} initialTab={history[historyIdx].searchData?.openTab} />;
       case 'wizard':
         return (
           <div className="fade-in" style={{ padding: '4rem 0', maxWidth: '800px', margin: '0 auto' }}>
@@ -115,7 +127,7 @@ function AppContent() {
       case 'register':
         return <Register onNavigate={handleNavigate} />;
       case 'catalog':
-        return <Catalog onNavigate={handleNavigate} />;
+        return <Catalog onNavigate={handleNavigate} {...compareProps} />;
       case 'verify':
         return <VerifyPolicy onNavigate={handleNavigate} />;
       case 'about':
@@ -129,6 +141,7 @@ function AppContent() {
             searchData={history[historyIdx].searchData}
             onBack={() => handleNavigate('landing')} 
             onStartWizard={(id, data, step) => handleNavigate('wizard', id, data, step)}
+            {...compareProps}
           />
         );
       case 'landing':
@@ -136,7 +149,8 @@ function AppContent() {
         return (
           <LandingPage 
             onStartWizard={(id, data, step) => handleNavigate('wizard', id ?? null, data ?? null, step ?? null)} 
-            onNavigate={handleNavigate} 
+            onNavigate={handleNavigate}
+            {...compareProps}
           />
         );
     }
@@ -158,10 +172,42 @@ function AppContent() {
         {renderView()}
       </main>
       <Footer onNavigate={handleNavigate} />
+
+      {/* ── Global compare UI — persists across all views ── */}
+      {!isAgent && showDatePicker && (
+        <CompareDatePicker
+          onConfirm={(dates) => { setCompareDates(dates); setShowDatePicker(false); setCompareOpen(true); }}
+          onSkip={() => { setCompareDates(null); setShowDatePicker(false); setCompareOpen(true); }}
+          onClose={() => setShowDatePicker(false)}
+        />
+      )}
+      {!isAgent && compareOpen && (
+        <CompareModal
+          selected={compareSelected}
+          onClose={() => setCompareOpen(false)}
+          compareDates={compareDates}
+          onPickPolicy={(p) => {
+            setCompareOpen(false);
+            handleNavigate('policy-detail', p.databaseId, compareDates);
+          }}
+          onKeepComparing={(p) => {
+            setCompareSelected([p]);
+            setCompareOpen(false);
+          }}
+        />
+      )}
+      {!isAgent && (
+        <CompareBar
+          selected={compareSelected}
+          onRemove={onRemoveCompare}
+          onClear={() => setCompareSelected([])}
+          onCompare={() => setShowDatePicker(true)}
+        />
+      )}
       {/* Persistent chat bubble — visible on all views */}
       <button
         aria-label="Open live chat"
-        onClick={() => handleNavigate(user ? 'dashboard' : 'login')}
+        onClick={() => handleNavigate(user ? 'dashboard' : 'login', null, user ? { openTab: 'support' } : null)}
         title={user ? 'Open Live Support' : 'Sign in to chat'}
         style={{ position: 'fixed', bottom: 28, right: 28, zIndex: 900, width: 52, height: 52, borderRadius: '50%', background: 'var(--indigo)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, cursor: 'pointer', boxShadow: '0 4px 20px rgba(49,99,49,0.5)', transition: 'transform 0.2s' }}
         onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}

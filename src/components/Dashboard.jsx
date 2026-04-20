@@ -3,16 +3,16 @@ import { useAuth } from '../lib/AuthContext';
 import InsuredDashboard from './InsuredDashboard';
 import AgentDashboard from './AgentDashboard';
 
-const Dashboard = ({ onNavigate }) => {
+const Dashboard = ({ onNavigate, initialTab }) => {
   const { user, role } = useAuth();
 
   const renderDashboard = () => {
     switch (role) {
       case 'agent':
-      case 'administrator': // Admins can see the agent dashboard for now
+      case 'administrator':
         return <AgentDashboard user={user} onNavigate={onNavigate} />;
       case 'insured':
-        return <InsuredDashboard user={user} onNavigate={onNavigate} />;
+        return <InsuredDashboard user={user} onNavigate={onNavigate} initialTab={initialTab} />;
       default:
         return (
           <div className="glass-card" style={{ textAlign: 'center', margin: '4rem auto', maxWidth: '600px' }}>
