@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useQuery } from 'urql';
 import { useAuth } from '../lib/AuthContext';
 import { useResponsive } from '../lib/useResponsive';
 import Hero from './Hero';
@@ -821,10 +822,20 @@ const TESTIMONIALS = [
   { quote: 'Had a medical emergency in Dubai. Filed a claim through the insurer portal using my policy number. KES 420,000 was approved within 48 hours. Incredible.', name: 'Patricia W.', title: 'Kampala, Uganda', emoji: '\uD83D\uDC69\uD83C\uDFFE\u200D\u2695\uFE0F' },
 ];
 
+const POLICY_SALES_COUNT = `
+  query PublicPolicySalesCountLP {
+    policySales(first: 1) {
+      pageInfo { total }
+    }
+  }
+`;
+
 const LandingPage = ({ onStartWizard, onNavigate, compareSelected = [], onAddCompare, onRemoveCompare }) => {
   const { user, role } = useAuth();
   const { mobile } = useResponsive();
   const isAgent = role === 'agent' || role === 'administrator';
+  const [{ data: countData }] = useQuery({ query: POLICY_SALES_COUNT });
+  const liveCount = countData?.policySales?.pageInfo?.total ?? null;
   const [searchParams, setSearchParams] = useState(null);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const touchStartX = useRef(null);
@@ -953,7 +964,9 @@ const LandingPage = ({ onStartWizard, onNavigate, compareSelected = [], onAddCom
         <div className="container">
           <div className="section-header">
             <p className="section-label">Customer Stories</p>
-            <h2 className="section-title reveal">Trusted by 50,000+ Travelers</h2>
+            <h2 className="section-title reveal">
+              Trusted by {liveCount !== null ? `${liveCount.toLocaleString()}+` : '50,000+'} Travelers
+            </h2>
             <p className="reveal reveal-delay-1">Real experiences from real policyholders across Africa and beyond.</p>
           </div>
 

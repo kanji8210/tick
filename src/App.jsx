@@ -101,7 +101,7 @@ function AppContent() {
         return <Dashboard onNavigate={handleNavigate} initialTab={history[historyIdx].searchData?.openTab} />;
       case 'wizard':
         return (
-          <div className="fade-in" style={{ padding: '4rem 0', maxWidth: '800px', margin: '0 auto' }}>
+          <div className="fade-in container" style={{ paddingTop: 'clamp(5rem, 10vw, 6rem)', paddingBottom: '3rem', maxWidth: '800px' }}>
             <QuoteWizard
               initialPolicyId={history[historyIdx].policyId}
               initialSearchData={history[historyIdx].searchData}

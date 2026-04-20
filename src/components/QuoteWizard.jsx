@@ -385,7 +385,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
   if (step === 1) return (
     <div className="glass-card fade-in" style={{ padding: mobile ? '1.25rem' : '2rem' }}>
       <StepBar step={1} isAgent={isAgent} mobile={mobile} />
-      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, marginBottom: 24 }}>
+      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: mobile ? 20 : 22, fontWeight: 800, marginBottom: 24, textAlign: mobile ? 'center' : undefined }}>
         {isAgent ? "Client's Travel" : 'Your Trip'} <span style={{ color: 'var(--gold)' }}>Details</span>
       </h3>
 
@@ -401,7 +401,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
           {regions.length === 0 ? (
             <p style={{ color: 'var(--slate)', fontSize: 13 }}>Loading regions…</p>
           ) : (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: mobile ? 'center' : undefined }}>
               {regions.map(r => {
                 const active = form.destinationRegion === r.slug;
                 return (

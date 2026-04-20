@@ -117,6 +117,9 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   box-shadow: var(--shadow-card);
   transition: border-color 0.3s, transform 0.3s;
 }
+@media (max-width: 480px) {
+  .glass-card { border-radius: var(--radius-md); }
+}
 @media (hover: hover) {
   .glass-card:hover { border-color: rgba(49,99,49,0.4); }
 }

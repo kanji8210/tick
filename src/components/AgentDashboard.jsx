@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { useQuery, gql } from 'urql';
+import { useQuery, useMutation, gql } from 'urql';
 import { useAuth } from '../lib/AuthContext';
 import { useResponsive } from '../lib/useResponsive';
 import ProfileEditModal from './ProfileEditModal';
 import NotificationPanel from './NotificationPanel';
 import PolicyEditModal from './PolicyEditModal';
 import AssignClientModal from './AssignClientModal';
+import { openCertificate } from '../lib/generateCertificate';
 
 /* ═══════════════════════════════════════════════════════════════════
  *  GRAPHQL
@@ -24,6 +25,15 @@ const AGENCY_DASHBOARD = gql`
       monthlyAnalytics { month premium commission policies clients }
       statusDistribution { status count }
       topProducts { policyId policyTitle soldCount totalPremium }
+    }
+  }
+`;
+
+const UPDATE_POLICY_STATUS = gql`
+  mutation UpdatePolicySaleStatus($saleId: Int!, $status: String!) {
+    maljaniUpdatePolicySaleStatus(input: { saleId: $saleId, status: $status }) {
+      success
+      message
     }
   }
 `;
@@ -212,6 +222,10 @@ const AgentDashboard = ({ user, onNavigate }) => {
   const [editPolicy, setEditPolicy] = useState(null);
   const [assignPolicy, setAssignPolicy] = useState(null);
   const [clientActions, setClientActions] = useState({}); // { email: 'signalled' | 'archived' }
+  const [statusChanging, setStatusChanging] = useState(null); // saleId being updated
+  const [statusDraft, setStatusDraft]       = useState({});   // { [saleId]: pendingStatus }
+
+  const [, execUpdateStatus] = useMutation(UPDATE_POLICY_STATUS);
 
   const APP_SECRET = import.meta.env.VITE_APP_SECRET ?? '';
   const restHeaders = () => {
@@ -232,6 +246,33 @@ const AgentDashboard = ({ user, onNavigate }) => {
       else throw new Error('No invoice content returned');
     } catch (e) { alert(`Could not load invoice. ${e.message}`); }
     finally { setActionLoading(null); }
+  };
+
+  const handlePrintCertificate = (policy) => openCertificate(policy);
+
+  /** Change policy status and notify the notification panel instantly */
+  const handleUpdateStatus = async (sale) => {
+    const newStatus = statusDraft[sale.id];
+    if (!newStatus || newStatus === sale.policyStatus) return;
+    setStatusChanging(sale.id);
+    try {
+      const numId = parseInt(toNumericId(sale.id), 10);
+      const res = await execUpdateStatus({ saleId: numId, status: newStatus });
+      if (res.error) throw new Error(res.error.message.replace(/\[GraphQL\]\s?/g, ''));
+      if (res.data?.maljaniUpdatePolicySaleStatus?.success === false)
+        throw new Error(res.data.maljaniUpdatePolicySaleStatus.message || 'Update failed');
+      /* Refresh policies list */
+      polResult.reexecute?.({ requestPolicy: 'network-only' });
+      /* Signal NotificationPanel to refetch immediately */
+      window.dispatchEvent(new CustomEvent('tick:notif:refresh'));
+      /* Update local selectedSale so the badge reflects instantly */
+      setSelectedSale(prev => prev?.id === sale.id ? { ...prev, policyStatus: newStatus } : prev);
+      setStatusDraft(prev => { const n = { ...prev }; delete n[sale.id]; return n; });
+    } catch (e) {
+      alert(`Could not update status: ${e.message}`);
+    } finally {
+      setStatusChanging(null);
+    }
   };
 
   const handleProceedToPayment = async (saleId) => {
@@ -466,12 +507,24 @@ const AgentDashboard = ({ user, onNavigate }) => {
                 }}>{loading ? 'Processing…' : '💳 Launch Payment'}</button>
               )}
               {!isUnpaid && (
-                <button disabled={loading} onClick={() => handleViewInvoice(s.id)} style={{
-                  background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)',
-                  borderRadius: '8px', padding: '0.5rem 1rem', cursor: loading ? 'wait' : 'pointer',
-                  color: '#22c55e', fontSize: '0.78rem', fontWeight: 700, opacity: loading ? 0.6 : 1,
-                }}>{loading ? 'Loading…' : '📄 View Invoice'}</button>
+                <button
+                  disabled={loading}
+                  onClick={() => handleViewInvoice(s.id)}
+                  title="Payment invoice — financial document from the insurer"
+                  style={{
+                    background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)',
+                    borderRadius: '8px', padding: '0.5rem 1rem', cursor: loading ? 'wait' : 'pointer',
+                    color: '#22c55e', fontSize: '0.78rem', fontWeight: 700, opacity: loading ? 0.6 : 1,
+                  }}>{loading ? 'Loading…' : '📄 Invoice'}</button>
               )}
+              <button
+                onClick={() => handlePrintCertificate(s)}
+                title="TICK authenticity certificate with QR code — verify at verify.maljani.co.ke"
+                style={{
+                  background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.3)',
+                  borderRadius: '8px', padding: '0.5rem 1rem', cursor: 'pointer',
+                  color: 'var(--gold)', fontSize: '0.78rem', fontWeight: 700,
+                }}>🖨 Certificate</button>
               <button onClick={() => onNavigate?.('policy-detail', s.policyId)} style={{
                 background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
                 borderRadius: '8px', padding: '0.5rem 1rem', cursor: 'pointer',
@@ -479,8 +532,45 @@ const AgentDashboard = ({ user, onNavigate }) => {
               }}>View Product Page</button>
             </div>
 
+            {/* ── Status change row ── */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap',
+              background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+              borderRadius: '10px', padding: '0.65rem 1rem' }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)',
+                letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                Change Status
+              </span>
+              <select
+                value={statusDraft[s.id] ?? s.policyStatus ?? ''}
+                onChange={e => setStatusDraft(prev => ({ ...prev, [s.id]: e.target.value }))}
+                disabled={statusChanging === s.id}
+                style={{ flex: 1, minWidth: 160, ...inputStyle, padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
+              >
+                <option value="unconfirmed">Unpaid / Unconfirmed</option>
+                <option value="pending_review">Pending Review</option>
+                <option value="submitted_to_insurer">Submitted to Insurer</option>
+                <option value="approved">Approved</option>
+                <option value="verification_ready">Verification Ready</option>
+                <option value="active">Active</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="archived">Archived</option>
+              </select>
+              <button
+                disabled={statusChanging === s.id || (statusDraft[s.id] ?? s.policyStatus) === s.policyStatus}
+                onClick={() => handleUpdateStatus(s)}
+                style={{
+                  background: 'var(--indigo, #316331)', border: 'none', borderRadius: '8px',
+                  padding: '0.45rem 1rem', cursor: 'pointer', color: '#fff',
+                  fontSize: '0.78rem', fontWeight: 700, whiteSpace: 'nowrap',
+                  opacity: (statusChanging === s.id || (statusDraft[s.id] ?? s.policyStatus) === s.policyStatus) ? 0.45 : 1,
+                  transition: 'opacity 0.2s',
+                }}
+              >
+                {statusChanging === s.id ? 'Saving…' : 'Apply'}
+              </button>
+            </div>
+
             {/* Info grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(2, 1fr)', gap: '1.25rem' }}>
               {/* Buyer / Client */}
               <SectionCard title="Buyer / Client">
                 <InfoRow label="Full Name" value={s.insuredNames} />

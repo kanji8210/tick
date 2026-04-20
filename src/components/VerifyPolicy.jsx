@@ -13,7 +13,11 @@ const getStatusMeta = (s) =>
 
 const VerifyPolicy = ({ onNavigate }) => {
   const [mode, setMode]         = useState('traveler');
-  const [form, setForm]         = useState({ policyNo: '', passport: '' });
+
+  /* Pre-fill policy number from QR scan URL: /verify?policy_no=TICK-XXX */
+  const prefillNo = new URLSearchParams(window.location.search).get('policy_no') || '';
+
+  const [form, setForm]         = useState({ policyNo: prefillNo, passport: '' });
   const [result, setResult]     = useState(null);
   const [loading, setLoading]   = useState(false);
   const [apiError, setApiError] = useState(null);
