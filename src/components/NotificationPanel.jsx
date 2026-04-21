@@ -58,6 +58,22 @@ const NotificationPanel = ({ onNavigate }) => {
   const items = result.data?.myNotifications || [];
   const unread = items.filter(n => !n.isRead);
 
+  // Background poll every 30 s — keeps the bell up-to-date without user action
+  useEffect(() => {
+    if (!user?.token) return;
+    const id = setInterval(() => reexecute({ requestPolicy: 'network-only' }), 30_000);
+    return () => clearInterval(id);
+  }, [user?.token, reexecute]);
+
+  // Instant refresh when any part of the app dispatches 'tick:notif:refresh'
+  // (e.g. AgentDashboard after a status change)
+  useEffect(() => {
+    if (!user?.token) return;
+    const handler = () => reexecute({ requestPolicy: 'network-only' });
+    window.addEventListener('tick:notif:refresh', handler);
+    return () => window.removeEventListener('tick:notif:refresh', handler);
+  }, [user?.token, reexecute]);
+
   // Close on outside click
   useEffect(() => {
     if (!open) return;

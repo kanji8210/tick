@@ -571,6 +571,7 @@ const AgentDashboard = ({ user, onNavigate }) => {
             </div>
 
             {/* Info grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(2, 1fr)', gap: '1.25rem' }}>
               {/* Buyer / Client */}
               <SectionCard title="Buyer / Client">
                 <InfoRow label="Full Name" value={s.insuredNames} />
