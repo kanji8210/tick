@@ -104,7 +104,8 @@ const TrustSection = ({ onNavigate }) => {
   return (
   <section style={{ position: 'relative', zIndex: 1 }}>
 
-    {/* Stats bar */}
+    {/* Stats bar — hidden */}
+    {false && (
     <div style={{
       borderTop: '1px solid var(--glass-border)',
       borderBottom: '1px solid var(--glass-border)',
@@ -127,6 +128,7 @@ const TrustSection = ({ onNavigate }) => {
         </div>
       </div>
     </div>
+    )}
 
     {/* Anti-fraud banner */}
     <div style={{

@@ -62,6 +62,10 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
 }
 @media (max-width: 1024px) { .container { padding: 0 40px; } }
 @media (max-width: 768px)  { .container { padding: 0 16px; } }
+/* Landscape phones (height ≤ 500px on touch device) → use mobile container padding */
+@media (max-height: 500px) and (orientation: landscape) and (pointer: coarse) {
+  .container { padding: 0 16px; }
+}
 
 /* ── Background effects ── */
 .bg-mesh {

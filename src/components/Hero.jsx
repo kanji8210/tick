@@ -293,37 +293,7 @@ const Hero = ({ onStart, onNavigate }) => {
                       </button>
                     </div>
                   </div>
-                ) : (
-                  /* Logged-out: CTA only */
-                  <div style={{
-                    background: "var(--glass-bg)", border: "1px solid var(--glass-border)",
-                    borderRadius: "var(--radius-lg)", padding: "40px 28px", fontFamily: "var(--font-body)",
-                    animation: "float 7s ease-in-out infinite", textAlign: "center",
-                  }}>
-                    <div style={{ fontSize: 44, marginBottom: 16 }}>🛡️</div>
-                    <h3 style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 800, margin: "0 0 8px", color: "#fff" }}>
-                      Your Policies, Anytime
-                    </h3>
-                    <p style={{ fontSize: 13, color: "var(--slate)", margin: "0 0 28px", lineHeight: 1.7 }}>
-                      Download certificates, track claim status, and manage all your travel cover from one place.
-                    </p>
-                    <button
-                      onClick={() => onNavigate?.("login")}
-                      style={{ width: "100%", padding: "13px", borderRadius: 10, border: "none", background: "var(--indigo)", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", letterSpacing: "0.02em", marginBottom: 10 }}
-                    >
-                      Login for Self-Service Access →
-                    </button>
-                    <button
-                      onClick={() => onNavigate?.("register")}
-                      style={{ width: "100%", padding: "11px", borderRadius: 10, border: "1px solid var(--glass-border)", background: "transparent", color: "var(--slate)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-                    >
-                      Create a Free Account
-                    </button>
-                    <p style={{ marginTop: 18, fontSize: 11, color: "var(--slate)", opacity: 0.6 }}>
-                      ✓ No sign-up needed to compare policies
-                    </p>
-                  </div>
-                )
+                ) : null /* Logged-out: CTA removed on desktop */
               )}
 
               {/* ── Quote wizard (shown on Compare Policies click) ── */}
