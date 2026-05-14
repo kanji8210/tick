@@ -126,8 +126,8 @@ const Hero = ({ onStart, onNavigate }) => {
       }} aria-hidden="true" />
       <style>{`@keyframes spin-slow { to { transform: translateY(-50%) rotate(360deg); } } @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }`}</style>
 
-      <div className="hero-content">
-        <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr" : tablet ? "1fr minmax(320px, 380px)" : "1fr minmax(380px, 460px)", gap: mobile ? 32 : tablet ? 48 : 72, alignItems: "center" }}>
+      <div className="hero-content" style={{ width: '100%', maxWidth: '100%', padding: 0 }}>
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 32, alignItems: 'stretch' }}>
 
           {/* ── Left column ── */}
           {isAgent ? (
@@ -174,17 +174,17 @@ const Hero = ({ onStart, onNavigate }) => {
                 <div style={{ width: 28, height: 2, background: "var(--gold)", flexShrink: 0 }} />
                 <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--gold)" }}>East Africa&apos;s #1 Travel Insurance Hub</span>
               </div>
-              <h1 className="reveal reveal-delay-1" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(40px,5vw,72px)", fontWeight: 800, lineHeight: 1.0, letterSpacing: "-0.025em", marginBottom: 22 }}>
+              <h1 className="reveal reveal-delay-1" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(40px,5vw,72px)", fontWeight: 800, lineHeight: 1.0, letterSpacing: "-0.025em", marginBottom: 22, width: '100%', textAlign: 'center' }}>
                 Travel Insurance{" "}
                 <em style={{ fontStyle: "normal", background: "linear-gradient(135deg,var(--indigo-glow),#86efac)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Center.</em>
               </h1>
-              <p className="reveal reveal-delay-2" style={{ fontSize: 18, color: "var(--slate)", lineHeight: 1.75, marginBottom: 36, maxWidth: 520 }}>
+              <p className="reveal reveal-delay-2" style={{ fontSize: 18, color: "var(--slate)", lineHeight: 1.75, marginBottom: 36, width: '100%', textAlign: 'center' }}>
                 Compare policies from Africa&apos;s leading insurers in seconds.
                 Instant certificates. Zero paperwork. Built for travelers and agencies.
               </p>
-              <div className="reveal reveal-delay-3" style={{ display: "flex", alignItems: mobile ? "stretch" : "center", flexDirection: mobile ? "column" : "row", gap: mobile ? 10 : 14, flexWrap: "wrap", marginBottom: 18 }}>
-                <button className="btn btn--primary btn--lg" style={mobile ? { width: '100%', justifyContent: 'center' } : {}} onClick={() => document.getElementById('policy-showcase')?.scrollIntoView({ behavior: 'smooth' })}>Compare Policies &rarr;</button>
-                <button className="btn btn--ghost btn--lg" style={mobile ? { width: '100%', justifyContent: 'center' } : {}} onClick={() => document.getElementById("agencies")?.scrollIntoView({ behavior: "smooth" })}>For Agencies</button>
+              <div className="reveal reveal-delay-3" style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 18, width: '100%' }}>
+                <button className="btn btn--primary btn--lg" style={{ width: '100%', justifyContent: 'center' }} onClick={() => document.getElementById('policy-showcase')?.scrollIntoView({ behavior: 'smooth' })}>Compare Policies &rarr;</button>
+                <button className="btn btn--ghost btn--lg" style={{ width: '100%', justifyContent: 'center' }} onClick={() => document.getElementById("agencies")?.scrollIntoView({ behavior: "smooth" })}>For Agencies</button>
               </div>
               <div className="reveal reveal-delay-4" style={{ display: "flex", alignItems: "center", gap: mobile ? 8 : 16, flexWrap: "wrap", fontSize: mobile ? 12 : 13, color: "var(--slate-dark)" }}>
                 {["\u2713 No sign-up needed to compare", "\u2713 Embassy-verified certificates", "\u2713 15+ Partner insurers"].map(t => (
