@@ -21,7 +21,7 @@ const Footer = ({ onNavigate }) => {
 
   const productLinks = [
     { label: 'Travel Insurance',   view: 'catalog' },
-    { label: 'Group Policies',     view: 'catalog' },
+    { label: 'Group Policies',     view: 'group-quotes' },
     { label: 'Annual Multi-Trip',  view: 'catalog' },
     { label: 'Embassy Letters',    view: 'catalog' },
   ];

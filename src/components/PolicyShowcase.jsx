@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery } from 'urql';
 import { useResponsive } from '../lib/useResponsive';
 
@@ -22,6 +22,11 @@ const GET_POLICIES = `
         policyFeatureTags
         policyInsurerName
         policyInsurerLogo
+        policyInsurerDatabaseId
+        policyInsurerBio
+        policyInsurerWebsite
+        policyInsurerLinkedin
+        policyInsurerFeatureImage
         policyCountries
         policyDayPremiums {
           from
@@ -39,18 +44,20 @@ const minPremium = (brackets) => {
   return Math.min(...brackets.map(b => b.premium));
 };
 
-/** Days between two YYYY-MM-DD strings (inclusive) */
-const tripDays = (dep, ret) => {
-  if (!dep || !ret) return 0;
-  const ms = new Date(ret) - new Date(dep);
-  return Math.max(1, Math.round(ms / 86400000) + 1);
+/** Inclusive trip duration in days from two ISO date strings. Returns 0 if invalid. */
+const tripDays = (from, to) => {
+  if (!from || !to) return 0;
+  const a = new Date(from); const b = new Date(to);
+  if (isNaN(a) || isNaN(b)) return 0;
+  const diff = Math.round((b - a) / 86400000) + 1;
+  return diff > 0 ? diff : 0;
 };
 
-/** Find premium for trip length from day-bracket array */
+/** Premium for an exact day-count from the brackets, or null when none match. */
 const bracketPremium = (brackets, days) => {
   if (!brackets || !brackets.length || !days) return null;
-  const match = brackets.find(b => days >= b.from && days <= b.to);
-  return match ? match.premium : null;
+  const hit = brackets.find(b => days >= b.from && days <= b.to);
+  return hit ? hit.premium : null;
 };
 
 /** Split comma-separated feature tag string into an array. */
@@ -67,8 +74,6 @@ const fmtPrice = (price, currency) => {
 
 /** Strip HTML tags from a string. */
 const stripHtml = (s) => (s || '').replace(/<[^>]*>/g, ' ').replace(/\s{2,}/g, ' ').trim();
-
-
 
 /* ── Insurer logo ────────────────────────────────────────────────────────────────── */
 const InsurerLogo = ({ logoUrl, name, size = 44 }) => {
@@ -87,22 +92,91 @@ const InsurerLogo = ({ logoUrl, name, size = 44 }) => {
   );
 };
 
+/* ── Large clickable logo banner (~40% card width) ───────────────────────── */
+const InsurerLogoBanner = ({ logoUrl, name, onClick }) => {
+  const baseStyle = {
+    width: '40%',
+    aspectRatio: '5 / 3',
+    borderRadius: 12,
+    background: logoUrl ? 'white' : 'rgba(49,99,49,0.18)',
+    border: '1px solid var(--glass-border)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: logoUrl ? 10 : 0,
+    overflow: 'hidden',
+    flexShrink: 0,
+    cursor: onClick ? 'pointer' : 'default',
+    transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+  };
+  const initial = (name && name !== NOT_PROVIDED) ? name.charAt(0).toUpperCase() : '?';
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={name ? `View ${name} profile` : 'View insurer profile'}
+      aria-label={name ? `View ${name} profile` : 'View insurer profile'}
+      style={baseStyle}
+      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px -12px rgba(0,0,0,0.5)'; }}
+      onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
+    >
+      {logoUrl ? (
+        <img src={logoUrl} alt={name || 'Insurer'} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+      ) : (
+        <span style={{ fontSize: 36, fontWeight: 800, color: '#86efac' }}>{initial}</span>
+      )}
+    </button>
+  );
+};
+
 /* ── Insurer Profile Modal ──────────────────────────────────────────────────── */
 const InsurerProfileModal = ({ policy, onClose }) => {
   const { mobile } = useResponsive();
   if (!policy) return null;
-  const name    = policy.policyInsurerName || NOT_PROVIDED;
-  const logoUrl = policy.policyInsurerLogo || '';
+  const name        = policy.policyInsurerName || NOT_PROVIDED;
+  const logoUrl     = policy.policyInsurerLogo || '';
+  const bio         = (policy.policyInsurerBio || '').trim();
+  const website     = (policy.policyInsurerWebsite || '').trim();
+  const linkedin    = (policy.policyInsurerLinkedin || '').trim();
+  const featureImg  = policy.policyInsurerFeatureImage || '';
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: mobile ? 'flex-end' : 'center', justifyContent: 'center', padding: mobile ? 0 : '2rem' }} onClick={onClose}>
-      <div className="glass-card" style={{ maxWidth: mobile ? '100%' : 400, width: '100%', padding: mobile ? '2rem 1.5rem' : '2.5rem', position: 'relative', textAlign: 'center', borderRadius: mobile ? '20px 20px 0 0' : undefined }} onClick={e => e.stopPropagation()}>
-        <button type="button" onClick={onClose} aria-label="Close" style={{ position: 'absolute', top: 10, right: 10, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--slate)', fontSize: 18, borderRadius: 8, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>✕</button>
-        <div style={{ width: 80, height: 80, margin: '0 auto 1.5rem' }}>
-          <InsurerLogo logoUrl={logoUrl} name={name} size={80} />
+      <div className="glass-card" style={{ maxWidth: mobile ? '100%' : 520, width: '100%', padding: 0, position: 'relative', borderRadius: mobile ? '20px 20px 0 0' : undefined, overflow: 'hidden', maxHeight: mobile ? '92vh' : '85vh', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+        <button type="button" onClick={onClose} aria-label="Close" style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.55)', border: '1px solid var(--glass-border)', color: '#fff', fontSize: 18, borderRadius: 8, width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2 }}>✕</button>
+
+        {featureImg ? (
+          <div style={{ width: '100%', height: 160, backgroundImage: `url(${featureImg})`, backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative' }}>
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.0) 30%, rgba(0,0,0,0.7) 100%)' }} />
+          </div>
+        ) : null}
+
+        <div style={{ padding: mobile ? '1.5rem' : '2rem', overflowY: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: '1.2rem', marginTop: featureImg ? '-44px' : 0 }}>
+            <div style={{ background: 'white', borderRadius: 12, padding: 6, border: '1px solid var(--glass-border)', boxShadow: featureImg ? '0 10px 25px -10px rgba(0,0,0,0.6)' : 'none' }}>
+              <InsurerLogo logoUrl={logoUrl} name={name} size={64} />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', margin: 0, color: '#fff' }}>{name}</h3>
+              <p style={{ color: 'var(--slate)', fontSize: 12, margin: '4px 0 0' }}>Underwriting insurer</p>
+            </div>
+          </div>
+
+          {bio ? (
+            <p style={{ color: 'rgba(255,255,255,0.82)', fontSize: 14, lineHeight: 1.7, marginBottom: '1.2rem' }}>{bio}</p>
+          ) : (
+            <p style={{ color: 'var(--slate)', fontSize: 13, marginBottom: '1.2rem' }}>No profile description provided.</p>
+          )}
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: '0.5rem' }}>
+            {website && (
+              <a href={website} target="_blank" rel="noopener noreferrer" className="btn btn--ghost btn--sm" style={{ textDecoration: 'none' }}>Website ↗</a>
+            )}
+            {linkedin && (
+              <a href={linkedin} target="_blank" rel="noopener noreferrer" className="btn btn--ghost btn--sm" style={{ textDecoration: 'none' }}>LinkedIn ↗</a>
+            )}
+            <button type="button" className="btn btn--ghost btn--sm" style={{ marginLeft: 'auto' }} onClick={onClose}>Close</button>
+          </div>
         </div>
-        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', marginBottom: '0.4rem' }}>{name}</h3>
-        <p style={{ color: 'var(--slate)', fontSize: 13, marginBottom: '1.5rem' }}>Underwriting insurer for this policy</p>
-        <button type="button" className="btn btn--ghost" style={{ width: '100%', justifyContent: 'center' }} onClick={onClose}>Close</button>
       </div>
     </div>
   );
@@ -194,51 +268,60 @@ const BenefitModal = ({ policy, onClose, onNavigate }) => {
 };
 
 const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [], onAddCompare, onRemoveCompare }) => {
-  const { mobile } = useResponsive();
-  const activeFilterRef = useRef(null);
+  const { mobile, tablet } = useResponsive();
 
-  useEffect(() => { if (searchParams?.region) activeFilterRef.current = searchParams.region; }, [searchParams?.region]);
-  const [activeFilter, setActiveFilter] = useState(() => searchParams?.region ?? null);
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [selectedInsurerPolicy, setSelectedInsurerPolicy] = useState(null);
+  const [selectedRegion, setSelectedRegion] = useState(searchParams?.region || 'all');
+  const [departure, setDeparture] = useState(searchParams?.departure || '');
+  const [returnDate, setReturnDate] = useState(searchParams?.returnDate || '');
 
-  /* ── Local travel dates (used when no searchParams, or to override) ── */
-  const [today] = useState(() => new Date().toISOString().split('T')[0]);
-  const [localDates, setLocalDates] = useState({
-    departure: searchParams?.departure || '',
-    returnDate: searchParams?.returnDate || '',
-    passengers: searchParams?.passengers || 1,
-  });
+  const days = useMemo(() => tripDays(departure, returnDate), [departure, returnDate]);
+  const hasDates = days > 0;
 
-  const hasDates = localDates.departure && localDates.returnDate;
-  const localDays = hasDates ? tripDays(localDates.departure, localDates.returnDate) : 0;
-  const localPax = localDates.passengers || 1;
-
-  const effectiveRegion = activeFilter;
   const [{ data, fetching, error }] = useQuery({ query: GET_POLICIES, variables: {} });
 
-  const displayPolicies = useMemo(() => {
-    const nodes = data?.policies?.nodes || [];
-    const filtered = effectiveRegion
-      ? nodes.filter(p => p.regions?.nodes?.some(r => r.slug === effectiveRegion))
-      : nodes;
-    return filtered.slice(0, 9);
-  }, [data, effectiveRegion]);
+  // Random ordering: re-seed only when the underlying data changes. We deliberately
+  // call Math.random in an effect (after data loads) and write to state so the
+  // shuffled list is stable across re-renders.
+  const [shuffleSeed, setShuffleSeed] = useState(1);
+  useEffect(() => {
+    if (!data?.policies?.nodes) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setShuffleSeed(Math.floor(Math.random() * 2 ** 31) || 1);
+  }, [data]);
 
-  /* Derive filter chips from loaded policies — only show regions that have ≥1 policy. */
-  const filterChips = useMemo(() => {
-    const nodes = data?.policies?.nodes || [];
-    const map = new Map(); // slug → name
-    nodes.forEach(p => {
-      (p.regions?.nodes || []).forEach(r => {
-        if (r.slug && r.name && !map.has(r.slug)) map.set(r.slug, r.name);
+  const destinationOptions = useMemo(() => {
+    const map = new Map();
+    (data?.policies?.nodes || []).forEach((policy) => {
+      (policy.regions?.nodes || []).forEach((region) => {
+        const slug = region.slug || region.name;
+        if (!slug || map.has(slug)) return;
+        map.set(slug, { slug, name: region.name || slug });
       });
     });
-    return [
-      { label: 'All Policies', slug: null },
-      ...Array.from(map.entries()).map(([slug, name]) => ({ label: name, slug })),
-    ];
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [data]);
+
+  const displayPolicies = useMemo(() => {
+    const nodes = [...(data?.policies?.nodes || [])]
+      .filter((policy) => {
+        if (selectedRegion === 'all') return true;
+        return (policy.regions?.nodes || []).some((region) => region.slug === selectedRegion || region.name === selectedRegion);
+      });
+    let s = shuffleSeed | 0;
+    const rand = () => {
+      s = s + 0x6D2B79F5 | 0;
+      let t = Math.imul(s ^ s >>> 15, 1 | s);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+    for (let i = nodes.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [nodes[i], nodes[j]] = [nodes[j], nodes[i]];
+    }
+    return nodes.slice(0, 20);
+  }, [data, shuffleSeed, selectedRegion]);
 
   const isInCompare = (id) => compareSelected.some(p => p.id === id);
 
@@ -259,90 +342,111 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
       />
       <InsurerProfileModal policy={selectedInsurerPolicy} onClose={() => setSelectedInsurerPolicy(null)} />
 
-      <div className="container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: mobile ? 12 : 20, flexDirection: mobile ? 'column' : 'row', alignItems: mobile ? 'stretch' : 'flex-end' }}>
-          <div>
-            <p className="section-label">Compare & Buy</p>
-            <h2 className="section-title" style={{ fontSize: 'clamp(28px,3vw,44px)' }}>
-              Available Policies
-            </h2>
-          </div>
-          <span style={{ fontSize: 13, color: 'var(--slate)' }}>Select up to 3 to compare side-by-side</span>
-        </div>
-
-        {/* ── Travel dates bar ── */}
-        <div style={{
-          background: 'var(--glass-bg)', border: '1px solid var(--glass-border-bright)', borderRadius: 'var(--radius-md)',
-          padding: mobile ? '14px 16px' : '14px 24px', marginBottom: mobile ? 24 : 32,
-          display: 'flex', alignItems: mobile ? 'stretch' : 'center', flexDirection: mobile ? 'column' : 'row',
-          gap: mobile ? 12 : 16, flexWrap: 'wrap',
-        }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>
-            {hasDates ? '\u2713 Prices calculated' : 'Enter dates for exact prices'}
-          </span>
-          <div style={{ display: 'flex', gap: 10, flex: 1, flexWrap: 'wrap', alignItems: 'center' }}>
-            <input
-              type="date" className="form-input"
-              value={localDates.departure} min={today}
-              onChange={e => setLocalDates(d => ({ ...d, departure: e.target.value }))}
-              style={{ flex: 1, minWidth: 130, padding: '8px 12px', fontSize: 13 }}
-              aria-label="Departure date"
-            />
-            <span style={{ color: 'var(--slate)', fontSize: 13 }}>to</span>
-            <input
-              type="date" className="form-input"
-              value={localDates.returnDate} min={localDates.departure || today}
-              onChange={e => setLocalDates(d => ({ ...d, returnDate: e.target.value }))}
-              style={{ flex: 1, minWidth: 130, padding: '8px 12px', fontSize: 13 }}
-              aria-label="Return date"
-            />
-            <select
-              className="form-input"
-              value={localDates.passengers}
-              onChange={e => setLocalDates(d => ({ ...d, passengers: Number(e.target.value) }))}
-              style={{ width: mobile ? '100%' : 100, padding: '8px 12px', fontSize: 13 }}
-              aria-label="Number of travellers"
-            >
-              {[1,2,3,4,5,6,7,8,9,10].map(n => <option key={n} value={n}>{n} {n === 1 ? 'traveller' : 'travellers'}</option>)}
-            </select>
-          </div>
-          {hasDates && (
-            <div style={{ fontSize: 12, color: '#86efac', fontWeight: 600, whiteSpace: 'nowrap' }}>
-              {localDays} day{localDays !== 1 ? 's' : ''} &middot; {localPax} traveller{localPax !== 1 ? 's' : ''}
-            </div>
-          )}
-        </div>
-
-        {/* Filter chips — derived from policies that are actually in the system */}
-        {filterChips.length > 1 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: mobile ? 8 : 10, flexWrap: 'wrap', marginBottom: mobile ? 28 : 40 }}>
-            {filterChips.map(chip => (
-              <button key={chip.label} onClick={() => setActiveFilter(chip.slug)}
-                style={{ padding: mobile ? '8px 14px' : '9px 20px', borderRadius: 100, border: `1px solid ${activeFilter === chip.slug ? 'rgba(49,99,49,0.5)' : 'var(--glass-border)'}`, background: activeFilter === chip.slug ? 'rgba(49,99,49,0.18)' : 'var(--glass-bg)', color: activeFilter === chip.slug ? '#86efac' : 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-body)', fontSize: mobile ? 12 : 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
-              >{chip.label}</button>
-            ))}
-          </div>
-        )}
-
+      <div className="container" style={{ maxWidth: mobile ? undefined : 1520 }}>
         {fetching && <p style={{ textAlign: 'center', color: 'var(--slate)', padding: '60px 0' }}>Loading policies…</p>}
         {error   && <p style={{ textAlign: 'center', color: '#f87171', padding: '60px 0' }}>Error: {error.message}</p>}
 
+        {!fetching && !error && destinationOptions.length > 0 && (
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10, flexWrap: 'wrap' }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--slate)', margin: 0 }}>
+                Filter by Destination &amp; Travel Dates
+              </p>
+              {!mobile && (selectedRegion !== 'all' || departure || returnDate) && (
+                <button
+                  type="button"
+                  onClick={() => { setSelectedRegion('all'); setDeparture(''); setReturnDate(''); }}
+                  style={{ fontSize: 12, color: 'var(--gold)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 700 }}
+                >
+                  Clear Filters
+                </button>
+              )}
+            </div>
+
+            {/* Date range — used to compute real premiums when both dates set */}
+            <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr auto', gap: 10, marginBottom: 12, alignItems: 'end' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate-dark)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Departure</span>
+                <input
+                  type="date"
+                  value={departure}
+                  onChange={(e) => setDeparture(e.target.value)}
+                  style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 14, fontFamily: 'var(--font-body)', outline: 'none', colorScheme: 'dark' }}
+                />
+              </label>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate-dark)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Return</span>
+                <input
+                  type="date"
+                  value={returnDate}
+                  min={departure || undefined}
+                  onChange={(e) => setReturnDate(e.target.value)}
+                  style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 14, fontFamily: 'var(--font-body)', outline: 'none', colorScheme: 'dark' }}
+                />
+              </label>
+              <div style={{ fontSize: 12, color: hasDates ? '#86efac' : 'var(--slate-dark)', fontWeight: 700, whiteSpace: 'nowrap', padding: mobile ? '4px 0' : '0 4px 12px' }}>
+                {hasDates ? `${days} day${days > 1 ? 's' : ''} trip — showing exact premium` : 'Pick dates for exact premium'}
+              </div>
+            </div>
+
+            {mobile ? (
+              <select
+                value={selectedRegion}
+                onChange={(e) => setSelectedRegion(e.target.value)}
+                style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 14, fontFamily: 'var(--font-body)', outline: 'none' }}
+              >
+                <option value="all">All Destinations</option>
+                {destinationOptions.map((option) => (
+                  <option key={option.slug} value={option.slug}>{option.name}</option>
+                ))}
+              </select>
+            ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRegion('all')}
+                  style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${selectedRegion === 'all' ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: selectedRegion === 'all' ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: selectedRegion === 'all' ? '#86efac' : 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  All Destinations
+                </button>
+                {destinationOptions.map((option) => (
+                  <button
+                    key={option.slug}
+                    type="button"
+                    onClick={() => setSelectedRegion(option.slug)}
+                    style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${selectedRegion === option.slug ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: selectedRegion === option.slug ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: selectedRegion === option.slug ? '#86efac' : 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    {option.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {!fetching && !error && (
-          <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(auto-fill,minmax(340px,1fr))', gap: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : tablet ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))', gap: mobile ? 16 : 24 }}>
             {displayPolicies.map((policy) => {
-              const price    = minPremium(policy.policyDayPremiums);
-              const tags     = parseTags(policy.policyFeatureTags);
-              const checked  = isInCompare(policy.id);
+              const exactPrice = hasDates ? bracketPremium(policy.policyDayPremiums, days) : null;
+              const minPrice   = minPremium(policy.policyDayPremiums);
+              const price      = exactPrice ?? minPrice;
+              const isExact    = hasDates && exactPrice !== null;
+              const tags       = parseTags(policy.policyFeatureTags);
+              const checked    = isInCompare(policy.id);
 
               return (
                 <div key={policy.id} className="policy-card" style={{ background: 'var(--glass-bg)', border: `1px solid ${checked ? 'rgba(49,99,49,0.5)' : 'var(--glass-border)'}`, borderRadius: 'var(--radius-lg)', overflow: 'hidden', position: 'relative' }}
                 >
                   {/* Card header */}
                   <div style={{ padding: '18px 18px 14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                      <InsurerLogo logoUrl={policy.policyInsurerLogo} name={policy.policyInsurerName} size={mobile ? 38 : 44} />
-                      <div style={{ minWidth: 0 }}>
-                        <button type="button" onClick={() => setSelectedInsurerPolicy(policy)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.75)', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: 0, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', display: 'block' }} title="View insurer profile">{policy.policyInsurerName || 'Insurer'}</button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                      <InsurerLogoBanner
+                        logoUrl={policy.policyInsurerLogo}
+                        name={policy.policyInsurerName}
+                        onClick={() => setSelectedInsurerPolicy(policy)}
+                      />
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <button type="button" onClick={() => setSelectedInsurerPolicy(policy)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.85)', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: 0, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', display: 'block', textDecoration: 'underline', textUnderlineOffset: 3, textDecorationColor: 'rgba(255,255,255,0.25)' }} title="View insurer profile">{policy.policyInsurerName || 'Insurer'}</button>
                         <div style={{ display: 'flex', gap: 2, marginTop: 2 }}>
                           {'★★★★★'.split('').map((s, i) => <span key={i} style={{ color: i < 5 ? '#FBBF24' : 'var(--slate-dark)', fontSize: 11 }}>{s}</span>)}
                           <span style={{ color: 'var(--slate-dark)', fontSize: 11, marginLeft: 3 }}>5.0</span>
@@ -352,32 +456,18 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
 
                     <h3 style={{ fontFamily: 'var(--font-display)', fontSize: mobile ? 16 : 18, fontWeight: 700, marginBottom: 10, lineHeight: 1.3 }}>{policy.title}</h3>
 
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 16 }}>
-                      {hasDates ? (
-                        <>
-                          <span style={{ fontSize: 11, color: 'var(--slate)', marginBottom: 2 }}>your trip</span>
-                          <span style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 800, color: '#86efac' }}>
-                            {(() => {
-                              const p = bracketPremium(policy.policyDayPremiums, localDays);
-                              return p ? fmtPrice(p * localPax, policy.policyCurrency) : 'N/A';
-                            })()}
-                          </span>
-                          <span style={{ fontSize: 13, color: 'var(--slate)' }}>
-                            /{localDays} days{localPax > 1 ? ` · ${localPax} pax` : ''}
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <span style={{ fontSize: 11, color: 'var(--slate)', marginBottom: 2 }}>from</span>
-                          <span style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 800, color: 'var(--white)' }}>
-                            {fmtPrice(price, policy.policyCurrency) || 'N/A'}
-                          </span>
-                          <span style={{ fontSize: 13, color: 'var(--slate)' }}>/trip</span>
-                        </>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 11, color: 'var(--slate)', marginBottom: 2 }}>{isExact ? 'price' : 'from'}</span>
+                      <span style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 800, color: 'var(--white)' }}>
+                        {fmtPrice(price, policy.policyCurrency) || 'N/A'}
+                      </span>
+                      <span style={{ fontSize: 13, color: 'var(--slate)' }}>{isExact ? `/ ${days}d trip` : '/trip'}</span>
+                      {isExact && (
+                        <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, color: '#86efac', background: 'rgba(49,99,49,0.18)', border: '1px solid rgba(49,99,49,0.4)', padding: '3px 8px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Exact</span>
                       )}
                     </div>
 
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
                       {tags.slice(0, 3).map(t => (
                         <span key={t} style={{ padding: '4px 10px', borderRadius: 100, background: 'rgba(49,99,49,0.12)', border: '1px solid rgba(49,99,49,0.22)', fontSize: 11, fontWeight: 600, color: '#86efac' }}>{t}</span>
                       ))}
@@ -389,8 +479,8 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                   </div>
 
                   {/* Card footer */}
-                  <div style={{ borderTop: '1px solid var(--glass-border)', padding: mobile ? '14px 18px' : '16px 22px', display: 'flex', gap: 10 }}>
-                    <button type="button" className="btn btn--primary btn--sm" style={{ flex: 1, justifyContent: 'center' }} onClick={() => onNavigate('policy-detail', policy.databaseId, searchParams)}>Pick This →</button>
+                  <div style={{ borderTop: '1px solid var(--glass-border)', padding: mobile ? '14px 18px' : '16px 22px', display: 'flex', gap: 10, flexWrap: mobile ? 'wrap' : 'nowrap' }}>
+                    <button type="button" className="btn btn--primary btn--sm" style={{ flex: 1, justifyContent: 'center' }} onClick={() => onNavigate('policy-detail', policy.databaseId, { ...(searchParams || {}), departure, returnDate })}>Pick This →</button>
                     <button
                       type="button"
                       className="btn btn--ghost btn--sm"
@@ -398,6 +488,9 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                       style={{ opacity: compareSelected.length >= 3 && !checked ? 0.45 : 1, background: checked ? 'rgba(49,99,49,0.2)' : undefined, borderColor: checked ? 'rgba(49,99,49,0.6)' : undefined, color: checked ? '#86efac' : undefined }}
                       onClick={() => toggleCompare(policy)}
                     >{checked ? '✓ Comparing' : 'Compare'}</button>
+                    <button type="button" className="btn btn--ghost btn--sm" style={{ justifyContent: 'center' }} onClick={() => setSelectedPolicy(policy)}>
+                      Benefits
+                    </button>
                   </div>
                 </div>
               );

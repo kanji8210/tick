@@ -3,9 +3,7 @@ import { useQuery } from 'urql';
 import { useAuth } from '../lib/AuthContext';
 import { useResponsive } from '../lib/useResponsive';
 import Hero from './Hero';
-import CategoryFilters from './CategoryFilters';
 import TrustSection from './TrustSection';
-import ProcessSection from './ProcessSection';
 import PolicyShowcase from './PolicyShowcase';
 import FAQSection from './FAQSection';
 import TrustedPartners from './TrustedPartners';
@@ -893,14 +891,7 @@ const LandingPage = ({ onStartWizard, onNavigate, compareSelected = [], onAddCom
         </div>
       )}
 
-      {!isAgent && (
-        <CategoryFilters onSelect={(slug) => {
-          setSearchParams({ region: slug });
-          document.getElementById('policy-showcase')?.scrollIntoView({ behavior: 'smooth' });
-        }} />
-      )}
-
-      {!isAgent && <ProcessSection />}
+      {/* Popular Destinations + 3-step process removed per design */}
 
       {!isAgent && <PolicyShowcase
         onNavigate={onNavigate}

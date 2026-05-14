@@ -60,8 +60,45 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   width: 100%; max-width: 1280px;
   margin: 0 auto; padding: 0 80px;
 }
+/* Hero section — full width on desktop, responsive padding on tablet/mobile */
+.hero-full-bleed {
+  width: 100%;
+}
+.hero-content {
+  width: 100%;
+  max-width: 100%;
+  padding: 0 80px;
+  margin: 0 auto;
+}
+@media (max-width: 1024px) {
+  .hero-content {
+    padding: 0 40px;
+  }
+}
+@media (max-width: 768px) {
+  .hero-content {
+    padding: 0 16px;
+  }
+}
 @media (max-width: 1024px) { .container { padding: 0 40px; } }
 @media (max-width: 768px)  { .container { padding: 0 16px; } }
+@media (max-width: 1024px) {
+  .hero-full-bleed {
+    width: auto;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .container--hero-full {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+@media (max-width: 768px) {
+  .container--hero-full {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
 /* Landscape phones (height ≤ 500px on touch device) → use mobile container padding */
 @media (max-height: 500px) and (orientation: landscape) and (pointer: coarse) {
   .container { padding: 0 16px; }

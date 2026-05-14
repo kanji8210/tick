@@ -22,6 +22,8 @@ const GET_POLICIES = `
         title
         excerpt
         policyDescription
+        policyBenefits
+        policyFeatureTags
         policyCurrency
         policyInsurerName
         policyCountries
@@ -65,6 +67,50 @@ const fmt = (n) =>
     : `${CURRENCY} ${Number(n).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const stripHtml = (s) => (s || '').replace(/<[^>]*>/g, ' ').replace(/\s{2,}/g, ' ').trim();
+
+const parseBenefits = (policy) => {
+  const html = policy.policyBenefits || '';
+
+  if (/<tr/i.test(html) && /<td/i.test(html)) {
+    const rows = [];
+    const rowRx = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+    let rowMatch;
+    while ((rowMatch = rowRx.exec(html)) !== null) {
+      const cells = [];
+      const cellRx = /<td[^>]*>([\s\S]*?)<\/td>/gi;
+      let cellMatch;
+      while ((cellMatch = cellRx.exec(rowMatch[1])) !== null) cells.push(stripHtml(cellMatch[1]));
+      if (!cells.length) continue;
+
+      const name = (cells[0] || '').trim();
+      const limit = (cells[1] || '').trim();
+      if (!name) continue;
+
+      const isHeader = /benefit|cover|description/i.test(name) && /limit|amount|sum/i.test(limit || '');
+      const isCategoryOnly = !limit && cells.length <= 2;
+      if (isHeader || isCategoryOnly) continue;
+
+      rows.push(limit ? `${name}: ${limit}` : name);
+      if (rows.length >= 4) break;
+    }
+    if (rows.length) return rows;
+  }
+
+  const plainBenefits = stripHtml(html)
+    .split(/\.|;|\n|,/)
+    .map(part => part.trim())
+    .filter(Boolean)
+    .filter(part => part.length > 6 && part.length < 90)
+    .slice(0, 4);
+  if (plainBenefits.length) return plainBenefits;
+
+  const featureTags = (policy.policyFeatureTags || '')
+    .split(',')
+    .map(tag => tag.trim())
+    .filter(Boolean);
+
+  return featureTags.slice(0, 4);
+};
 
 /** Does this policy cover the given destination region slug? */
 const coversRegion = (policy, regionSlug) => {
@@ -157,7 +203,7 @@ const DateInput = ({ label, value, onChange, min }) => (
 /* ─── Component ───────────────────────────────────────────────────────────── */
 const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initialStep = 1, onNavigate }) => {
   const { user, loading: authLoading, role, login, register, error: authError } = useAuth();
-  const { mobile } = useResponsive();
+  const { mobile, tablet } = useResponsive();
   const isAgent = role === 'agent' || role === 'administrator';
   const [today] = useState(() => new Date().toISOString().split('T')[0]);
   const [nextWeek] = useState(() => new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]);
@@ -571,6 +617,20 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
                     if (!list.length) return '—';
                     return list.slice(0, 5).join(', ') + (list.length > 5 ? ` +${list.length - 5}` : '');
                   }},
+                  { label: 'Benefits', render: p => {
+                    const benefits = parseBenefits(p);
+                    if (!benefits.length) return '—';
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        {benefits.map(benefit => (
+                          <div key={benefit} style={{ display: 'flex', gap: 7, alignItems: 'flex-start', color: 'rgba(255,255,255,0.85)', fontSize: 12, lineHeight: 1.4 }}>
+                            <span style={{ color: '#86efac', fontWeight: 800, lineHeight: 1 }}>•</span>
+                            <span>{benefit}</span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  }},
                   { label: 'About', render: p => stripHtml(p.policyDescription || p.excerpt || '').substring(0, 90) + '…' },
                 ].map(row => (
                   <tr key={row.label} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
@@ -614,7 +674,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : tablet ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))', gap: mobile ? 12 : 16, alignItems: 'start' }}>
         {eligiblePolicies.map(policy => {
           const prem = policy.computedPremium;
           const total = prem !== null ? prem * form.passengers : null;
@@ -624,13 +684,13 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
             <div key={policy.id}
               onClick={() => set('selectedPolicy', policy)}
               style={{
-                padding: '16px 18px', borderRadius: 10, cursor: 'pointer',
+                padding: '16px 18px', borderRadius: 10, cursor: 'pointer', height: '100%',
                 border: `2px solid ${selected ? 'var(--gold)' : inCompare ? 'rgba(49,99,49,0.5)' : 'var(--glass-border)'}`,
                 background: selected ? 'rgba(212,175,55,0.07)' : inCompare ? 'rgba(49,99,49,0.06)' : 'var(--glass-bg)',
                 transition: 'border-color 0.15s, background 0.15s',
               }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-                <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, height: '100%' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                     {selected && <span style={{ fontSize: 14, color: 'var(--gold)' }}>✓</span>}
                     <strong style={{ fontSize: 15, color: selected ? 'var(--gold)' : '#fff' }}>{policy.title}</strong>
@@ -679,16 +739,6 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
                   </button>
                 </div>
               </div>
-              {policy.policyCountries?.length > 0 && (
-                <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                  {policy.policyCountries.slice(0, 6).map(c => (
-                    <span key={c} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 100, background: 'rgba(49,99,49,0.15)', border: '1px solid rgba(49,99,49,0.25)', color: '#86efac' }}>{c}</span>
-                  ))}
-                  {policy.policyCountries.length > 6 && (
-                    <span style={{ fontSize: 10, color: 'var(--slate)' }}>+{policy.policyCountries.length - 6} more</span>
-                  )}
-                </div>
-              )}
             </div>
           );
         })}
