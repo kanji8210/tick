@@ -181,7 +181,7 @@ const CompareBar = ({ selected, onRemove, onClear, onCompare }) => {
           <button onClick={() => onRemove(p.id)} aria-label={`Remove ${p.title} from comparison`} style={{ background: 'none', border: 'none', color: 'var(--slate)', fontSize: 16, cursor: 'pointer', lineHeight: 1, padding: '0 2px', flexShrink: 0 }}>&times;</button>
         </div>
       ))}
-      <div style={{ display: 'flex', gap: 8, ...(mobile ? { width: '100%' } : { marginLeft: 'auto' }) }}>
+      <div style={{ display: 'flex', gap: 8, ...(mobile ? { width: '100%', paddingRight: 84, boxSizing: 'border-box' } : { marginLeft: 'auto' }) }}>
         <button className="btn btn--ghost btn--sm" onClick={onClear} style={mobile ? { flex: 1 } : undefined}>Clear</button>
         <button className="btn btn--primary btn--sm" onClick={onCompare} disabled={!canCompare} style={{ ...(mobile ? { flex: 2 } : {}), opacity: canCompare ? 1 : 0.45, cursor: canCompare ? 'pointer' : 'not-allowed' }}>Compare Now</button>
       </div>

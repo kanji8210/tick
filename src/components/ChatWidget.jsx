@@ -145,6 +145,7 @@ const ChatWidget = () => {
   const [pinnedIds,   setPinnedIds]   = useState([]);
   const [unread,      setUnread]      = useState(0);
   const [hoveredMsg,  setHoveredMsg]  = useState(null);
+  const [compareBarOffset, setCompareBarOffset] = useState(0);
 
   const scrollRef  = useRef(null);
   const inputRef   = useRef(null);
@@ -239,6 +240,47 @@ const ChatWidget = () => {
   /* ── Clear unread when opened ──── */
   useEffect(() => { if (open) setUnread(0); }, [open]);
 
+  /* ── Keep chat bubble above CompareBar on mobile ──── */
+  useEffect(() => {
+    if (!mobile) {
+      setCompareBarOffset(0);
+      return;
+    }
+
+    let resizeObserver;
+    let intervalId;
+    const updateOffset = () => {
+      const compareBar = document.querySelector('[aria-label="Policy comparison bar"]');
+      if (!compareBar) {
+        setCompareBarOffset(0);
+        return;
+      }
+      const rect = compareBar.getBoundingClientRect();
+      const visibleHeight = Math.max(0, window.innerHeight - rect.top);
+      setCompareBarOffset(visibleHeight > 0 ? visibleHeight + 12 : 0);
+    };
+
+    const mutationObserver = new MutationObserver(updateOffset);
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+
+    window.addEventListener('resize', updateOffset);
+    updateOffset();
+  intervalId = window.setInterval(updateOffset, 300);
+
+    const compareBar = document.querySelector('[aria-label="Policy comparison bar"]');
+    if (compareBar && typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(updateOffset);
+      resizeObserver.observe(compareBar);
+    }
+
+    return () => {
+      mutationObserver.disconnect();
+      window.removeEventListener('resize', updateOffset);
+      resizeObserver?.disconnect();
+      window.clearInterval(intervalId);
+    };
+  }, [mobile]);
+
   /* ── Auto-focus input when chat opens ──── */
   useEffect(() => {
     if (open && !needsGuestForm && convId) {
@@ -315,7 +357,8 @@ const ChatWidget = () => {
 
   const BUBBLE_SIZE  = 52;
   const BUBBLE_RIGHT = 24;
-  const BUBBLE_BOT   = 24;
+  const BUBBLE_BOT   = 24 + compareBarOffset;
+  const compareBarVisible = compareBarOffset > 0;
 
   const panelRight  = BUBBLE_RIGHT;
   const panelBot    = BUBBLE_BOT + BUBBLE_SIZE + 12; // just above bubble
@@ -574,7 +617,7 @@ const ChatWidget = () => {
           position: 'fixed',
           bottom: BUBBLE_BOT,
           right: BUBBLE_RIGHT,
-          zIndex: 960,
+          zIndex: mobile && compareBarVisible ? 890 : 960,
           width:  BUBBLE_SIZE,
           height: BUBBLE_SIZE,
           borderRadius: '50%',
