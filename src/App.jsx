@@ -15,6 +15,7 @@ import Catalog from './components/Catalog'
 import VerifyPolicy from './components/VerifyPolicy'
 import AboutPage from './components/AboutPage'
 import AgenciesPage from './components/AgenciesPage'
+import GroupQuotesPage from './components/GroupQuotesPage'
 
 function AppContent() {
   const { user, role } = useAuth();
@@ -41,6 +42,7 @@ function AppContent() {
     verify:        '/verify',
     about:         '/about',
     agencies:      '/agencies',
+    'group-quotes': '/group-quotes',
     'policy-detail': '/policy',
   };
   const PATH_VIEWS = Object.fromEntries(Object.entries(VIEW_PATHS).map(([v, p]) => [p, v]));
@@ -135,6 +137,8 @@ function AppContent() {
         return <AboutPage onNavigate={handleNavigate} />;
       case 'agencies':
         return <AgenciesPage onNavigate={handleNavigate} />;
+      case 'group-quotes':
+        return <GroupQuotesPage onNavigate={handleNavigate} />;
       case 'policy-detail':
         return (
           <PolicyDetail 

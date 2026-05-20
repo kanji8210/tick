@@ -59,7 +59,7 @@ const StepBar = ({ currentStep }) => (
 
 const Hero = ({ onStart, onNavigate }) => {
   const { user, role } = useAuth();
-  const { mobile, tablet } = useResponsive();
+  const { mobile } = useResponsive();
   const isAgent = role === "agent" || role === "administrator";
   const [step, setStep] = useState(1);
   const [showQuote, setShowQuote] = useState(false);
@@ -185,7 +185,21 @@ const Hero = ({ onStart, onNavigate }) => {
               <div className="reveal reveal-delay-3" style={{ display: "flex", gap: 14, marginBottom: 18, width: '100%', flexWrap: 'wrap', justifyContent: mobile ? 'stretch' : 'flex-start' }}>
                 <button className="btn btn--primary btn--lg" style={{ flex: mobile ? '1 1 100%' : '1 1 auto', justifyContent: 'center' }} onClick={() => document.getElementById('policy-showcase')?.scrollIntoView({ behavior: 'smooth' })}>Compare Policies &rarr;</button>
                 <button className="btn btn--ghost btn--lg" style={{ flex: mobile ? '1 1 100%' : '1 1 auto', justifyContent: 'center' }} onClick={() => document.getElementById("agencies")?.scrollIntoView({ behavior: "smooth" })}>For Agencies</button>
-                <button className="btn btn--ghost btn--lg" style={{ flex: mobile ? '1 1 100%' : '1 1 auto', justifyContent: 'center' }} onClick={() => { setShowQuote(true); setActiveTab(1); setStep(1); }}>Group Travel Quote</button>
+                <button
+                  className="btn btn--ghost btn--lg"
+                  style={{ flex: mobile ? '1 1 100%' : '1 1 auto', justifyContent: 'center' }}
+                  onClick={() => {
+                    if (mobile) {
+                      onNavigate?.('group-quotes');
+                      return;
+                    }
+                    setShowQuote(true);
+                    setActiveTab(1);
+                    setStep(1);
+                  }}
+                >
+                  Group Travel Quote
+                </button>
               </div>
               <div className="reveal reveal-delay-4" style={{ display: "flex", alignItems: "center", gap: mobile ? 8 : 16, flexWrap: "wrap", fontSize: mobile ? 12 : 13, color: "var(--slate-dark)" }}>
                 {["\u2713 No sign-up needed to compare", "\u2713 Embassy-verified certificates", "\u2713 15+ Partner insurers"].map(t => (
