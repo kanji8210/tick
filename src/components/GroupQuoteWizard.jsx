@@ -19,6 +19,7 @@ const GET_POLICIES_FOR_QUOTE = `
         id databaseId title
         policyCurrency policyInsurerName policyInsurerLogo
         policyFeatureTags
+        policyBenefits policyCoverDetails policyNotCovered
         regions { nodes { slug name } }
         policyDayPremiums { from to premium }
       }
@@ -38,12 +39,6 @@ const bracketPremium = (brackets, days) => {
   return m ? m.premium : null;
 };
 
-const COVERAGE_MULTIPLIERS = {
-  Standard: 1,
-  Comprehensive: 1.18,
-  Premium: 1.35,
-};
-
 const TRAVELER_FACTORS = {
   adults: 1,
   seniors: 1.3,
@@ -53,7 +48,17 @@ const TRAVELER_FACTORS = {
 const fmtKES = (n, currency = 'KES') =>
   `${currency} ${Number(n || 0).toLocaleString('en-KE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
+const stripHtml = (value) => (value || '').replace(/<[^>]*>/g, ' ').replace(/\s{2,}/g, ' ').trim();
+
 const quoteRef = () => 'QT-' + Date.now().toString(36).toUpperCase();
+
+const addDaysToISO = (isoDate, daysToAdd) => {
+  if (!isoDate || !daysToAdd) return isoDate;
+  const date = new Date(`${isoDate}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return isoDate;
+  date.setDate(date.getDate() + daysToAdd);
+  return date.toISOString().split('T')[0];
+};
 
 /* ── Sub-components ─────────────────────────────────────── */
 const StepDots = ({ total, current }) => (
@@ -112,9 +117,17 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
   const [sending, setSending] = useState(false);
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
+  const [selectedPolicyId, setSelectedPolicyId] = useState(null);
+  const [selectedQuotePolicy, setSelectedQuotePolicy] = useState(null);
+  const [benefitPolicy, setBenefitPolicy] = useState(null);
+  const [compareIds, setCompareIds] = useState(() => new Set());
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [travelerPromptOpen, setTravelerPromptOpen] = useState(false);
+  const [travelerProfiles, setTravelerProfiles] = useState([]);
 
   const today    = new Date().toISOString().split('T')[0];
   const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
+  const defaultTripDays = String(tripDays(today, nextWeek));
 
   const [form, setForm] = useState({
     orgName:            '',
@@ -128,10 +141,9 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
     region:             '',
     departure:          today,
     returnDate:         nextWeek,
+    tripDays:           defaultTripDays,
     purpose:            'Tourism',
-    coverageTier:       'Standard',
     specialRequirements:'',
-    preExisting:        false,
     // agency extras
     clientName:         '',
     discountPct:        0,
@@ -147,7 +159,9 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
   const [{ data: pData }] = useQuery({ query: GET_POLICIES_FOR_QUOTE });
   const allPolicies = pData?.policies?.nodes || [];
 
-  const days      = tripDays(form.departure, form.returnDate);
+  const daysFromDates = tripDays(form.departure, form.returnDate);
+  const daysInput = Math.max(0, parseInt(form.tripDays, 10) || 0);
+  const days = daysInput || daysFromDates;
   const groupSize = Math.max(1, parseInt(form.groupSize) || 0);
   const adults    = Math.max(0, parseInt(form.adults) || 0);
   const seniors   = Math.max(0, parseInt(form.seniors) || 0);
@@ -159,7 +173,7 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
     seniors,
     children,
   };
-  const coverageMultiplier = COVERAGE_MULTIPLIERS[form.coverageTier] || 1;
+  const coverageMultiplier = 1;
   const APP_SECRET = import.meta.env.VITE_APP_SECRET ?? '';
 
   const restHeaders = () => {
@@ -179,7 +193,7 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
       .map(p => {
         const basePerTraveler = bracketPremium(p.policyDayPremiums, days);
         if (!basePerTraveler) return null;
-        const tierAdjustedRate = basePerTraveler * coverageMultiplier;
+        const tierAdjustedRate = basePerTraveler;
         const lineItems = [
           { key: 'adults', label: 'Adults', count: travelerMix.adults, factor: TRAVELER_FACTORS.adults },
           { key: 'seniors', label: 'Seniors', count: travelerMix.seniors, factor: TRAVELER_FACTORS.seniors },
@@ -208,9 +222,14 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
       .sort((a, b) => a.total - b.total);
   }, [allPolicies, form.region, form.discountPct, days, groupSize, coverageMultiplier, travelerMix, isAgency]);
 
+  const comparedPolicies = useMemo(
+    () => quotedPolicies.filter((policy) => compareIds.has(policy.id)),
+    [quotedPolicies, compareIds],
+  );
+
   const STEPS = isAgency
-    ? ['Client Info', 'Trip Details', 'Pricing', 'Quotation']
-    : ['Group Info',  'Trip Details', 'Coverage', 'Your Quote'];
+    ? ['Client Info', 'Trip Details', 'Additional Notes', 'Quotation']
+    : ['Corporate Travel Info', 'Trip Details', 'Additional Notes', 'Your Quote'];
 
   const quoteSubmissionPayload = useMemo(() => ({
     reference: ref,
@@ -229,16 +248,17 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
       returnDate: form.returnDate,
       daysCovered: days,
       purpose: form.purpose,
-      coverageTier: form.coverageTier,
       coverageMultiplier,
       specialRequirements: form.specialRequirements,
     },
     travelers: {
       total: groupSize,
       mix: travelerMix,
+      manifest: travelerProfiles,
       factors: TRAVELER_FACTORS,
     },
     pricing: {
+      preferredPolicyId: selectedPolicyId ? Number(selectedPolicyId) : null,
       agencyDiscountPct: isAgency ? Number(form.discountPct) || 0 : 0,
       options: quotedPolicies.slice(0, 5).map((policy, index) => ({
         rank: index + 1,
@@ -273,15 +293,74 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
     form.departure,
     form.returnDate,
     form.purpose,
-    form.coverageTier,
     form.specialRequirements,
     form.discountPct,
     days,
     coverageMultiplier,
     groupSize,
     travelerMix,
+    travelerProfiles,
     quotedPolicies,
+    selectedPolicyId,
   ]);
+
+  const toggleCompare = (policyId) => {
+    setCompareIds(prev => {
+      const next = new Set(prev);
+      if (next.has(policyId)) {
+        next.delete(policyId);
+      } else if (next.size < 3) {
+        next.add(policyId);
+      }
+      return next;
+    });
+  };
+
+  const choosePolicy = (policy) => {
+    setSelectedPolicyId(policy.id);
+    setForm(f => {
+      const preferredLine = `Preferred policy: ${policy.title}`;
+      if ((f.specialRequirements || '').includes(preferredLine)) return f;
+      return {
+        ...f,
+        specialRequirements: f.specialRequirements
+          ? `${f.specialRequirements}\n${preferredLine}`
+          : preferredLine,
+      };
+    });
+  };
+
+  const openSelectedQuote = (policy) => {
+    choosePolicy(policy);
+    setSelectedQuotePolicy(policy);
+  };
+
+  const openTravelerPrompt = () => {
+    const count = Math.max(1, parseInt(form.groupSize, 10) || 1);
+    setTravelerProfiles((prev) => {
+      const next = Array.from({ length: count }).map((_, idx) => ({
+        fullName: prev[idx]?.fullName || '',
+      }));
+      return next;
+    });
+    setTravelerPromptOpen(true);
+  };
+
+  const saveTravelerProfiles = () => {
+    const named = travelerProfiles.filter((t) => (t.fullName || '').trim());
+    if (named.length > 0) {
+      setForm((f) => {
+        const summary = `Traveler names captured (${named.length}/${travelerProfiles.length})`;
+        if ((f.specialRequirements || '').includes(summary)) return f;
+        return {
+          ...f,
+          specialRequirements: f.specialRequirements ? `${f.specialRequirements}\n${summary}` : summary,
+        };
+      });
+    }
+    setTravelerPromptOpen(false);
+    setSelectedQuotePolicy(null);
+  };
 
   const validate = () => {
     const e = {};
@@ -291,12 +370,14 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.contactEmail))
                                         e.contactEmail = 'Valid email required';
       if (!form.groupSize || parseInt(form.groupSize) < 5)
-                                        e.groupSize    = 'Minimum 5 travelers for a group quote';
+                                        e.groupSize    = 'Minimum 5 travelers for corporate travel';
       if (enteredBreakdown > groupSize)
                                         e.groupSize    = 'Traveler breakdown cannot exceed total travelers';
     }
     if (step === 1) {
       if (!form.region)                          e.region     = 'Select a destination';
+      if (!form.tripDays || parseInt(form.tripDays, 10) < 1)
+                                                e.tripDays   = 'Enter number of days';
       if (form.returnDate < form.departure)      e.returnDate = 'Must be after departure';
     }
     setErrors(e);
@@ -309,18 +390,75 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
     setSending(true);
     setSubmitError('');
     try {
-      const res = await fetch(`${WP_REST_BASE}/tick/v1/group-quote`, {
-        method: 'POST',
-        headers: { ...restHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify(quoteSubmissionPayload),
+      const discoverRoutes = async () => {
+        const res = await fetch(`${WP_REST_BASE}`);
+        const data = await res.json().catch(() => null);
+        const routes = data?.routes || {};
+
+        const discovered = Object.entries(routes)
+          .filter(([path, config]) => {
+            const p = String(path || '').toLowerCase();
+            const looksLikeQuoteRoute =
+              p.includes('quote') && (p.includes('group') || p.includes('corporate') || p.includes('travel'));
+            if (!looksLikeQuoteRoute) return false;
+
+            const endpoints = Array.isArray(config?.endpoints) ? config.endpoints : [];
+            return endpoints.some((ep) => {
+              if (Array.isArray(ep?.methods)) return ep.methods.includes('POST');
+              if (ep?.methods && typeof ep.methods === 'object') return Object.keys(ep.methods).includes('POST');
+              return false;
+            });
+          })
+          .map(([path]) => String(path));
+
+        return discovered;
+      };
+
+      const discoveredRoutes = await discoverRoutes().catch(() => []);
+
+      const candidateRoutes = [
+        ...discoveredRoutes,
+        '/maljani/v1/group-quote',
+        '/maljani/v1/corporate-travel-quote',
+        '/maljani/v1/quote-request',
+        '/tick/v1/group-quote',
+        '/tick/v1/corporate-travel-quote',
+        '/tick/v1/quote-request',
+      ].filter((route, idx, arr) => {
+        const normalized = route.startsWith('/') ? route : `/${route}`;
+        return arr.findIndex((r) => (r.startsWith('/') ? r : `/${r}`) === normalized) === idx;
       });
 
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
+      let lastRouteError = null;
+      let submittedOk = false;
+
+      for (const route of candidateRoutes) {
+        const normalizedRoute = route.startsWith('/') ? route : `/${route}`;
+        const res = await fetch(`${WP_REST_BASE}${normalizedRoute}`, {
+          method: 'POST',
+          headers: { ...restHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify(quoteSubmissionPayload),
+        });
+
+        const data = await res.json().catch(() => null);
+        if (res.ok) {
+          submittedOk = true;
+          break;
+        }
+
+        const apiCode = data?.code || '';
         const apiMessage = data?.message || data?.error || '';
-        throw new Error(apiMessage || (res.status === 404
-          ? 'The group quote submission endpoint is not available yet.'
-          : `Unable to submit quote request (${res.status}).`));
+        const isMissingRoute = res.status === 404 || apiCode === 'rest_no_route' || /no route/i.test(apiMessage);
+
+        if (!isMissingRoute) {
+          throw new Error(apiMessage || `Unable to submit quote request (${res.status}).`);
+        }
+
+        lastRouteError = apiMessage;
+      }
+
+      if (!submittedOk) {
+        throw new Error(lastRouteError || 'No corporate travel quote POST route found in /wp-json.');
       }
 
       setSubmitted(true);
@@ -346,7 +484,7 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
       <p style={{ color: 'var(--slate)', fontSize: 13, lineHeight: 1.7, marginBottom: 14 }}>
         {isAgency
           ? <>Quotation <strong style={{ color: 'var(--gold)' }}>{ref}</strong> is ready and has been sent to <strong>{form.contactEmail}</strong>.</>
-          : <>We've received your group quote request for <strong>{form.orgName}</strong>. Our team will respond to <strong>{form.contactEmail}</strong> within 48 hours.</>
+          : <>We've received your corporate travel request for <strong>{form.orgName}</strong>. Our team will respond to <strong>{form.contactEmail}</strong> within 48 hours.</>
         }
       </p>
       <div style={{ padding: '10px 14px', background: 'rgba(246,166,35,0.08)', border: '1px solid rgba(246,166,35,0.2)', borderRadius: 8, fontSize: 12, marginBottom: 16 }}>
@@ -425,7 +563,10 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
           </div>
 
           <div style={{ fontSize: 11, color: 'var(--slate)', marginTop: 2, lineHeight: 1.6 }}>
-            Group quotations are available for 5+ travelers. If traveler types have different premiums, the quote is weighted by member mix.
+            Corporate travel quotations are available for 5+ travelers. If traveler types have different premiums, the quote is weighted by member mix.
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--slate)', marginTop: 4, lineHeight: 1.6 }}>
+            For senior travelers, enter their count in the Seniors field.
           </div>
 
           {isAgency && (
@@ -473,16 +614,45 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <Field label="Departure Date">
               <input type="date" style={inputSt} min={today} value={form.departure}
-                onChange={e => set('departure', e.target.value)} />
+                onChange={e => {
+                  const departure = e.target.value;
+                  set('departure', departure);
+                  const enteredDays = Math.max(1, parseInt(form.tripDays, 10) || 0);
+                  if (enteredDays > 0) {
+                    set('returnDate', addDaysToISO(departure, enteredDays - 1));
+                  }
+                }} />
             </Field>
             <Field label="Return Date" error={err('returnDate')}>
               <input type="date"
                 style={{ ...inputSt, borderColor: err('returnDate') ? '#f87171' : 'var(--glass-border)' }}
                 min={form.departure} value={form.returnDate}
-                onChange={e => set('returnDate', e.target.value)}
+                onChange={e => {
+                  const returnDate = e.target.value;
+                  set('returnDate', returnDate);
+                  set('tripDays', String(tripDays(form.departure, returnDate)));
+                }}
               />
             </Field>
           </div>
+
+          <Field label="Number of Days" error={err('tripDays')}>
+            <input
+              type="number"
+              min="1"
+              style={{ ...inputSt, borderColor: err('tripDays') ? '#f87171' : 'var(--glass-border)' }}
+              value={form.tripDays}
+              onChange={e => {
+                const raw = e.target.value;
+                set('tripDays', raw);
+                const enteredDays = Math.max(0, parseInt(raw, 10) || 0);
+                if (enteredDays > 0) {
+                  set('returnDate', addDaysToISO(form.departure, enteredDays - 1));
+                }
+              }}
+              placeholder="e.g. 7"
+            />
+          </Field>
 
           {days > 0 && (
             <div style={{ padding: '8px 12px', background: 'rgba(246,166,35,0.08)', border: '1px solid rgba(246,166,35,0.2)', borderRadius: 8, fontSize: 12, color: 'var(--gold)', fontWeight: 600, marginBottom: 10 }}>
@@ -507,41 +677,9 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
         </div>
       )}
 
-      {/* ── Step 2: Coverage ── */}
+      {/* ── Step 2: Additional Notes ── */}
       {step === 2 && (
         <div className="fade-in">
-          <Field label="Coverage Tier">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {[
-                { value: 'Standard',      desc: 'Emergency medical + trip cancellation' },
-                { value: 'Comprehensive', desc: 'Standard + baggage, delays, evacuation' },
-                { value: 'Premium',       desc: 'All-inclusive + sports, pre-existing cover' },
-              ].map(t => (
-                <button key={t.value} type="button" onClick={() => set('coverageTier', t.value)}
-                  style={{
-                    padding: '11px 14px', borderRadius: 10, textAlign: 'left', cursor: 'pointer',
-                    border: `1px solid ${form.coverageTier === t.value ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`,
-                    background: form.coverageTier === t.value ? 'rgba(49,99,49,0.18)' : 'var(--glass-bg)',
-                    display: 'flex', alignItems: 'center', gap: 10, transition: 'all 0.2s',
-                  }}>
-                  <div style={{
-                    width: 14, height: 14, borderRadius: '50%', flexShrink: 0,
-                    border: `2px solid ${form.coverageTier === t.value ? 'var(--indigo)' : 'rgba(255,255,255,0.25)'}`,
-                    background: form.coverageTier === t.value ? 'var(--indigo)' : 'transparent',
-                    transition: 'all 0.2s',
-                  }} />
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: '#fff' }}>{t.value}</div>
-                    <div style={{ fontSize: 11, color: 'var(--slate)', marginTop: 1 }}>{t.desc}</div>
-                  </div>
-                  {form.coverageTier === t.value && (
-                    <span style={{ marginLeft: 'auto', color: '#86efac', fontSize: 14 }}>✓</span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </Field>
-
           {isAgency && (
             <Field label="Agency Discount (0–30 %)">
               <div style={{ position: 'relative' }}>
@@ -564,7 +702,7 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
             <textarea rows={3} style={{ ...inputSt, resize: 'vertical', lineHeight: 1.6 }}
               value={form.specialRequirements}
               onChange={e => set('specialRequirements', e.target.value)}
-              placeholder="Pre-existing conditions, adventure sports cover, etc."
+              placeholder="Any required cover details, destinations, special handling, etc."
             />
           </Field>
         </div>
@@ -589,7 +727,7 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
               ))}
             </div>
               <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: 11, color: 'var(--slate)', lineHeight: 1.6 }}>
-                Premium basis: {travelerMix.adults} adult{travelerMix.adults !== 1 ? 's' : ''}, {travelerMix.seniors} senior{travelerMix.seniors !== 1 ? 's' : ''}, {travelerMix.children} child{travelerMix.children !== 1 ? 'ren' : ''} · {form.coverageTier} cover · {days} day{days !== 1 ? 's' : ''}
+                Premium basis: {travelerMix.adults} adult{travelerMix.adults !== 1 ? 's' : ''}, {travelerMix.seniors} senior{travelerMix.seniors !== 1 ? 's' : ''}, {travelerMix.children} child{travelerMix.children !== 1 ? 'ren' : ''} · {days} day{days !== 1 ? 's' : ''}
               </div>
             {isAgency && form.discountPct > 0 && (
               <div style={{ marginTop: 6, padding: '4px 8px', background: 'rgba(134,239,172,0.1)', borderRadius: 6, textAlign: 'center', fontSize: 11, color: '#86efac', fontWeight: 700 }}>
@@ -603,48 +741,284 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
             {quotedPolicies.length > 0 ? 'Matching Policies' : 'No Exact Pricing Found'}
           </p>
 
+          {quotedPolicies.length > 0 && (
+            <div style={{ marginBottom: 10, fontSize: 11, color: 'var(--slate)' }}>
+              Compare selected: <strong style={{ color: '#86efac' }}>{compareIds.size}</strong>/3
+              {selectedPolicyId && <span style={{ marginLeft: 10, color: 'var(--gold)' }}>Preferred policy selected</span>}
+              {comparedPolicies.length >= 2 && (
+                <button
+                  type="button"
+                  className="btn btn--ghost btn--sm"
+                  style={{ marginLeft: 10 }}
+                  onClick={() => setCompareOpen(true)}
+                >
+                  Compare {comparedPolicies.length} Plans
+                </button>
+              )}
+            </div>
+          )}
+
           {quotedPolicies.length === 0 ? (
             <div style={{ padding: '14px', background: 'rgba(246,166,35,0.06)', border: '1px solid rgba(246,166,35,0.2)', borderRadius: 10, fontSize: 12, color: 'var(--slate)', lineHeight: 1.6 }}>
               No bracket pricing found for this region/duration — our team will prepare a custom quote for you.
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 7, maxHeight: 240, overflowY: 'auto', paddingRight: 2 }}>
-              {quotedPolicies.slice(0, 5).map((p, i) => (
-                <div key={p.id} style={{
-                  padding: '10px 12px', borderRadius: 10,
-                  background: i === 0 ? 'rgba(49,99,49,0.14)' : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${i === 0 ? 'rgba(49,99,49,0.4)' : 'var(--glass-border)'}`,
-                  display: 'flex', alignItems: 'center', gap: 10,
-                }}>
-                  {i === 0 && (
-                    <span style={{ fontSize: 9, background: 'var(--indigo)', color: '#fff', padding: '2px 7px', borderRadius: 100, fontWeight: 800, whiteSpace: 'nowrap', flexShrink: 0 }}>
-                      BEST
-                    </span>
-                  )}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#fff' }}>{p.title}</div>
-                    <div style={{ fontSize: 10, color: 'var(--slate)', marginTop: 1 }}>
-                      {p.policyInsurerName} · Base {fmtKES(p.basePerTraveler, p.policyCurrency)}/traveler · {form.coverageTier} x{coverageMultiplier.toFixed(2)}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 7, maxHeight: 320, overflowY: 'auto', paddingRight: 2 }}>
+              {quotedPolicies.slice(0, 5).map((p, i) => {
+                const inCompare = compareIds.has(p.id);
+                const compareFull = compareIds.size >= 3 && !inCompare;
+                const selected = selectedPolicyId === p.id;
+                const benefitLines = stripHtml(p.policyBenefits || p.policyCoverDetails)
+                  .split(/[\n\r]+/)
+                  .map(line => line.trim())
+                  .filter(Boolean)
+                  .slice(0, 8);
+
+                return (
+                  <div key={p.id} style={{
+                    padding: '10px 12px', borderRadius: 10,
+                    background: selected ? 'rgba(246,166,35,0.10)' : i === 0 ? 'rgba(49,99,49,0.14)' : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${selected ? 'rgba(246,166,35,0.45)' : i === 0 ? 'rgba(49,99,49,0.4)' : 'var(--glass-border)'}`,
+                    display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', cursor: 'pointer',
+                  }} onClick={() => choosePolicy(p)}>
+                    {i === 0 && (
+                      <span style={{ fontSize: 9, background: 'var(--indigo)', color: '#fff', padding: '2px 7px', borderRadius: 100, fontWeight: 800, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                        BEST
+                      </span>
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#fff' }}>{p.title}</div>
+                      <div style={{ fontSize: 10, color: 'var(--slate)', marginTop: 1 }}>
+                        {p.policyInsurerName} · Base {fmtKES(p.basePerTraveler, p.policyCurrency)}/traveler
+                      </div>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.65)', marginTop: 4, lineHeight: 1.5 }}>
+                        {p.lineItems.map(item => `${item.label}: ${item.count} x ${fmtKES(item.rate, p.policyCurrency)}`).join(' · ')}
+                      </div>
                     </div>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.65)', marginTop: 4, lineHeight: 1.5 }}>
-                      {p.lineItems.map(item => `${item.label}: ${item.count} x ${fmtKES(item.rate, p.policyCurrency)}`).join(' · ')}
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      {p.discount > 0 && (
+                        <div style={{ fontSize: 10, color: 'var(--slate)', textDecoration: 'line-through' }}>
+                          {fmtKES(p.subtotal, p.policyCurrency)}
+                        </div>
+                      )}
+                      <div style={{ fontWeight: 800, fontSize: 14, color: i === 0 ? '#86efac' : 'var(--white)' }}>
+                        {fmtKES(p.total, p.policyCurrency)}
+                      </div>
+                      <div style={{ fontSize: 10, color: 'var(--slate)' }}>group total</div>
+                    </div>
+
+                    <div style={{ width: '100%', display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        className="btn btn--primary btn--sm"
+                        style={{ flex: 1, justifyContent: 'center' }}
+                        onClick={(e) => { e.stopPropagation(); openSelectedQuote(p); }}
+                      >
+                        {selected ? '✓ Get This' : 'Get This'}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn--ghost btn--sm"
+                        disabled={compareFull}
+                        style={{
+                          opacity: compareFull ? 0.45 : 1,
+                          background: inCompare ? 'rgba(49,99,49,0.2)' : undefined,
+                          borderColor: inCompare ? 'rgba(49,99,49,0.6)' : undefined,
+                          color: inCompare ? '#86efac' : undefined,
+                        }}
+                        onClick={(e) => { e.stopPropagation(); toggleCompare(p.id); }}
+                      >
+                        {inCompare ? '✓ Comparing' : 'Compare'}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn--ghost btn--sm"
+                        onClick={(e) => { e.stopPropagation(); setBenefitPolicy({ ...p, benefitLines }); }}
+                      >
+                        Benefits View
+                      </button>
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    {p.discount > 0 && (
-                      <div style={{ fontSize: 10, color: 'var(--slate)', textDecoration: 'line-through' }}>
-                        {fmtKES(p.subtotal, p.policyCurrency)}
-                      </div>
-                    )}
-                    <div style={{ fontWeight: 800, fontSize: 14, color: i === 0 ? '#86efac' : 'var(--white)' }}>
-                      {fmtKES(p.total, p.policyCurrency)}
-                    </div>
-                    <div style={{ fontSize: 10, color: 'var(--slate)' }}>group total</div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {selectedQuotePolicy && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(8px)', zIndex: 1310, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+          onClick={() => setSelectedQuotePolicy(null)}
+        >
+          <div
+            style={{ width: '100%', maxWidth: 620, maxHeight: '85vh', overflowY: 'auto', background: 'var(--navy-mid)', border: '1px solid var(--glass-border-bright)', borderRadius: 14, padding: '1.2rem' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
+              <h4 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 18, color: '#fff' }}>Selected Trip Quote</h4>
+              <button type="button" className="btn btn--ghost btn--sm" onClick={() => setSelectedQuotePolicy(null)}>Close</button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+              {[
+                ['Policy', selectedQuotePolicy.title],
+                ['Insurer', selectedQuotePolicy.policyInsurerName || 'N/A'],
+                ['Destination', form.region || 'N/A'],
+                ['Departure', form.departure || 'N/A'],
+                ['Return', form.returnDate || 'N/A'],
+                ['Duration', `${days} day${days !== 1 ? 's' : ''}`],
+              ].map(([k, v]) => (
+                <div key={k} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: 10, padding: '10px 12px' }}>
+                  <div style={{ fontSize: 10, color: 'var(--slate-dark)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>{k}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{v}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--glass-border)', borderRadius: 10, padding: '10px 12px', marginBottom: 12 }}>
+              <div style={{ fontSize: 10, color: 'var(--slate-dark)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>Premium Breakdown</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', lineHeight: 1.7 }}>
+                {selectedQuotePolicy.lineItems.map(item => (
+                  <div key={`${selectedQuotePolicy.id}-${item.key}`} style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+                    <span>{item.label}: {item.count} x {fmtKES(item.rate, selectedQuotePolicy.policyCurrency)}</span>
+                    <strong style={{ color: '#fff' }}>{fmtKES(item.total, selectedQuotePolicy.policyCurrency)}</strong>
+                  </div>
+                ))}
+              </div>
+              {selectedQuotePolicy.discount > 0 && (
+                <div style={{ marginTop: 8, fontSize: 12, color: 'var(--slate)' }}>
+                  Discount: -{fmtKES(selectedQuotePolicy.discount, selectedQuotePolicy.policyCurrency)}
+                </div>
+              )}
+              <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 12, color: 'var(--slate)' }}>Total Premium</span>
+                <strong style={{ fontSize: 16, color: '#86efac' }}>{fmtKES(selectedQuotePolicy.total, selectedQuotePolicy.policyCurrency)}</strong>
+              </div>
+            </div>
+
+            <button type="button" className="btn btn--primary btn--sm" style={{ width: '100%', justifyContent: 'center' }} onClick={openTravelerPrompt}>
+              Use This Quote
+            </button>
+            <p style={{ margin: '8px 0 0', fontSize: 11, color: 'var(--slate)' }}>
+              You will add traveler names now. Passport/ID/KRA can be captured during payment.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {compareOpen && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.84)', backdropFilter: 'blur(8px)', zIndex: 1320, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+          onClick={() => setCompareOpen(false)}
+        >
+          <div
+            style={{ width: '100%', maxWidth: 860, maxHeight: '86vh', overflowY: 'auto', background: 'var(--navy-mid)', border: '1px solid var(--glass-border-bright)', borderRadius: 14, padding: '1.2rem' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
+              <h4 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 18, color: '#fff' }}>Corporate Quote Comparator</h4>
+              <button type="button" className="btn btn--ghost btn--sm" onClick={() => setCompareOpen(false)}>Close</button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 10 }}>
+              {comparedPolicies.map((p) => (
+                <div key={`cmp-${p.id}`} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--glass-border)', borderRadius: 10, padding: '10px 12px' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{p.title}</div>
+                  <div style={{ fontSize: 11, color: 'var(--slate)', marginBottom: 8 }}>{p.policyInsurerName}</div>
+                  <div style={{ fontSize: 12, color: '#86efac', fontWeight: 800, marginBottom: 8 }}>{fmtKES(p.total, p.policyCurrency)}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, marginBottom: 10 }}>
+                    {p.lineItems.map((item) => `${item.label}: ${item.count}`).join(' · ')}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      className="btn btn--primary btn--sm"
+                      style={{ flex: 1, justifyContent: 'center' }}
+                      onClick={() => { setCompareOpen(false); openSelectedQuote(p); }}
+                    >
+                      Pick This
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn--ghost btn--sm"
+                      onClick={() => { setCompareOpen(false); setBenefitPolicy({ ...p, benefitLines: stripHtml(p.policyBenefits || p.policyCoverDetails).split(/[\n\r]+/).map((line) => line.trim()).filter(Boolean).slice(0, 8) }); }}
+                    >
+                      Benefits
+                    </button>
                   </div>
                 </div>
               ))}
             </div>
-          )}
+          </div>
+        </div>
+      )}
+
+      {travelerPromptOpen && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.84)', backdropFilter: 'blur(8px)', zIndex: 1330, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+          onClick={() => setTravelerPromptOpen(false)}
+        >
+          <div
+            style={{ width: '100%', maxWidth: 640, maxHeight: '86vh', overflowY: 'auto', background: 'var(--navy-mid)', border: '1px solid var(--glass-border-bright)', borderRadius: 14, padding: '1.2rem' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
+              <h4 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 18, color: '#fff' }}>Traveler Details</h4>
+              <button type="button" className="btn btn--ghost btn--sm" onClick={() => setTravelerPromptOpen(false)}>Close</button>
+            </div>
+            <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--slate)' }}>
+              Enter traveler names now. Passport number, ID number, and KRA PIN can be captured during payment.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+              {travelerProfiles.map((traveler, idx) => (
+                <div key={`traveler-${idx}`} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: 10, padding: '10px 12px' }}>
+                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--slate)', marginBottom: 5 }}>
+                    Traveler {idx + 1} Full Name
+                  </label>
+                  <input
+                    style={inputSt}
+                    value={traveler.fullName}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setTravelerProfiles((prev) => prev.map((t, i) => i === idx ? { ...t, fullName: value } : t));
+                    }}
+                    placeholder="Full name as on travel document"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <button type="button" className="btn btn--primary btn--sm" style={{ width: '100%', justifyContent: 'center' }} onClick={saveTravelerProfiles}>
+              Save Travelers & Continue
+            </button>
+          </div>
+        </div>
+      )}
+
+      {benefitPolicy && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(8px)', zIndex: 1300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+          onClick={() => setBenefitPolicy(null)}
+        >
+          <div
+            style={{ width: '100%', maxWidth: 560, maxHeight: '80vh', overflowY: 'auto', background: 'var(--navy-mid)', border: '1px solid var(--glass-border-bright)', borderRadius: 14, padding: '1.2rem' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
+              <h4 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 18, color: '#fff' }}>{benefitPolicy.title}</h4>
+              <button type="button" className="btn btn--ghost btn--sm" onClick={() => setBenefitPolicy(null)}>Close</button>
+            </div>
+            <p style={{ margin: '0 0 10px', color: 'var(--slate)', fontSize: 12 }}>Benefits overview</p>
+            {benefitPolicy.benefitLines?.length ? (
+              <ul style={{ margin: 0, paddingLeft: 18, color: 'rgba(255,255,255,0.86)', fontSize: 13, lineHeight: 1.8 }}>
+                {benefitPolicy.benefitLines.map((line, idx) => <li key={`${benefitPolicy.id}-${idx}`}>{line}</li>)}
+              </ul>
+            ) : (
+              <p style={{ margin: 0, color: 'var(--slate)', fontSize: 13 }}>No benefit details available for this policy.</p>
+            )}
+          </div>
         </div>
       )}
 

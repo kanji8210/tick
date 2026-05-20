@@ -198,7 +198,7 @@ const Hero = ({ onStart, onNavigate }) => {
                     setStep(1);
                   }}
                 >
-                  Group Travel Quote
+                  Corporate Travel
                 </button>
               </div>
               <div className="reveal reveal-delay-4" style={{ display: "flex", alignItems: "center", gap: mobile ? 8 : 16, flexWrap: "wrap", fontSize: mobile ? 12 : 13, color: "var(--slate-dark)" }}>

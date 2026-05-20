@@ -357,7 +357,9 @@ const ChatWidget = () => {
 
   const BUBBLE_SIZE  = 52;
   const BUBBLE_RIGHT = 24;
-  const BUBBLE_BOT   = 24 + compareBarOffset;
+  const isGroupQuotesRoute = typeof window !== 'undefined' && window.location.pathname === '/group-quotes';
+  const routeOffset = mobile && isGroupQuotesRoute ? 96 : 0;
+  const BUBBLE_BOT   = 24 + compareBarOffset + routeOffset;
   const compareBarVisible = compareBarOffset > 0;
 
   const panelRight  = BUBBLE_RIGHT;
