@@ -75,6 +75,30 @@ const fmtPrice = (price, currency) => {
 /** Strip HTML tags from a string. */
 const stripHtml = (s) => (s || '').replace(/<[^>]*>/g, ' ').replace(/\s{2,}/g, ' ').trim();
 
+/** Parse the first two columns from a benefits HTML table. */
+const parseBenefitTableRows = (html) => {
+  if (!html || !/<table/i.test(html)) return [];
+
+  const rows = [];
+  const rowRx = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+  let rowMatch;
+
+  while ((rowMatch = rowRx.exec(html)) !== null) {
+    const cols = [];
+    const cellRx = /<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi;
+    let cellMatch;
+
+    while ((cellMatch = cellRx.exec(rowMatch[1])) !== null) {
+      const text = stripHtml(cellMatch[1]);
+      if (text) cols.push(text);
+    }
+
+    if (cols.length >= 2) rows.push([cols[0], cols[1]]);
+  }
+
+  return rows;
+};
+
 /* ── Insurer logo ────────────────────────────────────────────────────────────────── */
 const InsurerLogo = ({ logoUrl, name, size = 44 }) => {
   if (logoUrl) {
@@ -196,6 +220,7 @@ const BenefitModal = ({ policy, onClose, onNavigate }) => {
   const benefitLines = policy.policyBenefits
     ? stripHtml(policy.policyBenefits).split(/[\n\r]+/).map(s => s.trim()).filter(Boolean)
     : [];
+  const benefitTableRows = parseBenefitTableRows(policy.policyBenefits || '');
 
   const coverLines = policy.policyCoverDetails
     ? stripHtml(policy.policyCoverDetails).split(/[\n\r]+/).map(s => s.trim()).filter(Boolean)
@@ -240,7 +265,29 @@ const BenefitModal = ({ policy, onClose, onNavigate }) => {
           </div>
         )}
 
-        {benefitLines.length > 0 ? (
+        {benefitTableRows.length > 0 ? (
+          <div style={{ marginBottom: '1rem' }}>
+            <p style={{ fontSize: 11, color: 'var(--slate)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>Key Benefits</p>
+            <div style={{ maxHeight: '50vh', overflow: 'auto', border: '1px solid var(--glass-border)', borderRadius: 10 }}>
+              <table style={{ width: '100%', minWidth: 440, borderCollapse: 'collapse', fontSize: 12 }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--gold)', borderBottom: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.03)' }}>Benefit</th>
+                    <th style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--gold)', borderBottom: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.03)' }}>Limit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {benefitTableRows.map((row, idx) => (
+                    <tr key={idx}>
+                      <td style={{ padding: '9px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.9)', verticalAlign: 'top' }}>{row[0]}</td>
+                      <td style={{ padding: '9px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.82)', verticalAlign: 'top' }}>{row[1]}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : benefitLines.length > 0 ? (
           <div style={{ marginBottom: '1rem' }}>
             <p style={{ fontSize: 11, color: 'var(--slate)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>What’s Covered</p>
             <ul style={{ margin: 0, paddingLeft: 18, color: 'rgba(255,255,255,0.8)', fontSize: 13, lineHeight: 2 }}>

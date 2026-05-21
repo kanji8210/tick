@@ -50,6 +50,29 @@ const fmtKES = (n, currency = 'KES') =>
 
 const stripHtml = (value) => (value || '').replace(/<[^>]*>/g, ' ').replace(/\s{2,}/g, ' ').trim();
 
+const parseBenefitTableRows = (html) => {
+  if (!html || !/<table/i.test(html)) return [];
+
+  const rows = [];
+  const rowRx = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+  let rowMatch;
+
+  while ((rowMatch = rowRx.exec(html)) !== null) {
+    const cols = [];
+    const cellRx = /<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi;
+    let cellMatch;
+
+    while ((cellMatch = cellRx.exec(rowMatch[1])) !== null) {
+      const text = stripHtml(cellMatch[1]);
+      if (text) cols.push(text);
+    }
+
+    if (cols.length >= 2) rows.push([cols[0], cols[1]]);
+  }
+
+  return rows;
+};
+
 const quoteRef = () => 'QT-' + Date.now().toString(36).toUpperCase();
 
 const addDaysToISO = (isoDate, daysToAdd) => {
@@ -108,9 +131,101 @@ const ChipButton = ({ label, active, onClick, color = 'gold' }) => {
   );
 };
 
+/* ── Inline auth panel (login / register inside traveler modal) ── */
+const InlineAuthPanel = ({ login, register, authLoading }) => {
+  const [tab, setTab] = useState('login'); // 'login' | 'register'
+  const [open, setOpen] = useState(false);
+  const [loginData, setLoginData] = useState({ email: '', password: '' });
+  const [regData, setRegData] = useState({ fullName: '', email: '', phone: '', password: '', confirmPassword: '' });
+  const [err, setErr] = useState('');
+  const [ok, setOk] = useState('');
+
+  const iSt = { width: '100%', padding: '8px 10px', borderRadius: 7, border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' };
+  const lSt = { display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--slate)', marginBottom: 3 };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setErr(''); setOk('');
+    if (!loginData.email || !loginData.password) { setErr('Email and password are required.'); return; }
+    const result = await login(loginData.email, loginData.password);
+    if (result?.success) { setOk('Logged in! Your quote will be saved.'); }
+    else { setErr(result?.error || 'Login failed. Please check your credentials.'); }
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setErr(''); setOk('');
+    if (!regData.fullName || !regData.email || !regData.password || !regData.phone) { setErr('Please fill in all required fields.'); return; }
+    if (regData.password.length < 8) { setErr('Password must be at least 8 characters.'); return; }
+    if (regData.password !== regData.confirmPassword) { setErr('Passwords do not match.'); return; }
+    const result = await register({ ...regData, accountType: 'insured' });
+    if (result?.success) { setOk('Account created and logged in!'); }
+    else { setErr(result?.error || 'Registration failed. Please try again.'); }
+  };
+
+  if (!open) {
+    return (
+      <div style={{ background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(99,102,241,0.08))', border: '1px solid var(--gold)', borderRadius: 10, padding: '10px 14px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 12, color: 'var(--slate)', flex: 1, minWidth: 160 }}>
+          <strong style={{ color: 'var(--gold)' }}>Save your quote</strong> — log in or create an account to manage your policy.
+        </span>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button type="button" className="btn btn--primary btn--sm" onClick={() => { setTab('register'); setOpen(true); }}>Create Account</button>
+          <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setTab('login'); setOpen(true); }}>Log In</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: 'var(--navy-mid)', border: '1px solid var(--gold)', borderRadius: 10, padding: '14px', marginBottom: 14 }}>
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: 2, marginBottom: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 7, padding: 3 }}>
+        {['login','register'].map((t) => (
+          <button key={t} type="button" onClick={() => { setTab(t); setErr(''); setOk(''); }}
+            style={{ flex: 1, padding: '5px 0', borderRadius: 5, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', transition: 'all 0.15s',
+              background: tab === t ? 'var(--gold)' : 'transparent', color: tab === t ? '#000' : 'rgba(255,255,255,0.6)' }}>
+            {t === 'login' ? 'Log In' : 'Create Account'}
+          </button>
+        ))}
+      </div>
+
+      {err && <p style={{ margin: '0 0 8px', fontSize: 12, color: '#f87171', background: 'rgba(248,113,113,0.1)', borderRadius: 6, padding: '6px 10px' }}>{err}</p>}
+      {ok  && <p style={{ margin: '0 0 8px', fontSize: 12, color: '#4ade80', background: 'rgba(74,222,128,0.1)', borderRadius: 6, padding: '6px 10px' }}>{ok}</p>}
+
+      {tab === 'login' ? (
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div><label style={lSt}>Email</label><input style={iSt} type="email" autoComplete="email" value={loginData.email} onChange={(e) => setLoginData((p) => ({ ...p, email: e.target.value }))} placeholder="you@example.com" /></div>
+          <div><label style={lSt}>Password</label><input style={iSt} type="password" autoComplete="current-password" value={loginData.password} onChange={(e) => setLoginData((p) => ({ ...p, password: e.target.value }))} placeholder="••••••••" /></div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+            <button type="submit" className="btn btn--primary btn--sm" style={{ flex: 1, justifyContent: 'center' }} disabled={authLoading}>{authLoading ? 'Logging in…' : 'Log In'}</button>
+            <button type="button" className="btn btn--ghost btn--sm" onClick={() => setOpen(false)}>Cancel</button>
+          </div>
+        </form>
+      ) : (
+        <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div><label style={lSt}>Full Name *</label><input style={iSt} type="text" autoComplete="name" value={regData.fullName} onChange={(e) => setRegData((p) => ({ ...p, fullName: e.target.value }))} placeholder="Your full name" /></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <div><label style={lSt}>Email *</label><input style={iSt} type="email" autoComplete="email" value={regData.email} onChange={(e) => setRegData((p) => ({ ...p, email: e.target.value }))} placeholder="you@example.com" /></div>
+            <div><label style={lSt}>Phone *</label><input style={iSt} type="tel" autoComplete="tel" value={regData.phone} onChange={(e) => setRegData((p) => ({ ...p, phone: e.target.value }))} placeholder="+254 7xx xxx xxx" /></div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <div><label style={lSt}>Password *</label><input style={iSt} type="password" autoComplete="new-password" value={regData.password} onChange={(e) => setRegData((p) => ({ ...p, password: e.target.value }))} placeholder="Min 8 chars" /></div>
+            <div><label style={lSt}>Confirm *</label><input style={iSt} type="password" autoComplete="new-password" value={regData.confirmPassword} onChange={(e) => setRegData((p) => ({ ...p, confirmPassword: e.target.value }))} placeholder="Repeat password" /></div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+            <button type="submit" className="btn btn--primary btn--sm" style={{ flex: 1, justifyContent: 'center' }} disabled={authLoading}>{authLoading ? 'Creating…' : 'Create Account'}</button>
+            <button type="button" className="btn btn--ghost btn--sm" onClick={() => setOpen(false)}>Cancel</button>
+          </div>
+        </form>
+      )}
+    </div>
+  );
+};
+
 /* ── Main component ─────────────────────────────────────── */
-const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
-  const { user } = useAuth();
+const GroupQuoteWizard = ({ onClose, isAgency = false, onNavigate }) => {
+  const { user, login, register, loading: authLoading } = useAuth();
   const [ref] = useState(quoteRef);
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
@@ -229,7 +344,7 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
 
   const STEPS = isAgency
     ? ['Client Info', 'Trip Details', 'Additional Notes', 'Quotation']
-    : ['Corporate Travel Info', 'Trip Details', 'Additional Notes', 'Your Quote'];
+    : ['Group Travel Info', 'Trip Details', 'Additional Notes', 'Your Quote'];
 
   const quoteSubmissionPayload = useMemo(() => ({
     reference: ref,
@@ -340,6 +455,9 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
     setTravelerProfiles((prev) => {
       const next = Array.from({ length: count }).map((_, idx) => ({
         fullName: prev[idx]?.fullName || '',
+        dob:      prev[idx]?.dob      || '',
+        email:    prev[idx]?.email    || '',
+        phone:    prev[idx]?.phone    || '',
       }));
       return next;
     });
@@ -370,7 +488,7 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.contactEmail))
                                         e.contactEmail = 'Valid email required';
       if (!form.groupSize || parseInt(form.groupSize) < 5)
-                                        e.groupSize    = 'Minimum 5 travelers for corporate travel';
+                                        e.groupSize    = 'Minimum 5 travelers for group travel';
       if (enteredBreakdown > groupSize)
                                         e.groupSize    = 'Traveler breakdown cannot exceed total travelers';
     }
@@ -458,7 +576,7 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
       }
 
       if (!submittedOk) {
-        throw new Error(lastRouteError || 'No corporate travel quote POST route found in /wp-json.');
+        throw new Error(lastRouteError || 'No group travel quote POST route found in /wp-json.');
       }
 
       setSubmitted(true);
@@ -484,7 +602,7 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
       <p style={{ color: 'var(--slate)', fontSize: 13, lineHeight: 1.7, marginBottom: 14 }}>
         {isAgency
           ? <>Quotation <strong style={{ color: 'var(--gold)' }}>{ref}</strong> is ready and has been sent to <strong>{form.contactEmail}</strong>.</>
-          : <>We've received your corporate travel request for <strong>{form.orgName}</strong>. Our team will respond to <strong>{form.contactEmail}</strong> within 48 hours.</>
+          : <>We've received your group travel request for <strong>{form.orgName}</strong>. Our team will respond to <strong>{form.contactEmail}</strong> within 48 hours.</>
         }
       </p>
       <div style={{ padding: '10px 14px', background: 'rgba(246,166,35,0.08)', border: '1px solid rgba(246,166,35,0.2)', borderRadius: 8, fontSize: 12, marginBottom: 16 }}>
@@ -503,9 +621,28 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
   return (
     <div>
       <StepDots total={STEPS.length} current={step} />
-      <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--slate)', textAlign: 'center', marginBottom: 16 }}>
-        Step {step + 1} of {STEPS.length} — {STEPS[step]}
-      </p>
+
+      {/* Auth status indicator */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <p style={{ margin: 0, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--slate)' }}>
+          Step {step + 1} of {STEPS.length} — {STEPS[step]}
+        </p>
+        {user ? (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: '#4ade80', background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 20, padding: '3px 10px' }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', display: 'inline-block' }} />
+            {user.name || user.email}
+          </span>
+        ) : (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--slate)' }}>
+            <button type="button" onClick={() => onNavigate?.('login')}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: 'var(--gold)', textDecoration: 'underline', padding: 0 }}>Login</button>
+            <span style={{ opacity: 0.4 }}>/</span>
+            <button type="button" onClick={() => onNavigate?.('register')}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: 'var(--gold)', textDecoration: 'underline', padding: 0 }}>Register</button>
+            <span style={{ fontSize: 10, color: 'var(--slate)', opacity: 0.7 }}>(optional)</span>
+          </span>
+        )}
+      </div>
 
       {/* ── Step 0: Group / Client Info ── */}
       {step === 0 && (
@@ -563,7 +700,7 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
           </div>
 
           <div style={{ fontSize: 11, color: 'var(--slate)', marginTop: 2, lineHeight: 1.6 }}>
-            Corporate travel quotations are available for 5+ travelers. If traveler types have different premiums, the quote is weighted by member mix.
+            Group travel quotations are available for 5+ travelers. If traveler types have different premiums, the quote is weighted by member mix.
           </div>
           <div style={{ fontSize: 11, color: 'var(--slate)', marginTop: 4, lineHeight: 1.6 }}>
             For senior travelers, enter their count in the Seniors field.
@@ -773,6 +910,7 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
                   .map(line => line.trim())
                   .filter(Boolean)
                   .slice(0, 8);
+                const benefitTableRows = parseBenefitTableRows(p.policyBenefits || '');
 
                 return (
                   <div key={p.id} style={{
@@ -833,7 +971,7 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
                       <button
                         type="button"
                         className="btn btn--ghost btn--sm"
-                        onClick={(e) => { e.stopPropagation(); setBenefitPolicy({ ...p, benefitLines }); }}
+                        onClick={(e) => { e.stopPropagation(); setBenefitPolicy({ ...p, benefitLines, benefitTableRows }); }}
                       >
                         Benefits View
                       </button>
@@ -942,7 +1080,14 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
                     <button
                       type="button"
                       className="btn btn--ghost btn--sm"
-                      onClick={() => { setCompareOpen(false); setBenefitPolicy({ ...p, benefitLines: stripHtml(p.policyBenefits || p.policyCoverDetails).split(/[\n\r]+/).map((line) => line.trim()).filter(Boolean).slice(0, 8) }); }}
+                      onClick={() => {
+                        setCompareOpen(false);
+                        setBenefitPolicy({
+                          ...p,
+                          benefitLines: stripHtml(p.policyBenefits || p.policyCoverDetails).split(/[\n\r]+/).map((line) => line.trim()).filter(Boolean).slice(0, 8),
+                          benefitTableRows: parseBenefitTableRows(p.policyBenefits || ''),
+                        });
+                      }}
                     >
                       Benefits
                     </button>
@@ -967,27 +1112,40 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
               <h4 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 18, color: '#fff' }}>Traveler Details</h4>
               <button type="button" className="btn btn--ghost btn--sm" onClick={() => setTravelerPromptOpen(false)}>Close</button>
             </div>
+            {/* Inline auth panel — shown when user is not logged in */}
+            {!user && <InlineAuthPanel login={login} register={register} authLoading={authLoading} />}
+
             <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--slate)' }}>
-              Enter traveler names now. Passport number, ID number, and KRA PIN can be captured during payment.
+              Passport number, ID number, and KRA PIN will be collected at payment.
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
-              {travelerProfiles.map((traveler, idx) => (
-                <div key={`traveler-${idx}`} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: 10, padding: '10px 12px' }}>
-                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--slate)', marginBottom: 5 }}>
-                    Traveler {idx + 1} Full Name
-                  </label>
-                  <input
-                    style={inputSt}
-                    value={traveler.fullName}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setTravelerProfiles((prev) => prev.map((t, i) => i === idx ? { ...t, fullName: value } : t));
-                    }}
-                    placeholder="Full name as on travel document"
-                  />
-                </div>
-              ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12 }}>
+              {travelerProfiles.map((traveler, idx) => {
+                const upd = (field, value) => setTravelerProfiles((prev) => prev.map((t, i) => i === idx ? { ...t, [field]: value } : t));
+                return (
+                  <div key={`traveler-${idx}`} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: 10, padding: '12px 14px' }}>
+                    <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--gold)' }}>Traveler {idx + 1}</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <div style={{ gridColumn: '1 / -1' }}>
+                        <label style={{ display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--slate)', marginBottom: 4 }}>Full Name *</label>
+                        <input type="text" style={inputSt} value={traveler.fullName} onChange={(e) => upd('fullName', e.target.value)} placeholder="As on travel document" autoComplete="name" />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--slate)', marginBottom: 4 }}>Date of Birth</label>
+                        <input type="date" style={inputSt} value={traveler.dob} onChange={(e) => upd('dob', e.target.value)} max={new Date().toISOString().split('T')[0]} />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--slate)', marginBottom: 4 }}>Phone</label>
+                        <input type="tel" style={inputSt} value={traveler.phone} onChange={(e) => upd('phone', e.target.value)} placeholder="+254 7xx xxx xxx" autoComplete="tel" />
+                      </div>
+                      <div style={{ gridColumn: '1 / -1' }}>
+                        <label style={{ display: 'block', fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--slate)', marginBottom: 4 }}>Email</label>
+                        <input type="email" style={inputSt} value={traveler.email} onChange={(e) => upd('email', e.target.value)} placeholder="traveler@example.com" autoComplete="email" />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             <button type="button" className="btn btn--primary btn--sm" style={{ width: '100%', justifyContent: 'center' }} onClick={saveTravelerProfiles}>
@@ -1011,7 +1169,26 @@ const GroupQuoteWizard = ({ onClose, isAgency = false }) => {
               <button type="button" className="btn btn--ghost btn--sm" onClick={() => setBenefitPolicy(null)}>Close</button>
             </div>
             <p style={{ margin: '0 0 10px', color: 'var(--slate)', fontSize: 12 }}>Benefits overview</p>
-            {benefitPolicy.benefitLines?.length ? (
+            {benefitPolicy.benefitTableRows?.length ? (
+              <div style={{ maxHeight: '52vh', overflow: 'auto', border: '1px solid var(--glass-border)', borderRadius: 10 }}>
+                <table style={{ width: '100%', minWidth: 420, borderCollapse: 'collapse', fontSize: 12 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--gold)', borderBottom: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.03)' }}>Benefit</th>
+                      <th style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--gold)', borderBottom: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.03)' }}>Limit</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {benefitPolicy.benefitTableRows.map((row, idx) => (
+                      <tr key={`${benefitPolicy.id}-${idx}`}>
+                        <td style={{ padding: '9px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.9)', verticalAlign: 'top' }}>{row[0]}</td>
+                        <td style={{ padding: '9px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.82)', verticalAlign: 'top' }}>{row[1]}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : benefitPolicy.benefitLines?.length ? (
               <ul style={{ margin: 0, paddingLeft: 18, color: 'rgba(255,255,255,0.86)', fontSize: 13, lineHeight: 1.8 }}>
                 {benefitPolicy.benefitLines.map((line, idx) => <li key={`${benefitPolicy.id}-${idx}`}>{line}</li>)}
               </ul>
