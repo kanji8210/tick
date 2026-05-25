@@ -44,6 +44,17 @@ const SUBMIT_SALE = `
   }
 `;
 
+const AGENT_DISPLAY_SETTINGS = `
+  query AgentDisplaySettings {
+    agentDisplaySettings {
+      additionalFeeType
+      additionalFeeValue
+      receiptIssuerName
+      showProcessedByTick
+    }
+  }
+`;
+
 /* ─── Helpers ──────────────────────────────────────────────────────────────── */
 const CURRENCY = 'KES';
 
@@ -227,13 +238,17 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
 
   const [{ data: regData }] = useQuery({ query: GET_REGIONS });
   const [{ data, fetching, error }] = useQuery({ query: GET_POLICIES });
+  const [{ data: agentSettingsData }] = useQuery({
+    query: AGENT_DISPLAY_SETTINGS,
+    pause: !isAgent || !user,
+  });
   const [saleResult, submitSale] = useMutation(SUBMIT_SALE);
 
   const regions = regData?.regions?.nodes || [];
   const selectedRegionName = regions.find(r => r.slug === form.destinationRegion)?.name || '';
 
-  const [accountCreated] = useState(false);
-  const [isLoginMode, setIsLoginMode] = useState(false);
+  const [accountCreated, setAccountCreated] = useState(false);
+  const [checkoutMode, setCheckoutMode] = useState('guest'); // 'guest' | 'login' | 'register'
   const [regFetching, setRegFetching] = useState(false);
 
   // Sync initial search data on mount or change
@@ -331,6 +346,16 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
+  const getAgentDisplayFee = (baseAmount) => {
+    const s = agentSettingsData?.agentDisplaySettings;
+    if (!s) return 0;
+    const raw = Number(s.additionalFeeValue || 0);
+    const value = Number.isFinite(raw) ? Math.max(0, raw) : 0;
+    if (value <= 0) return 0;
+    if (s.additionalFeeType === 'percent') return (Number(baseAmount || 0) * value) / 100;
+    return value;
+  };
+
   const days = tripDays(form.departure, form.returnDate);
 
   /* Filter + annotate policies */
@@ -361,14 +386,14 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
   const handlePurchase = async () => {
     // 1. If guest, register or login first
     if (!user) {
-      if (isLoginMode) {
+      if (checkoutMode === 'login') {
         console.log('QuoteWizard: Guest logging in...');
         setRegFetching(true);
         const logRes = await login(form.email, form.password);
         setRegFetching(false);
         if (!logRes.success) return; // Error handled by AuthContext
         console.log('QuoteWizard: Login successful.');
-      } else {
+      } else if (checkoutMode === 'register') {
         if (!form.password) {
           alert('Please create a password for your account.');
           return;
@@ -392,11 +417,18 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
         if (!reg.success) {
           // If error is "account exists", maybe suggest switching to login mode
           if (authError?.toLowerCase().includes('already registered')) {
-            setIsLoginMode(true);
+            setCheckoutMode('login');
           }
           return;
         }
+        setAccountCreated(true);
         console.log('QuoteWizard: Registration successful. Proceeding to sale...');
+      } else {
+        if (!form.acceptTerms) {
+          alert('Please accept the terms and conditions to continue.');
+          return;
+        }
+        console.log('QuoteWizard: Continuing as guest.');
       }
     }
 
@@ -758,6 +790,13 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
   if (step === 3) {
     const prem  = bracketPremium(form.selectedPolicy?.policyDayPremiums, days);
     const total = prem !== null ? prem * form.passengers : null;
+    const agentDisplayFee = isAgent && total !== null ? getAgentDisplayFee(total) : 0;
+    const clientFacingTotal = total !== null ? total + agentDisplayFee : null;
+    const agentFeeType = agentSettingsData?.agentDisplaySettings?.additionalFeeType || 'fixed';
+    const agentFeeValue = Number(agentSettingsData?.agentDisplaySettings?.additionalFeeValue || 0);
+    const agentFeeLabel = agentFeeType === 'percent'
+      ? `${agentFeeValue}%`
+      : fmt(agentFeeValue);
     return (
       <div className="glass-card fade-in" style={{ padding: mobile ? '1.25rem' : '2rem' }}>
         <StepBar step={3} isAgent={isAgent} mobile={mobile} />
@@ -769,7 +808,16 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
         <div style={{ padding: '14px 16px', background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 8, marginBottom: 22 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 6 }}>
             <strong style={{ fontSize: 14 }}>{form.selectedPolicy?.title}</strong>
-            {total !== null && <span style={{ fontWeight: 800, color: 'var(--gold)', fontSize: 15 }}>{fmt(total)}</span>}
+            {total !== null && (
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontWeight: 800, color: 'var(--gold)', fontSize: 15 }}>{fmt(total)}</div>
+                {isAgent && agentDisplayFee > 0 && (
+                  <div style={{ fontSize: 11, color: '#93c5fd', marginTop: 2 }}>
+                    Client-facing: {fmt(clientFacingTotal)}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr auto', gap: 10, alignItems: 'flex-end' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -804,6 +852,22 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
           <div style={{ marginTop: 8, fontSize: 11, color: 'var(--slate)' }}>
             {selectedRegionName} · {form.passengers} traveller{form.passengers !== 1 ? 's' : ''}
           </div>
+          {isAgent && agentDisplayFee > 0 && (
+            <div style={{
+              marginTop: 10,
+              padding: '8px 10px',
+              borderRadius: 8,
+              background: 'rgba(59,130,246,0.12)',
+              border: '1px solid rgba(59,130,246,0.25)',
+              fontSize: 11,
+              lineHeight: 1.45,
+              color: 'rgba(255,255,255,0.9)',
+            }}>
+              Agency display fee: <strong>{fmt(agentDisplayFee)}</strong> ({agentFeeLabel}).
+              Client-facing total: <strong>{fmt(clientFacingTotal)}</strong>.
+              Official processed total remains <strong>{fmt(total)}</strong>.
+            </div>
+          )}
         </div>
 
         {/* Pre-fill notice for logged-in users */}
@@ -862,40 +926,58 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
             </div>
           ))}
 
-          {/* Guest Registration / Login Toggle Fields */}
+          {/* Guest checkout options */}
           {!user && (
             <div style={{ marginTop: 10, padding: '20px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', borderRadius: 10 }}>
               <div style={{ display: 'flex', gap: 20, marginBottom: 20, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                 <button 
                   type="button" 
-                  onClick={() => setIsLoginMode(false)}
+                  onClick={() => setCheckoutMode('guest')}
                   style={{ 
                     padding: '8px 0', border: 'none', background: 'none', cursor: 'pointer',
-                    fontSize: 13, fontWeight: 700, color: !isLoginMode ? 'var(--gold)' : 'var(--slate)',
-                    borderBottom: !isLoginMode ? '2px solid var(--gold)' : '2px solid transparent',
+                    fontSize: 13, fontWeight: 700, color: checkoutMode === 'guest' ? 'var(--gold)' : 'var(--slate)',
+                    borderBottom: checkoutMode === 'guest' ? '2px solid var(--gold)' : '2px solid transparent',
                     transition: 'all 0.2s'
                   }}
-                >NEW CUSTOMER</button>
+                >CONTINUE AS GUEST</button>
                 <button 
                   type="button" 
-                  onClick={() => setIsLoginMode(true)}
+                  onClick={() => setCheckoutMode('register')}
                   style={{ 
                     padding: '8px 0', border: 'none', background: 'none', cursor: 'pointer',
-                    fontSize: 13, fontWeight: 700, color: isLoginMode ? 'var(--gold)' : 'var(--slate)',
-                    borderBottom: isLoginMode ? '2px solid var(--gold)' : '2px solid transparent',
+                    fontSize: 13, fontWeight: 700, color: checkoutMode === 'register' ? 'var(--gold)' : 'var(--slate)',
+                    borderBottom: checkoutMode === 'register' ? '2px solid var(--gold)' : '2px solid transparent',
+                    transition: 'all 0.2s'
+                  }}
+                >CREATE ACCOUNT</button>
+                <button 
+                  type="button" 
+                  onClick={() => setCheckoutMode('login')}
+                  style={{ 
+                    padding: '8px 0', border: 'none', background: 'none', cursor: 'pointer',
+                    fontSize: 13, fontWeight: 700, color: checkoutMode === 'login' ? 'var(--gold)' : 'var(--slate)',
+                    borderBottom: checkoutMode === 'login' ? '2px solid var(--gold)' : '2px solid transparent',
                     transition: 'all 0.2s'
                   }}
                 >ALREADY REGISTERED</button>
               </div>
 
-              <div style={fieldStyle}>
-                <label style={labelStyle}>{isLoginMode ? 'Account Password' : 'Create Password *'}</label>
-                <input type="password" style={inputStyle} placeholder="••••••••"
-                  value={form.password} onChange={e => set('password', e.target.value)} />
-                {!isLoginMode && <p style={{ fontSize: 10, color: 'var(--slate)', marginTop: 4 }}>Used for your Maljani account login</p>}
-              </div>
+              {checkoutMode === 'guest' && (
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.82)', lineHeight: 1.6 }}>
+                  Continue without creating an account. We will contact you via your email and phone for payment updates, cover edits, and claim guidance.
+                </div>
+              )}
+
+              {(checkoutMode === 'login' || checkoutMode === 'register') && (
+                <div style={fieldStyle}>
+                  <label style={labelStyle}>{checkoutMode === 'login' ? 'Account Password' : 'Create Password *'}</label>
+                  <input type="password" style={inputStyle} placeholder="••••••••"
+                    value={form.password} onChange={e => set('password', e.target.value)} />
+                  {checkoutMode === 'register' && <p style={{ fontSize: 10, color: 'var(--slate)', marginTop: 4 }}>Create an account now to pay later, edit your cover, and track claims online.</p>}
+                </div>
+              )}
               
-              {!isLoginMode && (
+              {checkoutMode !== 'login' && (
                 <div style={{ ...fieldStyle, marginTop: 14 }}>
                   <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', textTransform: 'none' }}>
                     <input type="checkbox" checked={form.acceptTerms} onChange={e => set('acceptTerms', e.target.checked)}
@@ -912,12 +994,16 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
           <button style={{ padding: '11px', borderRadius: 8, border: '1px solid var(--glass-border)', background: 'none', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}
             onClick={() => setStep(2)}>← Back</button>
           <button
-            style={{ padding: '11px', borderRadius: 8, border: 'none', background: 'var(--gold)', color: '#0a0e27', cursor: (!effectiveName || !effectiveEmail || saleResult.fetching) ? 'not-allowed' : 'pointer', opacity: (!effectiveName || !effectiveEmail) ? 0.6 : 1, fontSize: 13, fontWeight: 800 }}
-            disabled={!effectiveName || !effectiveEmail || saleResult.fetching || regFetching}
+            style={{ padding: '11px', borderRadius: 8, border: 'none', background: 'var(--gold)', color: '#0a0e27', cursor: (!effectiveName || !effectiveEmail || !form.phone || saleResult.fetching) ? 'not-allowed' : 'pointer', opacity: (!effectiveName || !effectiveEmail || !form.phone) ? 0.6 : 1, fontSize: 13, fontWeight: 800 }}
+            disabled={!effectiveName || !effectiveEmail || !form.phone || saleResult.fetching || regFetching}
             onClick={handlePurchase}>
-            {saleResult.fetching || regFetching ? (isLoginMode ? 'Signing in...' : 'Processing…') : 
-              user ? `Submit Application ${total !== null ? '— ' + fmt(total) : ''}` : 
-              (isLoginMode ? `Login & Submit ${total !== null ? '— ' + fmt(total) : ''}` : `Register & Submit ${total !== null ? '— ' + fmt(total) : ''}`)
+            {saleResult.fetching || regFetching ? (checkoutMode === 'login' ? 'Signing in...' : checkoutMode === 'register' ? 'Creating account...' : 'Processing…') : 
+              user ? `Submit Application ${total !== null ? '— ' + (isAgent && agentDisplayFee > 0 ? `${fmt(total)} (client-facing ${fmt(clientFacingTotal)})` : fmt(total)) : ''}` : 
+              (checkoutMode === 'login'
+                ? `Login & Submit ${total !== null ? '— ' + (isAgent && agentDisplayFee > 0 ? `${fmt(total)} (client-facing ${fmt(clientFacingTotal)})` : fmt(total)) : ''}`
+                : checkoutMode === 'register'
+                  ? `Create Account & Submit ${total !== null ? '— ' + (isAgent && agentDisplayFee > 0 ? `${fmt(total)} (client-facing ${fmt(clientFacingTotal)})` : fmt(total)) : ''}`
+                  : `Continue Without Account ${total !== null ? '— ' + (isAgent && agentDisplayFee > 0 ? `${fmt(total)} (client-facing ${fmt(clientFacingTotal)})` : fmt(total)) : ''}`)
             }
           </button>
         </div>
@@ -941,7 +1027,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
             </div>
             <p style={{ margin: 0, opacity: 0.9 }}>
               {authError.toLowerCase().includes('already registered') 
-                ? <>The email <strong>{form.email}</strong> is already registered. Please click <strong style={{ color: 'var(--gold)', cursor: 'pointer' }} onClick={() => setIsLoginMode(true)}>Already Registered</strong> above to log in.</>
+                ? <>The email <strong>{form.email}</strong> is already registered. Please click <strong style={{ color: 'var(--gold)', cursor: 'pointer' }} onClick={() => setCheckoutMode('login')}>Already Registered</strong> above to log in.</>
                 : authError
               }
             </p>
@@ -969,14 +1055,19 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
             Your booking for policy <strong style={{ color: '#fff' }}>{saleData?.policyNumber || '—'}</strong> has been registered. 
             It will be activated as soon as your payment is processed.
           </p>
+          {!user && !accountCreated && (
+            <p style={{ color: 'rgba(255,255,255,0.78)', fontSize: 13, maxWidth: 520, margin: '0 auto 24px', lineHeight: 1.7 }}>
+              You continued without creating an account. Our team will contact you via <strong style={{ color: '#fff' }}>email and phone</strong> for payment, cover updates, and claim support.
+            </p>
+          )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 300, margin: '0 auto' }}>
             <button 
               className="btn btn--primary" 
               style={{ width: '100%' }}
-              onClick={() => onNavigate?.('dashboard')}
+              onClick={() => onNavigate?.(!user && !accountCreated ? 'register' : 'dashboard')}
             >
-              View in My Dashboard
+              {!user && !accountCreated ? 'Create Account Now' : 'View in My Dashboard'}
             </button>
             <button 
               className="btn btn--ghost" 

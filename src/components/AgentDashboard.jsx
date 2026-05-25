@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, gql } from 'urql';
 import { useAuth } from '../lib/AuthContext';
 import { useResponsive } from '../lib/useResponsive';
@@ -47,6 +47,40 @@ const MY_POLICIES = gql`
       amountPaid paymentStatus policyStatus createdAt
       workflowStatus agentCommissionAmount agentCommissionStatus
       serviceFeeAmount maljaniCommissionAmount netToInsurer
+    }
+  }
+`;
+
+const AGENT_DISPLAY_SETTINGS = gql`
+  query AgentDisplaySettings {
+    agentDisplaySettings {
+      additionalFeeType
+      additionalFeeValue
+      receiptIssuerName
+      showProcessedByTick
+    }
+  }
+`;
+
+const UPDATE_AGENT_DISPLAY_SETTINGS = gql`
+  mutation UpdateAgentDisplaySettings(
+    $additionalFeeType: String!
+    $additionalFeeValue: Float!
+    $receiptIssuerName: String
+    $showProcessedByTick: Boolean!
+  ) {
+    maljaniUpdateAgentDisplaySettings(input: {
+      additionalFeeType: $additionalFeeType
+      additionalFeeValue: $additionalFeeValue
+      receiptIssuerName: $receiptIssuerName
+      showProcessedByTick: $showProcessedByTick
+    }) {
+      success
+      message
+      additionalFeeType
+      additionalFeeValue
+      receiptIssuerName
+      showProcessedByTick
     }
   }
 `;
@@ -195,6 +229,7 @@ const TABS = [
   { id: 'policies',    label: 'Policies',    icon: '◈' },
   { id: 'commissions', label: 'Commissions', icon: '◆' },
   { id: 'analytics',   label: 'Analytics',   icon: '◇' },
+  { id: 'settings',    label: 'Settings',    icon: '⚙' },
 ];
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -224,8 +259,17 @@ const AgentDashboard = ({ user, onNavigate }) => {
   const [clientActions, setClientActions] = useState({}); // { email: 'signalled' | 'archived' }
   const [statusChanging, setStatusChanging] = useState(null); // saleId being updated
   const [statusDraft, setStatusDraft]       = useState({});   // { [saleId]: pendingStatus }
+  const [settingsForm, setSettingsForm] = useState({
+    additionalFeeType: 'fixed',
+    additionalFeeValue: '0',
+    receiptIssuerName: '',
+    showProcessedByTick: true,
+  });
+  const [settingsFeedback, setSettingsFeedback] = useState(null);
+  const [savingSettings, setSavingSettings] = useState(false);
 
   const [, execUpdateStatus] = useMutation(UPDATE_POLICY_STATUS);
+  const [, execUpdateAgentSettings] = useMutation(UPDATE_AGENT_DISPLAY_SETTINGS);
 
   const APP_SECRET = import.meta.env.VITE_APP_SECRET ?? '';
   const restHeaders = () => {
@@ -292,9 +336,10 @@ const AgentDashboard = ({ user, onNavigate }) => {
 
   const [dashResult] = useQuery({ query: AGENCY_DASHBOARD, pause: !authUser?.token });
   const [polResult]  = useQuery({ query: MY_POLICIES, pause: !authUser?.token });
+  const [settingsResult] = useQuery({ query: AGENT_DISPLAY_SETTINGS, pause: !authUser?.token });
 
-  const loading = dashResult.fetching || polResult.fetching;
-  const error   = dashResult.error?.message || polResult.error?.message || null;
+  const loading = dashResult.fetching || polResult.fetching || settingsResult.fetching;
+  const error   = dashResult.error?.message || polResult.error?.message || settingsResult.error?.message || null;
 
   const dash     = dashResult.data?.agencyDashboard;
   const agency   = dash?.agency;
@@ -304,6 +349,58 @@ const AgentDashboard = ({ user, onNavigate }) => {
   const statusDist = dash?.statusDistribution || [];
   const topProducts = dash?.topProducts || [];
   const policies = useMemo(() => polResult.data?.myPolicySales || [], [polResult.data?.myPolicySales]);
+  const agentDisplaySettings = settingsResult.data?.agentDisplaySettings;
+
+  useEffect(() => {
+    if (!agentDisplaySettings) return;
+    setSettingsForm({
+      additionalFeeType: agentDisplaySettings.additionalFeeType || 'fixed',
+      additionalFeeValue: String(agentDisplaySettings.additionalFeeValue ?? 0),
+      receiptIssuerName: agentDisplaySettings.receiptIssuerName || '',
+      showProcessedByTick: !!agentDisplaySettings.showProcessedByTick,
+    });
+  }, [agentDisplaySettings]);
+
+  const getDisplayFeeAmount = (amountPaid) => {
+    const raw = Number(settingsForm.additionalFeeValue || 0);
+    const value = Number.isFinite(raw) ? Math.max(0, raw) : 0;
+    if (value <= 0) return 0;
+    if (settingsForm.additionalFeeType === 'percent') {
+      return (Number(amountPaid || 0) * value) / 100;
+    }
+    return value;
+  };
+
+  const handleSaveSettings = async () => {
+    setSavingSettings(true);
+    setSettingsFeedback(null);
+    try {
+      const parsed = Number(settingsForm.additionalFeeValue || 0);
+      const safeValue = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+
+      const result = await execUpdateAgentSettings({
+        additionalFeeType: settingsForm.additionalFeeType === 'percent' ? 'percent' : 'fixed',
+        additionalFeeValue: safeValue,
+        receiptIssuerName: settingsForm.receiptIssuerName || '',
+        showProcessedByTick: !!settingsForm.showProcessedByTick,
+      });
+
+      if (result.error) {
+        throw new Error(result.error.message.replace(/\[GraphQL\]\s?/g, ''));
+      }
+
+      if (!result.data?.maljaniUpdateAgentDisplaySettings?.success) {
+        throw new Error(result.data?.maljaniUpdateAgentDisplaySettings?.message || 'Could not save settings.');
+      }
+
+      setSettingsFeedback({ type: 'success', msg: 'Settings saved. New receipts will use your updated display options.' });
+      settingsResult.reexecute?.({ requestPolicy: 'network-only' });
+    } catch (e) {
+      setSettingsFeedback({ type: 'error', msg: e.message || 'Could not save settings.' });
+    } finally {
+      setSavingSettings(false);
+    }
+  };
 
   /* ── filtered data ─────────────────────────────────────── */
   const filteredClients = useMemo(() => {
@@ -600,11 +697,33 @@ const AgentDashboard = ({ user, onNavigate }) => {
 
               {/* Financial */}
               <SectionCard title="Financials">
+                {(() => {
+                  const displayFee = getDisplayFeeAmount(s.amountPaid);
+                  const displayTotal = Number(s.amountPaid || 0) + displayFee;
+                  return (
+                    <>
                 <InfoRow label="Premium" value={fmtKES(s.premium)} accent="var(--gold)" />
                 <InfoRow label="Amount Paid" value={fmtKES(s.amountPaid)} accent={isUnpaid ? '#f59e0b' : '#22c55e'} />
                 <InfoRow label="Payment Status" value={pay.label} accent={pay.color} />
                 {(s.serviceFeeAmount > 0) && <InfoRow label="Service Fee" value={fmtKES(s.serviceFeeAmount)} />}
                 {(s.netToInsurer > 0) && <InfoRow label="Net to Insurer" value={fmtKES(s.netToInsurer)} />}
+                      {displayFee > 0 && (
+                        <InfoRow
+                          label="Agency Display Fee"
+                          value={`${fmtKES(displayFee)} (${settingsForm.additionalFeeType === 'percent' ? `${settingsForm.additionalFeeValue}%` : 'fixed'})`}
+                          accent="#3b82f6"
+                        />
+                      )}
+                      {displayFee > 0 && (
+                        <InfoRow
+                          label="Client-facing Total"
+                          value={fmtKES(displayTotal)}
+                          accent="var(--gold)"
+                        />
+                      )}
+                    </>
+                  );
+                })()}
               </SectionCard>
 
               {/* Status & Commission */}
@@ -1042,6 +1161,114 @@ const AgentDashboard = ({ user, onNavigate }) => {
               ))}
               {topProducts.length === 0 && <div style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>No data yet</div>}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════
+       *  TAB: SETTINGS
+       * ═══════════════════════════════════════════════════ */}
+      {!selectedSale && activeTab === 'settings' && (
+        <div style={{ ...cardStyle, padding: mobile ? '1.25rem' : '1.75rem', maxWidth: 880 }}>
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>
+            Agency Receipt & Fee Settings
+          </h3>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', margin: '0.5rem 0 1.2rem' }}>
+            These values are display-only for your agency documents and client-facing totals. They do not change backend processed totals, settlement, or insurer remittance.
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', gap: '1rem' }}>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Additional Fee Type</span>
+              <select
+                value={settingsForm.additionalFeeType}
+                onChange={(e) => setSettingsForm(prev => ({ ...prev, additionalFeeType: e.target.value }))}
+                style={{ ...inputStyle }}
+              >
+                <option value="fixed">Fixed Amount</option>
+                <option value="percent">Percentage</option>
+              </select>
+            </label>
+
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                Additional Fee Value {settingsForm.additionalFeeType === 'percent' ? '(%)' : '(KES)'}
+              </span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={settingsForm.additionalFeeValue}
+                onChange={(e) => setSettingsForm(prev => ({ ...prev, additionalFeeValue: e.target.value }))}
+                style={{ ...inputStyle }}
+                placeholder={settingsForm.additionalFeeType === 'percent' ? 'e.g. 5' : 'e.g. 500'}
+              />
+            </label>
+
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', gridColumn: mobile ? '1' : '1 / -1' }}>
+              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                Receipt Issuer Name
+              </span>
+              <input
+                type="text"
+                value={settingsForm.receiptIssuerName}
+                onChange={(e) => setSettingsForm(prev => ({ ...prev, receiptIssuerName: e.target.value }))}
+                style={{ ...inputStyle }}
+                placeholder="e.g. Safara Travels Ltd"
+                maxLength={120}
+              />
+            </label>
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', gridColumn: mobile ? '1' : '1 / -1', marginTop: '0.2rem' }}>
+              <input
+                type="checkbox"
+                checked={!!settingsForm.showProcessedByTick}
+                onChange={(e) => setSettingsForm(prev => ({ ...prev, showProcessedByTick: e.target.checked }))}
+              />
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Show “Processed by TICK” on invoice/receipt documents</span>
+            </label>
+          </div>
+
+          <div style={{ marginTop: '1rem', padding: '0.9rem 1rem', borderRadius: '10px', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)' }}>
+            <div style={{ fontSize: '0.78rem', color: '#93c5fd', fontWeight: 700, marginBottom: '0.35rem' }}>Preview Note</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              Example: if processed amount is KES 10,000 and your display fee is {settingsForm.additionalFeeType === 'percent' ? `${settingsForm.additionalFeeValue || 0}%` : `KES ${settingsForm.additionalFeeValue || 0}`}, the client-facing total is shown separately while official processed totals remain unchanged.
+            </div>
+          </div>
+
+          {settingsFeedback && (
+            <div style={{
+              marginTop: '1rem',
+              padding: '0.75rem 0.9rem',
+              borderRadius: '8px',
+              fontSize: '0.8rem',
+              color: settingsFeedback.type === 'success' ? '#22c55e' : '#f87171',
+              background: settingsFeedback.type === 'success' ? 'rgba(34,197,94,0.08)' : 'rgba(248,113,113,0.08)',
+              border: settingsFeedback.type === 'success' ? '1px solid rgba(34,197,94,0.25)' : '1px solid rgba(248,113,113,0.25)',
+            }}>
+              {settingsFeedback.msg}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.1rem' }}>
+            <button
+              onClick={handleSaveSettings}
+              disabled={savingSettings}
+              style={{
+                background: 'linear-gradient(135deg, var(--gold, #d4af37), #b8941f)',
+                border: 'none',
+                borderRadius: '10px',
+                padding: '0.6rem 1.2rem',
+                color: '#0f172a',
+                cursor: savingSettings ? 'wait' : 'pointer',
+                fontSize: '0.76rem',
+                fontWeight: 800,
+                letterSpacing: '0.04em',
+                opacity: savingSettings ? 0.65 : 1,
+              }}
+            >
+              {savingSettings ? 'Saving…' : 'Save Settings'}
+            </button>
           </div>
         </div>
       )}

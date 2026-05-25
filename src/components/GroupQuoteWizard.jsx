@@ -167,7 +167,7 @@ const InlineAuthPanel = ({ login, register, authLoading }) => {
     return (
       <div style={{ background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(99,102,241,0.08))', border: '1px solid var(--gold)', borderRadius: 10, padding: '10px 14px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 12, color: 'var(--slate)', flex: 1, minWidth: 160 }}>
-          <strong style={{ color: 'var(--gold)' }}>Save your quote</strong> — log in or create an account to manage your policy.
+          <strong style={{ color: 'var(--gold)' }}>Account is optional</strong> — continue without one, or create an account to pay later and edit cover.
         </span>
         <div style={{ display: 'flex', gap: 6 }}>
           <button type="button" className="btn btn--primary btn--sm" onClick={() => { setTab('register'); setOpen(true); }}>Create Account</button>

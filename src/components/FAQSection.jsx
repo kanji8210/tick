@@ -7,7 +7,7 @@ const FAQS = [
   { q: 'Is Maljani itself a licensed insurer?',      a: 'No. Maljani is a licensed insurance aggregation and distribution platform. All policies are underwritten directly by IRA-approved insurance companies. We are a regulated intermediary — not the risk carrier.' },
   { q: 'Does the policy meet Schengen requirements?', a: 'Yes. Policies labelled “Schengen Approved” meet the EU minimum of â‚¬30,000 medical cover. Our embassy letters are accepted at all Schengen embassies operating in East Africa.' },
   { q: 'Can I buy group or family policies?',        a: 'Yes. Select “Group” on the quote card to compare prices for 2–20+ travellers. Travel agencies can issue bulk policies from their partner dashboard.' },
-  { q: 'How do I make a claim?',                     a: 'Claims are filed directly with the underwriting insurer using your policy number. Your Maljani certificate includes the insurer’s 24/7 emergency hotline and claims portal URL.' },
+  { q: 'How do I make a claim?',                     a: 'Use your policy number to call the insurer hotline or submit the claim in their portal. If you need help, Maljani support will guide you by email and phone.' },
 ];
 
 const FAQSection = () => {
