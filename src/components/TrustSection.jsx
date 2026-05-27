@@ -70,7 +70,7 @@ const StatCell = ({ value, suffix, label, mobile, isLast, isOddRight }) => {
       <div style={{
         fontFamily: 'var(--font-display)', fontWeight: 800,
         fontSize: 'clamp(24px,2.8vw,36px)', lineHeight: 1.1, marginBottom: 5,
-        background: 'linear-gradient(135deg,#fff 30%,var(--gold))',
+        backgroundImage: 'linear-gradient(135deg,#fff 30%,var(--gold))',
         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
         backgroundClip: 'text',
       }}>

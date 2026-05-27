@@ -95,7 +95,7 @@ function AppContent() {
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
-  });
+  }, []);
 
   const renderView = () => {
     switch(activeView) {

@@ -78,7 +78,7 @@ const AgenciesPage = ({ onNavigate }) => {
               <p className="section-label">For Insurance Agencies</p>
               <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(40px,4.5vw,62px)', fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.025em', marginBottom: 20 }}>
                 Issue Policies in Bulk.<br />
-                <em style={{ fontStyle: 'normal', background: 'linear-gradient(135deg,var(--gold),var(--gold-light))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>From One Dashboard.</em>
+                <em style={{ fontStyle: 'normal', backgroundImage: 'linear-gradient(135deg,var(--gold),var(--gold-light))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>From One Dashboard.</em>
               </h1>
               <p style={{ color: 'var(--slate)', fontSize: 17, lineHeight: 1.8, marginBottom: 32, maxWidth: 520 }}>
                 Join 200+ travel agencies already issuing instant certificates through Maljani.

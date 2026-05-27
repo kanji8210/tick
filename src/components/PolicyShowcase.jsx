@@ -13,7 +13,13 @@ const GET_POLICIES = `
         title
         excerpt
         link
-        regions { nodes { slug name } }
+        regions {
+          nodes {
+            id
+            slug
+            name
+          }
+        }
         policyCurrency
         policyDescription
         policyBenefits
@@ -32,6 +38,25 @@ const GET_POLICIES = `
           from
           to
           premium
+        }
+      }
+    }
+  }
+`;
+
+const GET_REGIONS = `
+  query GetRegionsForPolicyFilters($first: Int = 200) {
+    regions(first: $first) {
+      nodes {
+        id
+        slug
+        name
+        parent {
+          node {
+            id
+            slug
+            name
+          }
         }
       }
     }
@@ -74,6 +99,9 @@ const fmtPrice = (price, currency) => {
 
 /** Strip HTML tags from a string. */
 const stripHtml = (s) => (s || '').replace(/<[^>]*>/g, ' ').replace(/\s{2,}/g, ' ').trim();
+
+const normalizeRegionLabel = (value) => (value || '').toLowerCase().replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
+const regionKey = (region) => normalizeRegionLabel(region?.slug || region?.name || '');
 
 /** Parse the first two columns from a benefits HTML table. */
 const parseBenefitTableRows = (html) => {
@@ -320,6 +348,7 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [selectedInsurerPolicy, setSelectedInsurerPolicy] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState(searchParams?.region || 'all');
+  const [parentRegionFilter, setParentRegionFilter] = useState('all');
   const [departure, setDeparture] = useState(searchParams?.departure || '');
   const [returnDate, setReturnDate] = useState(searchParams?.returnDate || '');
 
@@ -327,6 +356,7 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
   const hasDates = days > 0;
 
   const [{ data, fetching, error }] = useQuery({ query: GET_POLICIES, variables: {} });
+  const [{ data: regionsData }] = useQuery({ query: GET_REGIONS, variables: {} });
 
   // Random ordering: re-seed only when the underlying data changes. We deliberately
   // call Math.random in an effect (after data loads) and write to state so the
@@ -339,22 +369,100 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
   }, [data]);
 
   const destinationOptions = useMemo(() => {
-    const map = new Map();
-    (data?.policies?.nodes || []).forEach((policy) => {
+    const backendRegions = regionsData?.regions?.nodes || [];
+    const policyNodes = data?.policies?.nodes || [];
+
+    const linkedKeys = new Set();
+    policyNodes.forEach((policy) => {
       (policy.regions?.nodes || []).forEach((region) => {
-        const slug = region.slug || region.name;
-        if (!slug || map.has(slug)) return;
-        map.set(slug, { slug, name: region.name || slug });
+        const key = regionKey(region);
+        if (key) linkedKeys.add(key);
       });
     });
-    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [data]);
+
+    const backendByKey = new Map();
+    backendRegions.forEach((region) => {
+      const key = regionKey(region);
+      if (!key || backendByKey.has(key)) return;
+      backendByKey.set(key, region);
+    });
+
+    const included = new Map();
+    backendByKey.forEach((region, key) => {
+      if (!linkedKeys.has(key)) return;
+      included.set(key, region);
+
+      const parent = region.parent?.node;
+      const parentKey = regionKey(parent);
+      if (parent && parentKey && !included.has(parentKey)) {
+        included.set(parentKey, {
+          id: parent.id,
+          slug: parent.slug,
+          name: parent.name,
+          parent: null,
+        });
+      }
+    });
+
+    if (included.size === 0) {
+      policyNodes.forEach((policy) => {
+        (policy.regions?.nodes || []).forEach((region) => {
+          const key = regionKey(region);
+          if (!key || included.has(key)) return;
+          included.set(key, { id: region.id, slug: region.slug, name: region.name, parent: null });
+        });
+      });
+    }
+
+    return Array.from(included.values())
+      .map((region) => ({
+        key: regionKey(region),
+        slug: region.slug || region.name,
+        name: region.name || region.slug,
+        parentKey: regionKey(region.parent?.node),
+      }))
+      .filter((region) => region.key)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [data, regionsData]);
+
+  const parentRegionOptions = useMemo(() => {
+    return destinationOptions
+      .filter((option) => !option.parentKey || !destinationOptions.some((candidate) => candidate.key === option.parentKey))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [destinationOptions]);
+
+  const effectiveParentRegion = useMemo(() => {
+    if (selectedRegion === 'all') return parentRegionFilter;
+    const selected = destinationOptions.find((option) => option.slug === selectedRegion || option.name === selectedRegion);
+    if (!selected) return parentRegionFilter;
+    return selected.parentKey || selected.key;
+  }, [destinationOptions, parentRegionFilter, selectedRegion]);
+
+  const subRegionOptions = useMemo(() => {
+    if (effectiveParentRegion === 'all') return [];
+    return destinationOptions.filter((option) => option.parentKey === effectiveParentRegion);
+  }, [destinationOptions, effectiveParentRegion]);
+
+  const categoryOptions = useMemo(() => subRegionOptions, [subRegionOptions]);
+
+  const effectiveParentLabel = useMemo(() => {
+    if (effectiveParentRegion === 'all') return 'Region';
+    return destinationOptions.find((option) => option.key === effectiveParentRegion)?.name || effectiveParentRegion;
+  }, [destinationOptions, effectiveParentRegion]);
 
   const displayPolicies = useMemo(() => {
     const nodes = [...(data?.policies?.nodes || [])]
       .filter((policy) => {
+        const regions = policy.regions?.nodes || [];
+
+        if (effectiveParentRegion !== 'all') {
+          const allowedKeys = new Set([effectiveParentRegion, ...subRegionOptions.map((option) => option.key)]);
+          const hasParentMatch = regions.some((region) => allowedKeys.has(regionKey(region)));
+          if (!hasParentMatch) return false;
+        }
+
         if (selectedRegion === 'all') return true;
-        return (policy.regions?.nodes || []).some((region) => region.slug === selectedRegion || region.name === selectedRegion);
+        return regions.some((region) => region.slug === selectedRegion || region.name === selectedRegion);
       });
     let s = shuffleSeed | 0;
     const rand = () => {
@@ -368,7 +476,7 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
       [nodes[i], nodes[j]] = [nodes[j], nodes[i]];
     }
     return nodes.slice(0, 20);
-  }, [data, shuffleSeed, selectedRegion]);
+  }, [data, effectiveParentRegion, selectedRegion, shuffleSeed, subRegionOptions]);
 
   const isInCompare = (id) => compareSelected.some(p => p.id === id);
 
@@ -399,10 +507,10 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
               <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--slate)', margin: 0 }}>
                 Filter by Destination &amp; Travel Dates
               </p>
-              {!mobile && (selectedRegion !== 'all' || departure || returnDate) && (
+              {!mobile && (effectiveParentRegion !== 'all' || selectedRegion !== 'all' || departure || returnDate) && (
                 <button
                   type="button"
-                  onClick={() => { setSelectedRegion('all'); setDeparture(''); setReturnDate(''); }}
+                  onClick={() => { setParentRegionFilter('all'); setSelectedRegion('all'); setDeparture(''); setReturnDate(''); }}
                   style={{ fontSize: 12, color: 'var(--gold)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 700 }}
                 >
                   Clear Filters
@@ -437,35 +545,94 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
             </div>
 
             {mobile ? (
-              <select
-                value={selectedRegion}
-                onChange={(e) => setSelectedRegion(e.target.value)}
-                style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 14, fontFamily: 'var(--font-body)', outline: 'none' }}
-              >
-                <option value="all">All Destinations</option>
-                {destinationOptions.map((option) => (
-                  <option key={option.slug} value={option.slug}>{option.name}</option>
-                ))}
-              </select>
-            ) : (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedRegion('all')}
-                  style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${selectedRegion === 'all' ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: selectedRegion === 'all' ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: selectedRegion === 'all' ? '#86efac' : 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate-dark)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Parent Region</div>
+                <select
+                  value={effectiveParentRegion}
+                  onChange={(e) => { setParentRegionFilter(e.target.value); setSelectedRegion('all'); }}
+                  style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 14, fontFamily: 'var(--font-body)', outline: 'none' }}
                 >
-                  All Destinations
-                </button>
-                {destinationOptions.map((option) => (
+                  <option value="all">All Regions</option>
+                  {parentRegionOptions.map((parent) => (
+                    <option key={parent.key} value={parent.key}>{parent.name}</option>
+                  ))}
+                </select>
+
+                {effectiveParentRegion !== 'all' && categoryOptions.length > 0 && (
+                  <>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate-dark)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Sub-regions</div>
+                    <select
+                      value={selectedRegion}
+                      onChange={(e) => setSelectedRegion(e.target.value)}
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 14, fontFamily: 'var(--font-body)', outline: 'none' }}
+                    >
+                      <option value="all">
+                        {`All ${effectiveParentLabel} Regions`}
+                      </option>
+                      {categoryOptions.map((option) => (
+                        <option key={option.slug} value={option.slug}>{option.name}</option>
+                      ))}
+                    </select>
+                  </>
+                )}
+                {effectiveParentRegion !== 'all' && categoryOptions.length === 0 && (
+                  <div style={{ fontSize: 12, color: 'var(--slate-dark)' }}>
+                    No sub-regions under this region. Showing all linked policies.
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gap: 10 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate-dark)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Parent Region</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   <button
-                    key={option.slug}
                     type="button"
-                    onClick={() => setSelectedRegion(option.slug)}
-                    style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${selectedRegion === option.slug ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: selectedRegion === option.slug ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: selectedRegion === option.slug ? '#86efac' : 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                    onClick={() => { setParentRegionFilter('all'); setSelectedRegion('all'); }}
+                    style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${effectiveParentRegion === 'all' ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: effectiveParentRegion === 'all' ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: effectiveParentRegion === 'all' ? '#86efac' : 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                   >
-                    {option.name}
+                    All Regions
                   </button>
-                ))}
+                  {parentRegionOptions.map((parent) => (
+                    <button
+                      key={parent.key}
+                      type="button"
+                      onClick={() => { setParentRegionFilter(parent.key); setSelectedRegion('all'); }}
+                      style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${effectiveParentRegion === parent.key ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: effectiveParentRegion === parent.key ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: effectiveParentRegion === parent.key ? '#86efac' : 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      {parent.name}
+                    </button>
+                  ))}
+                </div>
+
+                {effectiveParentRegion !== 'all' && categoryOptions.length > 0 && (
+                  <>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate-dark)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Sub-regions</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedRegion('all')}
+                        style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${selectedRegion === 'all' ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: selectedRegion === 'all' ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: selectedRegion === 'all' ? '#86efac' : 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        {`All ${effectiveParentLabel} Regions`}
+                      </button>
+                      {categoryOptions.map((option) => (
+                        <button
+                          key={option.slug}
+                          type="button"
+                          onClick={() => setSelectedRegion(option.slug)}
+                          style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${selectedRegion === option.slug ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: selectedRegion === option.slug ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: selectedRegion === option.slug ? '#86efac' : 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          {option.name}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+                {effectiveParentRegion !== 'all' && categoryOptions.length === 0 && (
+                  <div style={{ fontSize: 12, color: 'var(--slate-dark)' }}>
+                    No sub-regions under this region. Showing all linked policies.
+                  </div>
+                )}
               </div>
             )}
           </div>

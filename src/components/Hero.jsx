@@ -136,7 +136,7 @@ const Hero = ({ onStart, onNavigate }) => {
               <p className="section-label">For Insurance Agencies</p>
               <h1 className="reveal" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(36px,4vw,58px)", fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.025em", marginBottom: 18 }}>
                 Issue Policies in Bulk.<br />
-                <em style={{ fontStyle: "normal", background: "linear-gradient(135deg,var(--gold),var(--gold-light))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>From One Dashboard.</em>
+                <em style={{ fontStyle: "normal", backgroundImage: "linear-gradient(135deg,var(--gold),var(--gold-light))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>From One Dashboard.</em>
               </h1>
               {user?.name && (
                 <div style={{ fontSize: 13, color: "#86efac", marginBottom: 14, fontWeight: 600 }}>Welcome back, {user.name}</div>
@@ -176,7 +176,7 @@ const Hero = ({ onStart, onNavigate }) => {
               </div>
               <h1 className="reveal reveal-delay-1" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(40px,5vw,72px)", fontWeight: 800, lineHeight: 1.0, letterSpacing: "-0.025em", marginBottom: 22, width: '100%', textAlign: 'center' }}>
                 Travel Insurance{" "}
-                <em style={{ fontStyle: "normal", background: "linear-gradient(135deg,var(--indigo-glow),#86efac)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Center.</em>
+                <em style={{ fontStyle: "normal", backgroundImage: "linear-gradient(135deg,var(--indigo-glow),#86efac)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Center.</em>
               </h1>
               <p className="reveal reveal-delay-2" style={{ fontSize: 18, color: "var(--slate)", lineHeight: 1.75, marginBottom: 36, width: '100%', textAlign: 'center' }}>
                 Compare policies from Africa&apos;s leading insurers in seconds.

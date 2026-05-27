@@ -52,7 +52,7 @@ const AboutPage = ({ onNavigate }) => {
           <p className="section-label">About Maljani</p>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(40px,5vw,72px)', fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.025em', marginBottom: 24, maxWidth: 820, margin: '0 auto 24px' }}>
             The Anti-Fraud{' '}
-            <em style={{ fontStyle: 'normal', background: 'linear-gradient(135deg,var(--indigo-glow),#86efac)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Travel Insurance</em>
+            <em style={{ fontStyle: 'normal', backgroundImage: 'linear-gradient(135deg,var(--indigo-glow),#86efac)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Travel Insurance</em>
             {' '}Platform.
           </h1>
           <p style={{ color: 'var(--slate)', fontSize: 18, lineHeight: 1.8, maxWidth: 640, margin: '0 auto 44px' }}>
