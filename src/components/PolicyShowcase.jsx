@@ -372,38 +372,14 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
     const backendRegions = regionsData?.regions?.nodes || [];
     const policyNodes = data?.policies?.nodes || [];
 
-    const linkedKeys = new Set();
-    policyNodes.forEach((policy) => {
-      (policy.regions?.nodes || []).forEach((region) => {
-        const key = regionKey(region);
-        if (key) linkedKeys.add(key);
-      });
-    });
-
-    const backendByKey = new Map();
+    const included = new Map();
     backendRegions.forEach((region) => {
       const key = regionKey(region);
-      if (!key || backendByKey.has(key)) return;
-      backendByKey.set(key, region);
-    });
-
-    const included = new Map();
-    backendByKey.forEach((region, key) => {
-      if (!linkedKeys.has(key)) return;
+      if (!key || included.has(key)) return;
       included.set(key, region);
-
-      const parent = region.parent?.node;
-      const parentKey = regionKey(parent);
-      if (parent && parentKey && !included.has(parentKey)) {
-        included.set(parentKey, {
-          id: parent.id,
-          slug: parent.slug,
-          name: parent.name,
-          parent: null,
-        });
-      }
     });
 
+    // Safety fallback when region taxonomy query is empty/unavailable.
     if (included.size === 0) {
       policyNodes.forEach((policy) => {
         (policy.regions?.nodes || []).forEach((region) => {
