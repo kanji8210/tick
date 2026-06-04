@@ -123,6 +123,25 @@ const parseBenefits = (policy) => {
   return featureTags.slice(0, 4);
 };
 
+const ageFromDob = (dob) => {
+  if (!dob) return null;
+  const birth = new Date(dob);
+  if (Number.isNaN(birth.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age -= 1;
+  return age;
+};
+
+const isSeniorPolicy = (policy) => {
+  if (!policy) return false;
+  const title = String(policy.title || '').toLowerCase();
+  const tags = String(policy.policyFeatureTags || '').toLowerCase();
+  const benefits = String(policy.policyBenefits || '').toLowerCase();
+  return title.includes('senior') || tags.includes('senior') || benefits.includes('senior');
+};
+
 /** Does this policy cover the given destination region slug? */
 const coversRegion = (policy, regionSlug) => {
   if (!regionSlug) return true;
@@ -346,6 +365,17 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
+  const travelerAge = useMemo(() => ageFromDob(form.dob), [form.dob]);
+  const requiresSeniorPolicy = travelerAge !== null && travelerAge > 70;
+
+  useEffect(() => {
+    if (!requiresSeniorPolicy) return;
+    if (form.selectedPolicy && !isSeniorPolicy(form.selectedPolicy)) {
+      set('selectedPolicy', null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requiresSeniorPolicy]);
+
   const getAgentDisplayFee = (baseAmount) => {
     const s = agentSettingsData?.agentDisplaySettings;
     if (!s) return 0;
@@ -363,12 +393,13 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
     if (!data?.policies?.nodes) return [];
     return data.policies.nodes
       .filter(p => coversRegion(p, form.destinationRegion))
+      .filter(p => (requiresSeniorPolicy ? isSeniorPolicy(p) : true))
       .map(p => ({
         ...p,
         computedPremium: bracketPremium(p.policyDayPremiums, days),
       }))
       .sort((a, b) => (a.computedPremium ?? Infinity) - (b.computedPremium ?? Infinity));
-  }, [data, form.destinationRegion, days]);
+  }, [data, form.destinationRegion, days, requiresSeniorPolicy]);
 
   // Always derive compareList from eligiblePolicies so computedPremium is always current
   const compareList = eligiblePolicies.filter(p => compareIds.has(String(p.databaseId)));
@@ -384,6 +415,12 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
   }, [step, saleId, selectedPolicyId]);
 
   const handlePurchase = async () => {
+    if (requiresSeniorPolicy && !isSeniorPolicy(form.selectedPolicy)) {
+      alert('Traveller above 70 years must take a Senior policy type. Please select a Senior plan.');
+      setStep(2);
+      return;
+    }
+
     // 1. If guest, register or login first
     if (!user) {
       if (checkoutMode === 'login') {
@@ -608,6 +645,21 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
       {error   && <p style={{ color: '#f87171' }}>Error: {error.message}</p>}
 
       {/* ── Comparison panel ── */}
+      {requiresSeniorPolicy && (
+        <div style={{
+          marginBottom: 16,
+          padding: '10px 14px',
+          borderRadius: 8,
+          background: 'rgba(248,113,113,0.12)',
+          border: '1px solid rgba(248,113,113,0.3)',
+          fontSize: 12,
+          color: '#fecaca',
+          fontWeight: 700,
+        }}>
+          Senior rule applied: traveller age {travelerAge} requires Senior policy type only.
+        </div>
+      )}
+
       {compareList.length >= 2 && (
         <div style={{ marginBottom: 24, borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(212,175,55,0.35)' }}>
           <div style={{ padding: '10px 16px', background: 'rgba(212,175,55,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -790,6 +842,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
   if (step === 3) {
     const prem  = bracketPremium(form.selectedPolicy?.policyDayPremiums, days);
     const total = prem !== null ? prem * form.passengers : null;
+    const seniorPolicyValid = !requiresSeniorPolicy || isSeniorPolicy(form.selectedPolicy);
     const agentDisplayFee = isAgent && total !== null ? getAgentDisplayFee(total) : 0;
     const clientFacingTotal = total !== null ? total + agentDisplayFee : null;
     const agentFeeType = agentSettingsData?.agentDisplaySettings?.additionalFeeType || 'fixed';
@@ -926,6 +979,21 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
             </div>
           ))}
 
+          {requiresSeniorPolicy && (
+            <div style={{
+              marginTop: -4,
+              padding: '10px 12px',
+              borderRadius: 8,
+              background: 'rgba(248,113,113,0.1)',
+              border: '1px solid rgba(248,113,113,0.25)',
+              fontSize: 12,
+              color: '#fecaca',
+              lineHeight: 1.5,
+            }}>
+              Traveller is above 70 years. Only Senior policy type can be purchased.
+            </div>
+          )}
+
           {/* Guest checkout options */}
           {!user && (
             <div style={{ marginTop: 10, padding: '20px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--glass-border)', borderRadius: 10 }}>
@@ -994,8 +1062,8 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
           <button style={{ padding: '11px', borderRadius: 8, border: '1px solid var(--glass-border)', background: 'none', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}
             onClick={() => setStep(2)}>← Back</button>
           <button
-            style={{ padding: '11px', borderRadius: 8, border: 'none', background: 'var(--gold)', color: '#0a0e27', cursor: (!effectiveName || !effectiveEmail || !form.phone || saleResult.fetching) ? 'not-allowed' : 'pointer', opacity: (!effectiveName || !effectiveEmail || !form.phone) ? 0.6 : 1, fontSize: 13, fontWeight: 800 }}
-            disabled={!effectiveName || !effectiveEmail || !form.phone || saleResult.fetching || regFetching}
+            style={{ padding: '11px', borderRadius: 8, border: 'none', background: 'var(--gold)', color: '#0a0e27', cursor: (!effectiveName || !effectiveEmail || !form.phone || saleResult.fetching || !seniorPolicyValid) ? 'not-allowed' : 'pointer', opacity: (!effectiveName || !effectiveEmail || !form.phone || !seniorPolicyValid) ? 0.6 : 1, fontSize: 13, fontWeight: 800 }}
+            disabled={!effectiveName || !effectiveEmail || !form.phone || saleResult.fetching || regFetching || !seniorPolicyValid}
             onClick={handlePurchase}>
             {saleResult.fetching || regFetching ? (checkoutMode === 'login' ? 'Signing in...' : checkoutMode === 'register' ? 'Creating account...' : 'Processing…') : 
               user ? `Submit Application ${total !== null ? '— ' + (isAgent && agentDisplayFee > 0 ? `${fmt(total)} (client-facing ${fmt(clientFacingTotal)})` : fmt(total)) : ''}` : 

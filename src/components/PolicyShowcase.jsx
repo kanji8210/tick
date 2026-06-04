@@ -39,6 +39,13 @@ const GET_POLICIES = `
           to
           premium
         }
+        policyTypes {
+          nodes {
+            id
+            slug
+            name
+          }
+        }
       }
     }
   }
@@ -125,6 +132,52 @@ const parseBenefitTableRows = (html) => {
   }
 
   return rows;
+};
+
+const parseBenefitAmount = (raw) => {
+  if (!raw) return 0;
+  const cleaned = String(raw).replace(/,/g, '');
+  const matches = cleaned.match(/\d+(?:\.\d+)?/g);
+  if (!matches || !matches.length) return 0;
+  return Math.max(...matches.map((m) => Number(m) || 0));
+};
+
+const benefitPriority = (policy, sortKey) => {
+  if (!sortKey || sortKey === 'default') return 0;
+  const rows = parseBenefitTableRows(policy.policyBenefits || '');
+  if (!rows.length) return 0;
+
+  const matchers = {
+    medical: /medical|hospital|health|emergency/i,
+    luggage: /luggage|baggage|bag/i,
+    delay: /delay|flight delay|travel delay/i,
+    cancellation: /cancel|cancellation|trip cancellation/i,
+  };
+
+  const rx = matchers[sortKey];
+  if (!rx) return 0;
+
+  const hit = rows.find(([name]) => rx.test(name || ''));
+  if (!hit) return 0;
+  return parseBenefitAmount(hit[1]);
+};
+
+const filterSelectStyle = {
+  width: '100%',
+  padding: '12px 14px',
+  borderRadius: 10,
+  border: '1px solid var(--glass-border)',
+  background: 'rgba(15,23,42,0.92)',
+  color: '#fff',
+  fontSize: 14,
+  fontFamily: 'var(--font-body)',
+  outline: 'none',
+  colorScheme: 'dark',
+};
+
+const filterOptionStyle = {
+  backgroundColor: '#0f172a',
+  color: '#fff',
 };
 
 /* ── Insurer logo ────────────────────────────────────────────────────────────────── */
@@ -348,7 +401,8 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [selectedInsurerPolicy, setSelectedInsurerPolicy] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState(searchParams?.region || 'all');
-  const [parentRegionFilter, setParentRegionFilter] = useState('all');
+  const [selectedPolicyType, setSelectedPolicyType] = useState('all');
+  const [sortBenefitBy, setSortBenefitBy] = useState('default');
   const [departure, setDeparture] = useState(searchParams?.departure || '');
   const [returnDate, setReturnDate] = useState(searchParams?.returnDate || '');
 
@@ -407,52 +461,52 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [destinationOptions]);
 
-  const effectiveParentRegion = useMemo(() => {
-    if (selectedRegion === 'all') return parentRegionFilter;
-    const selected = destinationOptions.find((option) => option.slug === selectedRegion || option.name === selectedRegion);
-    if (!selected) return parentRegionFilter;
-    return selected.parentKey || selected.key;
-  }, [destinationOptions, parentRegionFilter, selectedRegion]);
-
-  const subRegionOptions = useMemo(() => {
-    if (effectiveParentRegion === 'all') return [];
-    return destinationOptions.filter((option) => option.parentKey === effectiveParentRegion);
-  }, [destinationOptions, effectiveParentRegion]);
-
-  const categoryOptions = useMemo(() => subRegionOptions, [subRegionOptions]);
-
-  const effectiveParentLabel = useMemo(() => {
-    if (effectiveParentRegion === 'all') return 'Region';
-    return destinationOptions.find((option) => option.key === effectiveParentRegion)?.name || effectiveParentRegion;
-  }, [destinationOptions, effectiveParentRegion]);
+  const policyTypeOptions = useMemo(() => {
+    const nodes = data?.policies?.nodes || [];
+    const map = new Map();
+    nodes.forEach((policy) => {
+      (policy.policyTypes?.nodes || []).forEach((type) => {
+        if (!type?.slug || !type?.name || map.has(type.slug)) return;
+        map.set(type.slug, type.name);
+      });
+    });
+    return Array.from(map.entries()).map(([slug, name]) => ({ slug, name })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [data]);
 
   const displayPolicies = useMemo(() => {
-    const nodes = [...(data?.policies?.nodes || [])]
-      .filter((policy) => {
-        const regions = policy.regions?.nodes || [];
+    let nodes = [...(data?.policies?.nodes || [])].filter((policy) => {
+      const regions = policy.regions?.nodes || [];
+      if (selectedRegion !== 'all') {
+        const hasRegion = regions.some((region) => region.slug === selectedRegion || region.name === selectedRegion);
+        if (!hasRegion) return false;
+      }
 
-        if (effectiveParentRegion !== 'all') {
-          const allowedKeys = new Set([effectiveParentRegion, ...subRegionOptions.map((option) => option.key)]);
-          const hasParentMatch = regions.some((region) => allowedKeys.has(regionKey(region)));
-          if (!hasParentMatch) return false;
-        }
+      if (selectedPolicyType !== 'all') {
+        const hasType = (policy.policyTypes?.nodes || []).some((type) => type.slug === selectedPolicyType || type.name === selectedPolicyType);
+        if (!hasType) return false;
+      }
 
-        if (selectedRegion === 'all') return true;
-        return regions.some((region) => region.slug === selectedRegion || region.name === selectedRegion);
-      });
-    let s = shuffleSeed | 0;
-    const rand = () => {
-      s = s + 0x6D2B79F5 | 0;
-      let t = Math.imul(s ^ s >>> 15, 1 | s);
-      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-      return ((t ^ t >>> 14) >>> 0) / 4294967296;
-    };
-    for (let i = nodes.length - 1; i > 0; i--) {
-      const j = Math.floor(rand() * (i + 1));
-      [nodes[i], nodes[j]] = [nodes[j], nodes[i]];
+      return true;
+    });
+
+    if (sortBenefitBy !== 'default') {
+      nodes.sort((a, b) => benefitPriority(b, sortBenefitBy) - benefitPriority(a, sortBenefitBy));
+    } else {
+      let s = shuffleSeed | 0;
+      const rand = () => {
+        s = s + 0x6D2B79F5 | 0;
+        let t = Math.imul(s ^ s >>> 15, 1 | s);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      };
+      for (let i = nodes.length - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        [nodes[i], nodes[j]] = [nodes[j], nodes[i]];
+      }
     }
+
     return nodes.slice(0, 20);
-  }, [data, effectiveParentRegion, selectedRegion, shuffleSeed, subRegionOptions]);
+  }, [data, selectedRegion, selectedPolicyType, sortBenefitBy, shuffleSeed]);
 
   const isInCompare = (id) => compareSelected.some(p => p.id === id);
 
@@ -481,12 +535,12 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
           <div style={{ marginBottom: 18 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10, flexWrap: 'wrap' }}>
               <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--slate)', margin: 0 }}>
-                Filter by Destination &amp; Travel Dates
+                Filter by Destination, Type &amp; Benefits
               </p>
-              {!mobile && (effectiveParentRegion !== 'all' || selectedRegion !== 'all' || departure || returnDate) && (
+              {!mobile && (selectedRegion !== 'all' || selectedPolicyType !== 'all' || sortBenefitBy !== 'default' || departure || returnDate) && (
                 <button
                   type="button"
-                  onClick={() => { setParentRegionFilter('all'); setSelectedRegion('all'); setDeparture(''); setReturnDate(''); }}
+                  onClick={() => { setSelectedRegion('all'); setSelectedPolicyType('all'); setSortBenefitBy('default'); setDeparture(''); setReturnDate(''); }}
                   style={{ fontSize: 12, color: 'var(--gold)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 700 }}
                 >
                   Clear Filters
@@ -522,81 +576,87 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
 
             {mobile ? (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate-dark)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Parent Region</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate-dark)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Region</div>
                 <select
-                  value={effectiveParentRegion}
-                  onChange={(e) => { setParentRegionFilter(e.target.value); setSelectedRegion('all'); }}
-                  style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 14, fontFamily: 'var(--font-body)', outline: 'none' }}
+                  value={selectedRegion}
+                  onChange={(e) => { setSelectedRegion(e.target.value); setSelectedPolicyType('all'); }}
+                  style={filterSelectStyle}
                 >
-                  <option value="all">All Regions</option>
-                  {parentRegionOptions.map((parent) => (
-                    <option key={parent.key} value={parent.key}>{parent.name}</option>
+                  <option value="all" style={filterOptionStyle}>All Regions</option>
+                  {parentRegionOptions.map((region) => (
+                    <option key={region.slug} value={region.slug} style={filterOptionStyle}>{region.name}</option>
                   ))}
                 </select>
 
-                {effectiveParentRegion !== 'all' && categoryOptions.length > 0 && (
+                {selectedRegion !== 'all' && policyTypeOptions.length > 0 && (
                   <>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate-dark)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Sub-regions</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate-dark)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Policy Type</div>
                     <select
-                      value={selectedRegion}
-                      onChange={(e) => setSelectedRegion(e.target.value)}
-                      style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 14, fontFamily: 'var(--font-body)', outline: 'none' }}
+                      value={selectedPolicyType}
+                      onChange={(e) => setSelectedPolicyType(e.target.value)}
+                      style={filterSelectStyle}
                     >
-                      <option value="all">
-                        {`All ${effectiveParentLabel} Regions`}
-                      </option>
-                      {categoryOptions.map((option) => (
-                        <option key={option.slug} value={option.slug}>{option.name}</option>
+                      <option value="all" style={filterOptionStyle}>All Types</option>
+                      {policyTypeOptions.map((option) => (
+                        <option key={option.slug} value={option.slug} style={filterOptionStyle}>{option.name}</option>
                       ))}
                     </select>
                   </>
                 )}
-                {effectiveParentRegion !== 'all' && categoryOptions.length === 0 && (
-                  <div style={{ fontSize: 12, color: 'var(--slate-dark)' }}>
-                    No sub-regions under this region. Showing all linked policies.
-                  </div>
-                )}
+
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate-dark)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Sort by Benefit</div>
+                <select
+                  value={sortBenefitBy}
+                  onChange={(e) => setSortBenefitBy(e.target.value)}
+                  style={filterSelectStyle}
+                >
+                  <option value="default" style={filterOptionStyle}>Default</option>
+                  <option value="medical" style={filterOptionStyle}>Medical</option>
+                  <option value="luggage" style={filterOptionStyle}>Luggage</option>
+                  <option value="delay" style={filterOptionStyle}>Delay</option>
+                  <option value="cancellation" style={filterOptionStyle}>Cancellation</option>
+                </select>
               </div>
             ) : (
               <div style={{ display: 'grid', gap: 10 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate-dark)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Parent Region</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate-dark)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Region</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   <button
                     type="button"
-                    onClick={() => { setParentRegionFilter('all'); setSelectedRegion('all'); }}
-                    style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${effectiveParentRegion === 'all' ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: effectiveParentRegion === 'all' ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: effectiveParentRegion === 'all' ? '#86efac' : 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                    onClick={() => { setSelectedRegion('all'); setSelectedPolicyType('all'); }}
+                    style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${selectedRegion === 'all' ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: selectedRegion === 'all' ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: selectedRegion === 'all' ? '#86efac' : 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                   >
                     All Regions
                   </button>
                   {parentRegionOptions.map((parent) => (
                     <button
-                      key={parent.key}
+                      key={parent.slug}
                       type="button"
-                      onClick={() => { setParentRegionFilter(parent.key); setSelectedRegion('all'); }}
-                      style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${effectiveParentRegion === parent.key ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: effectiveParentRegion === parent.key ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: effectiveParentRegion === parent.key ? '#86efac' : 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                      onClick={() => { setSelectedRegion(parent.slug); setSelectedPolicyType('all'); }}
+                      style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${selectedRegion === parent.slug ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: selectedRegion === parent.slug ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: selectedRegion === parent.slug ? '#86efac' : 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                     >
                       {parent.name}
                     </button>
                   ))}
                 </div>
 
-                {effectiveParentRegion !== 'all' && categoryOptions.length > 0 && (
+                {selectedRegion !== 'all' && policyTypeOptions.length > 0 && (
                   <>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate-dark)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Sub-regions</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate-dark)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Policy Type</div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                       <button
                         type="button"
-                        onClick={() => setSelectedRegion('all')}
-                        style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${selectedRegion === 'all' ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: selectedRegion === 'all' ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: selectedRegion === 'all' ? '#86efac' : 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                        onClick={() => setSelectedPolicyType('all')}
+                        style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${selectedPolicyType === 'all' ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: selectedPolicyType === 'all' ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: selectedPolicyType === 'all' ? '#86efac' : 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                       >
-                        {`All ${effectiveParentLabel} Regions`}
+                        All Types
                       </button>
-                      {categoryOptions.map((option) => (
+                      {policyTypeOptions.map((option) => (
                         <button
                           key={option.slug}
                           type="button"
-                          onClick={() => setSelectedRegion(option.slug)}
-                          style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${selectedRegion === option.slug ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: selectedRegion === option.slug ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: selectedRegion === option.slug ? '#86efac' : 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                          onClick={() => setSelectedPolicyType(option.slug)}
+                          style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${selectedPolicyType === option.slug ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: selectedPolicyType === option.slug ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: selectedPolicyType === option.slug ? '#86efac' : 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                         >
                           {option.name}
                         </button>
@@ -604,11 +664,19 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                     </div>
                   </>
                 )}
-                {effectiveParentRegion !== 'all' && categoryOptions.length === 0 && (
-                  <div style={{ fontSize: 12, color: 'var(--slate-dark)' }}>
-                    No sub-regions under this region. Showing all linked policies.
-                  </div>
-                )}
+
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate-dark)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Sort by Benefit</div>
+                <select
+                  value={sortBenefitBy}
+                  onChange={(e) => setSortBenefitBy(e.target.value)}
+                  style={{ ...filterSelectStyle, maxWidth: 320, padding: '10px 12px' }}
+                >
+                  <option value="default" style={filterOptionStyle}>Default</option>
+                  <option value="medical" style={filterOptionStyle}>Medical</option>
+                  <option value="luggage" style={filterOptionStyle}>Luggage</option>
+                  <option value="delay" style={filterOptionStyle}>Delay</option>
+                  <option value="cancellation" style={filterOptionStyle}>Cancellation</option>
+                </select>
               </div>
             )}
           </div>
