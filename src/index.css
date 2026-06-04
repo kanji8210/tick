@@ -201,11 +201,11 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   border-radius: var(--radius-sm); color: var(--white);
   font-family: var(--font-body); font-size: 16px; /* ≥16px prevents iOS Safari auto-zoom */
   transition: border-color 0.2s, box-shadow 0.2s; outline: none;
-  -webkit-appearance: none; appearance: none;
+  -webkit-appearance: none; appearance: none; color-scheme: dark;
 }
 .form-input:focus, .input-field:focus { border-color: var(--indigo-glow); box-shadow: 0 0 0 3px rgba(49,99,49,0.2); }
 .form-input::placeholder, .input-field::placeholder { color: var(--slate-dark); }
-.form-input option { background: var(--navy-mid); }
+.form-input option { background: var(--navy-mid); color: var(--white); }
 
 .fade-in { animation: fadeIn 0.8s ease-out forwards; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }

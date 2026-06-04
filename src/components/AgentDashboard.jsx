@@ -441,8 +441,9 @@ const AgentDashboard = ({ user, onNavigate }) => {
     background: 'rgba(255,255,255,0.06)',
     border: '1px solid rgba(255,255,255,0.12)',
     borderRadius: '8px', padding: '0.55rem 0.85rem',
-    color: 'white', fontSize: '0.82rem', outline: 'none', width: '100%',
+    color: 'white', fontSize: '0.82rem', outline: 'none', width: '100%', colorScheme: 'dark',
   };
+  const optionStyle = { backgroundColor: '#0f172a', color: '#fff' };
   const thStyle = {
     padding: '0.75rem 0.6rem', fontSize: '0.68rem', fontWeight: 700,
     color: 'var(--gold, #d4af37)', letterSpacing: '0.08em', textAlign: 'left',
@@ -643,14 +644,14 @@ const AgentDashboard = ({ user, onNavigate }) => {
                 disabled={statusChanging === s.id}
                 style={{ flex: 1, minWidth: 160, ...inputStyle, padding: '0.4rem 0.6rem', fontSize: '0.8rem' }}
               >
-                <option value="unconfirmed">Unpaid / Unconfirmed</option>
-                <option value="pending_review">Pending Review</option>
-                <option value="submitted_to_insurer">Submitted to Insurer</option>
-                <option value="approved">Approved</option>
-                <option value="verification_ready">Verification Ready</option>
-                <option value="active">Active</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="archived">Archived</option>
+                <option value="unconfirmed" style={optionStyle}>Unpaid / Unconfirmed</option>
+                <option value="pending_review" style={optionStyle}>Pending Review</option>
+                <option value="submitted_to_insurer" style={optionStyle}>Submitted to Insurer</option>
+                <option value="approved" style={optionStyle}>Approved</option>
+                <option value="verification_ready" style={optionStyle}>Verification Ready</option>
+                <option value="active" style={optionStyle}>Active</option>
+                <option value="cancelled" style={optionStyle}>Cancelled</option>
+                <option value="archived" style={optionStyle}>Archived</option>
               </select>
               <button
                 disabled={statusChanging === s.id || (statusDraft[s.id] ?? s.policyStatus) === s.policyStatus}
@@ -1185,8 +1186,8 @@ const AgentDashboard = ({ user, onNavigate }) => {
                 onChange={(e) => setSettingsForm(prev => ({ ...prev, additionalFeeType: e.target.value }))}
                 style={{ ...inputStyle }}
               >
-                <option value="fixed">Fixed Amount</option>
-                <option value="percent">Percentage</option>
+                <option value="fixed" style={optionStyle}>Fixed Amount</option>
+                <option value="percent" style={optionStyle}>Percentage</option>
               </select>
             </label>
 
