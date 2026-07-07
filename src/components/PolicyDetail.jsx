@@ -72,6 +72,9 @@ const bracketPremium = (brackets, days) => {
   return match ? match.premium : null;
 };
 
+const fmtUSD = (n) => `USD ${Number(n).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const fmtRate = (n) => Number(n || 0).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+
 const PolicyDetail = ({ policyId, searchData, onBack, onStartWizard, compareSelected = [], onAddCompare, onRemoveCompare }) => {
   const { mobile, tablet } = useResponsive();
   const [today]    = useState(() => new Date().toISOString().split('T')[0]);
@@ -116,8 +119,12 @@ const PolicyDetail = ({ policyId, searchData, onBack, onStartWizard, compareSele
 
   // Live quote calculation from sidebar date pickers
   const quoteDays    = tripDays(departure, returnDate);
-  const quotePremium = bracketPremium(premiums, quoteDays);
+  const quoteBracket = premiums.find(b => quoteDays >= b.from && quoteDays <= b.to) || null;
+  const quotePremium = quoteBracket ? quoteBracket.premium : null;
   const quoteTotal   = quotePremium !== null ? quotePremium * passengers : null;
+  const quoteRate    = Number(quoteBracket?.exchangeRate || 0);
+  const quoteUsd     = Number(quoteBracket?.usdPremium);
+  const hasUsdMeta   = quoteRate > 0 && Number.isFinite(quoteUsd);
   const fmtKES = (n) => `${currency} ${Number(n).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
@@ -238,7 +245,14 @@ const PolicyDetail = ({ policyId, searchData, onBack, onStartWizard, compareSele
                       {premiums.map((p, i) => (
                         <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                           <td style={{ padding: '10px 14px', color: 'rgba(255,255,255,0.8)' }}>{p.from}–{p.to} days</td>
-                          <td style={{ padding: '10px 14px', fontWeight: 700, color: 'var(--gold)' }}>{currency} {p.premium.toLocaleString()}</td>
+                          <td style={{ padding: '10px 14px', color: 'var(--gold)' }}>
+                            <div style={{ fontWeight: 700 }}>{currency} {p.premium.toLocaleString()}</div>
+                            {(Number(p.exchangeRate || 0) > 0 && Number.isFinite(Number(p.usdPremium))) && (
+                              <div style={{ fontSize: 10, color: 'var(--slate)', marginTop: 2 }}>
+                                {fmtUSD(Number(p.usdPremium))} @ 1 USD = KES {fmtRate(p.exchangeRate)}
+                              </div>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -309,6 +323,11 @@ const PolicyDetail = ({ policyId, searchData, onBack, onStartWizard, compareSele
                     <>
                       <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--gold)' }}>{fmtKES(quoteTotal)}</div>
                       <div style={{ fontSize: 11, color: 'var(--slate)', marginTop: 3 }}>{quoteDays} day{quoteDays !== 1 ? 's' : ''} · {fmtKES(quotePremium)} × {passengers} traveller{passengers !== 1 ? 's' : ''}</div>
+                      {hasUsdMeta && (
+                        <div style={{ fontSize: 10, color: 'var(--slate)', marginTop: 2 }}>
+                          {fmtUSD(quoteUsd * passengers)} @ 1 USD = KES {fmtRate(quoteRate)}
+                        </div>
+                      )}
                     </>
                   ) : (
                     <>

@@ -77,6 +77,26 @@ const fmt = (n) =>
     ? '—'
     : `${CURRENCY} ${Number(n).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
+const fmtUSD = (n) =>
+  n === null || n === undefined
+    ? '—'
+    : `USD ${Number(n).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+const fmtRate = (n) =>
+  Number(n || 0).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+
+const getUsdMeta = (bracket, passengers = 1) => {
+  if (!bracket) return null;
+  const rate = Number(bracket.exchangeRate || 0);
+  const usdPerPerson = Number(bracket.usdPremium);
+  if (!Number.isFinite(rate) || rate <= 0 || !Number.isFinite(usdPerPerson)) return null;
+  return {
+    rate,
+    usdPerPerson,
+    usdTotal: usdPerPerson * Number(passengers || 1),
+  };
+};
+
 const stripHtml = (s) => (s || '').replace(/<[^>]*>/g, ' ').replace(/\s{2,}/g, ' ').trim();
 
 const parseBenefits = (policy) => {
@@ -394,10 +414,14 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
     return data.policies.nodes
       .filter(p => coversRegion(p, form.destinationRegion))
       .filter(p => (requiresSeniorPolicy ? isSeniorPolicy(p) : true))
-      .map(p => ({
-        ...p,
-        computedPremium: bracketPremium(p.policyDayPremiums, days),
-      }))
+      .map(p => {
+        const computedBracket = (p.policyDayPremiums || []).find(b => days >= b.from && days <= b.to) || null;
+        return {
+          ...p,
+          computedBracket,
+          computedPremium: computedBracket ? computedBracket.premium : null,
+        };
+      })
       .sort((a, b) => (a.computedPremium ?? Infinity) - (b.computedPremium ?? Infinity));
   }, [data, form.destinationRegion, days, requiresSeniorPolicy]);
 
@@ -690,11 +714,32 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
                 {[
                   { label: 'Total Price', render: p => {
                     const tot = p.computedPremium !== null ? p.computedPremium * form.passengers : null;
+                    const usdMeta = getUsdMeta(p.computedBracket, form.passengers);
                     return tot !== null
-                      ? <strong style={{ color: 'var(--gold)', fontSize: 15 }}>{fmt(tot)}</strong>
+                      ? <div>
+                          <strong style={{ color: 'var(--gold)', fontSize: 15 }}>{fmt(tot)}</strong>
+                          {usdMeta && (
+                            <div style={{ fontSize: 10, color: 'var(--slate)', marginTop: 2 }}>
+                              {fmtUSD(usdMeta.usdTotal)} @ 1 USD = KES {fmtRate(usdMeta.rate)}
+                            </div>
+                          )}
+                        </div>
                       : <span style={{ color: 'var(--slate)' }}>On request</span>;
                   }},
-                  { label: 'Per Person', render: p => p.computedPremium !== null ? fmt(p.computedPremium) : '—' },
+                  { label: 'Per Person', render: p => {
+                    const usdMeta = getUsdMeta(p.computedBracket, 1);
+                    if (p.computedPremium === null) return '—';
+                    return (
+                      <div>
+                        <div>{fmt(p.computedPremium)}</div>
+                        {usdMeta && (
+                          <div style={{ fontSize: 10, color: 'var(--slate)', marginTop: 2 }}>
+                            {fmtUSD(usdMeta.usdPerPerson)}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }},
                   { label: 'Region', render: p => (p.regions?.nodes || []).map(r => r.name).join(', ') || '—' },
                   { label: 'Countries', render: p => {
                     const list = p.policyCountries || [];
@@ -762,6 +807,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
         {eligiblePolicies.map(policy => {
           const prem = policy.computedPremium;
           const total = prem !== null ? prem * form.passengers : null;
+          const usdMeta = getUsdMeta(policy.computedBracket, form.passengers);
           const selected = form.selectedPolicy?.databaseId === policy.databaseId;
           const inCompare = compareIds.has(String(policy.databaseId));
           return (
@@ -791,6 +837,11 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
                     <>
                       <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--gold)' }}>{fmt(total)}</div>
                       <div style={{ fontSize: 10, color: 'var(--slate)' }}>{fmt(prem)} × {form.passengers}</div>
+                      {usdMeta && (
+                        <div style={{ fontSize: 9, color: 'var(--slate)', maxWidth: 170, textAlign: 'right' }}>
+                          {fmtUSD(usdMeta.usdTotal)} @ {fmtRate(usdMeta.rate)}
+                        </div>
+                      )}
                     </>
                   ) : (
                     <div style={{ fontSize: 12, color: 'var(--slate)' }}>Quote on request</div>
@@ -840,8 +891,10 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
 
   /* ── Step 3 — Personal Details ── */
   if (step === 3) {
-    const prem  = bracketPremium(form.selectedPolicy?.policyDayPremiums, days);
+    const selectedBracket = (form.selectedPolicy?.policyDayPremiums || []).find(b => days >= b.from && days <= b.to) || null;
+    const prem  = selectedBracket ? selectedBracket.premium : null;
     const total = prem !== null ? prem * form.passengers : null;
+    const usdMeta = getUsdMeta(selectedBracket, form.passengers);
     const seniorPolicyValid = !requiresSeniorPolicy || isSeniorPolicy(form.selectedPolicy);
     const agentDisplayFee = isAgent && total !== null ? getAgentDisplayFee(total) : 0;
     const clientFacingTotal = total !== null ? total + agentDisplayFee : null;
@@ -864,6 +917,11 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
             {total !== null && (
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontWeight: 800, color: 'var(--gold)', fontSize: 15 }}>{fmt(total)}</div>
+                {usdMeta && (
+                  <div style={{ fontSize: 10, color: 'var(--slate)', marginTop: 2 }}>
+                    {fmtUSD(usdMeta.usdTotal)} @ 1 USD = KES {fmtRate(usdMeta.rate)}
+                  </div>
+                )}
                 {isAgent && agentDisplayFee > 0 && (
                   <div style={{ fontSize: 11, color: '#93c5fd', marginTop: 2 }}>
                     Client-facing: {fmt(clientFacingTotal)}

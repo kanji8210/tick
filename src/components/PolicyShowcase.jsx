@@ -104,6 +104,14 @@ const fmtPrice = (price, currency) => {
   return `${currency || 'KES'} ${Number(price).toLocaleString('en-KE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 };
 
+const fmtUSD = (n) => {
+  if (n === null || n === undefined) return null;
+  return `USD ${Number(n).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
+const fmtRate = (n) => Number(n || 0).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+const fmtKSH = (n) => `KSH ${Number(n).toLocaleString('en-KE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+
 /** Strip HTML tags from a string. */
 const stripHtml = (s) => (s || '').replace(/<[^>]*>/g, ' ').replace(/\s{2,}/g, ' ').trim();
 
@@ -689,6 +697,17 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
               const minPrice   = minPremium(policy.policyDayPremiums);
               const price      = exactPrice ?? minPrice;
               const isExact    = hasDates && exactPrice !== null;
+              const activeBracket = isExact
+                ? (policy.policyDayPremiums || []).find(b => days >= b.from && days <= b.to)
+                : null;
+              const usdMeta = activeBracket && Number(activeBracket.exchangeRate || 0) > 0 && Number.isFinite(Number(activeBracket.usdPremium))
+                ? { usd: Number(activeBracket.usdPremium), rate: Number(activeBracket.exchangeRate) }
+                : null;
+              const displayCurrency = String(policy.policyCurrency || 'KES').toUpperCase();
+              const shillingAmount = price !== null && price !== undefined ? fmtKSH(price) : 'N/A';
+              const exchangeDebug = usdMeta
+                ? `Exchange rate: default: ${fmtRate(usdMeta.rate)}`
+                : `Exchange rate: default: set status unavailable from API`;
               const tags       = parseTags(policy.policyFeatureTags);
               const checked    = isInCompare(policy.id);
 
@@ -723,6 +742,14 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                       {isExact && (
                         <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, color: '#86efac', background: 'rgba(49,99,49,0.18)', border: '1px solid rgba(49,99,49,0.4)', padding: '3px 8px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Exact</span>
                       )}
+                    </div>
+                    {usdMeta && (
+                      <div style={{ marginTop: -10, marginBottom: 12, fontSize: 10, color: 'var(--slate)', lineHeight: 1.4 }}>
+                        {fmtUSD(usdMeta.usd)} @ 1 USD = KES {fmtRate(usdMeta.rate)}
+                      </div>
+                    )}
+                    <div style={{ marginTop: usdMeta ? -4 : -10, marginBottom: 12, fontSize: 10, color: '#93c5fd', lineHeight: 1.45, background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 6, padding: '6px 8px' }}>
+                      {exchangeDebug}<br />Display currency: {displayCurrency}<br />Amount in shillings: {shillingAmount}
                     </div>
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>

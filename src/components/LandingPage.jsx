@@ -15,6 +15,13 @@ const fmtPrice = (price, currency = 'KES') => {
   return `${currency} ${Number(price).toLocaleString('en-KE')}`;
 };
 
+const fmtUSD = (n) => {
+  if (n === null || n === undefined) return null;
+  return `USD ${Number(n).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
+const fmtRate = (n) => Number(n || 0).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+
 const getDisplayFeatures = (p) => {
   if (p.policyFeatureTags) {
     const t = p.policyFeatureTags.split(',').map(s => s.trim()).filter(Boolean);
@@ -150,6 +157,18 @@ const bracketPremium = (brackets, days) => {
   if (!brackets || !brackets.length) return null;
   const match = brackets.find(b => days >= b.from && days <= b.to);
   return match ? match.premium : null;
+};
+
+const getUsdMetaFromBracket = (bracket, passengers = 1) => {
+  if (!bracket) return null;
+  const rate = Number(bracket.exchangeRate || 0);
+  const usdPerPerson = Number(bracket.usdPremium);
+  if (!Number.isFinite(rate) || rate <= 0 || !Number.isFinite(usdPerPerson)) return null;
+  return {
+    rate,
+    usdPerPerson,
+    usdTotal: usdPerPerson * Number(passengers || 1),
+  };
 };
 
 const fieldStyle = { display: 'flex', flexDirection: 'column', gap: 6 };
@@ -300,17 +319,24 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
   const getPremium = (p) => {
     const cur = p.policyCurrency || 'KES';
     const prem = p.policyDayPremiums;
-    if (!prem || !prem.length) return { perPerson: null, total: null, cur, label: 'N/A' };
+    if (!prem || !prem.length) return { perPerson: null, total: null, cur, label: 'N/A', usdMeta: null };
     if (days > 0) {
-      const perPerson = bracketPremium(prem, days);
-      if (perPerson !== null) {
-        return { perPerson, total: perPerson * passengers, cur, label: `${cur} ${(perPerson * passengers).toLocaleString('en-KE')}` };
+      const bracket = prem.find(b => days >= b.from && days <= b.to) || null;
+      const perPerson = bracket ? bracket.premium : null;
+      if (perPerson !== null && perPerson !== undefined) {
+        return {
+          perPerson,
+          total: perPerson * passengers,
+          cur,
+          label: `${cur} ${(perPerson * passengers).toLocaleString('en-KE')}`,
+          usdMeta: getUsdMetaFromBracket(bracket, passengers),
+        };
       }
     }
     const prices = prem.map(b => Number(b.premium)).filter(n => !isNaN(n));
-    if (!prices.length) return { perPerson: null, total: null, cur, label: 'N/A' };
+    if (!prices.length) return { perPerson: null, total: null, cur, label: 'N/A', usdMeta: null };
     const min = Math.min(...prices), max = Math.max(...prices);
-    return { perPerson: null, total: null, cur, label: min === max ? fmtPrice(min, cur) : `${cur} ${min.toLocaleString('en-KE')} \u2013 ${max.toLocaleString('en-KE')}` };
+    return { perPerson: null, total: null, cur, label: min === max ? fmtPrice(min, cur) : `${cur} ${min.toLocaleString('en-KE')} \u2013 ${max.toLocaleString('en-KE')}`, usdMeta: null };
   };
 
   const premiums = selected.map(getPremium);
@@ -361,6 +387,11 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 14, color: '#86efac' }}>{prem.cur} {prem.total.toLocaleString('en-KE')}</div>
                       {passengers > 1 && <div style={{ fontSize: 9, color: 'var(--slate)', marginTop: 1 }}>{prem.cur} {prem.perPerson.toLocaleString('en-KE')}/pp</div>}
+                      {prem.usdMeta && (
+                        <div style={{ fontSize: 9, color: 'var(--slate)', marginTop: 1 }}>
+                          {fmtUSD(prem.usdMeta.usdTotal)} @ {fmtRate(prem.usdMeta.rate)}
+                        </div>
+                      )}
                       <div style={{ fontSize: 9, color: 'var(--slate)' }}>{days}d &middot; {passengers} pax</div>
                     </div>
                   ) : (
@@ -583,6 +614,11 @@ const CompareModal = ({ selected, onClose, onPickPolicy, onKeepComparing, compar
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 16, color: '#86efac' }}>{prem.cur} {prem.total.toLocaleString('en-KE')}</div>
                       {passengers > 1 && <div style={{ fontSize: 11, color: 'var(--slate)', marginTop: 2 }}>{prem.cur} {prem.perPerson.toLocaleString('en-KE')}/person</div>}
+                      {prem.usdMeta && (
+                        <div style={{ fontSize: 10, color: 'var(--slate)', marginTop: 2 }}>
+                          {fmtUSD(prem.usdMeta.usdTotal)} @ 1 USD = KES {fmtRate(prem.usdMeta.rate)}
+                        </div>
+                      )}
                       <div style={{ fontSize: 10, color: 'var(--slate)', marginTop: 1 }}>{days} days &middot; {passengers} traveller{passengers !== 1 ? 's' : ''}</div>
                     </div>
                   ) : (
