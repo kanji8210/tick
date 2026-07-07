@@ -17,11 +17,12 @@ const GET_POLICIES_FOR_QUOTE = `
     policies(first: 100) {
       nodes {
         id databaseId title
+        defaultExchangeRateValue
         policyCurrency policyInsurerName policyInsurerLogo
         policyFeatureTags
         policyBenefits policyCoverDetails policyNotCovered
         regions { nodes { slug name } }
-        policyDayPremiums { from to premium }
+        policyDayPremiums { from to premium usdPremium exchangeRate }
       }
     }
   }
@@ -33,10 +34,44 @@ const tripDays = (dep, ret) => {
   return Math.max(1, Math.round(ms / 86400000) + 1);
 };
 
-const bracketPremium = (brackets, days) => {
-  if (!brackets?.length) return null;
-  const m = brackets.find(b => days >= b.from && days <= b.to);
-  return m ? m.premium : null;
+const normalizeBracketWithDefaultRate = (policy, bracket) => {
+  if (!bracket) return null;
+  const premium = Number(bracket.premium);
+  const rate = Number(bracket.exchangeRate || 0);
+  const usdPremium = Number(bracket.usdPremium);
+  if (Number.isFinite(rate) && rate > 0) {
+    return {
+      ...bracket,
+      premium: Number.isFinite(premium) ? premium : null,
+      usdPremium: Number.isFinite(usdPremium) ? usdPremium : premium,
+      exchangeRate: rate,
+    };
+  }
+
+  const currency = String(policy?.policyCurrency || '').toUpperCase();
+  const defaultRate = Number(policy?.defaultExchangeRateValue || 0);
+  if (currency === 'USD' && Number.isFinite(defaultRate) && defaultRate > 0 && Number.isFinite(premium)) {
+    return {
+      ...bracket,
+      premium: premium * defaultRate,
+      usdPremium: Number.isFinite(usdPremium) ? usdPremium : premium,
+      exchangeRate: defaultRate,
+    };
+  }
+
+  return {
+    ...bracket,
+    premium: Number.isFinite(premium) ? premium : null,
+    usdPremium: Number.isFinite(usdPremium) ? usdPremium : null,
+    exchangeRate: Number.isFinite(rate) ? rate : 0,
+  };
+};
+
+const bracketPremium = (policy, days) => {
+  const brackets = policy?.policyDayPremiums || [];
+  if (!brackets.length) return null;
+  const match = brackets.find(b => days >= b.from && days <= b.to) || null;
+  return normalizeBracketWithDefaultRate(policy, match);
 };
 
 const TRAVELER_FACTORS = {
@@ -306,8 +341,10 @@ const GroupQuoteWizard = ({ onClose, isAgency = false, onNavigate }) => {
       : allPolicies;
     return base
       .map(p => {
-        const basePerTraveler = bracketPremium(p.policyDayPremiums, days);
+        const activeBracket = bracketPremium(p, days);
+        const basePerTraveler = activeBracket?.premium;
         if (!basePerTraveler) return null;
+        const resolvedCurrency = Number(activeBracket.exchangeRate || 0) > 0 ? 'KES' : (p.policyCurrency || 'KES');
         const tierAdjustedRate = basePerTraveler;
         const lineItems = [
           { key: 'adults', label: 'Adults', count: travelerMix.adults, factor: TRAVELER_FACTORS.adults },
@@ -325,6 +362,8 @@ const GroupQuoteWizard = ({ onClose, isAgency = false, onNavigate }) => {
         const total    = subtotal - discount;
         return {
           ...p,
+          policyCurrency: resolvedCurrency,
+          activeBracket,
           basePerTraveler,
           tierAdjustedRate,
           lineItems,

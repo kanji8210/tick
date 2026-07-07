@@ -126,13 +126,13 @@ const Hero = ({ onStart, onNavigate }) => {
       }} aria-hidden="true" />
       <style>{`@keyframes spin-slow { to { transform: translateY(-50%) rotate(360deg); } } @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }`}</style>
 
-      <div className="hero-content" style={{ width: '100%', maxWidth: '100%', padding: 0 }}>
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 32, alignItems: 'stretch' }}>
+      <div className="hero-content" style={{ width: '100%', maxWidth: '100%', padding: mobile ? '0 16px' : '0 32px' }}>
+        <div style={{ width: '100%', display: 'flex', flexDirection: (isAgent && user && !mobile) ? 'row' : 'column', gap: 32, alignItems: 'stretch' }}>
 
           {/* ── Left column ── */}
           {isAgent ? (
             /* Agent copy */
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: (isAgent && user && !mobile) ? 'center' : undefined, alignItems: (isAgent && user && !mobile) ? 'center' : undefined, textAlign: (isAgent && user && !mobile) ? 'center' : undefined }}>
               <p className="section-label">For Insurance Agencies</p>
               <h1 className="reveal" style={{ fontFamily: "var(--font-display)", fontSize: "clamp(36px,4vw,58px)", fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.025em", marginBottom: 18 }}>
                 Issue Policies in Bulk.<br />
@@ -221,7 +221,7 @@ const Hero = ({ onStart, onNavigate }) => {
           {/* ── Right column ── */}
           {isAgent ? (
             /* Agency dashboard mockup */
-            <div className="reveal reveal-delay-2" style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", borderRadius: "var(--radius-lg)", padding: 24, fontFamily: "var(--font-body)", animation: "float 7s ease-in-out infinite", display: mobile ? 'none' : undefined }}>
+            <div className="reveal reveal-delay-2" style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)", borderRadius: "var(--radius-lg)", padding: 24, fontFamily: "var(--font-body)", animation: "float 7s ease-in-out infinite", display: mobile ? 'none' : undefined, flex: (isAgent && user && !mobile) ? '0 0 33.333%' : undefined }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
                 {["#ff5f57","#febc2e","#28c840"].map(c => <div key={c} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />)}
                 <span style={{ fontSize: 11, color: "var(--slate)", marginLeft: 8 }}>Agency Dashboard</span>

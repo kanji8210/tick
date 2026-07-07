@@ -25,9 +25,10 @@ const GET_POLICIES = `
         policyBenefits
         policyFeatureTags
         policyCurrency
+        defaultExchangeRateValue
         policyInsurerName
         policyCountries
-        policyDayPremiums { from to premium }
+        policyDayPremiums { from to premium usdPremium exchangeRate }
         regions { nodes { name slug } }
       }
     }
@@ -94,6 +95,39 @@ const getUsdMeta = (bracket, passengers = 1) => {
     rate,
     usdPerPerson,
     usdTotal: usdPerPerson * Number(passengers || 1),
+  };
+};
+
+const normalizeBracketWithDefaultRate = (policy, bracket) => {
+  if (!bracket) return null;
+  const premium = Number(bracket.premium);
+  const rate = Number(bracket.exchangeRate || 0);
+  const usdPremium = Number(bracket.usdPremium);
+  if (Number.isFinite(rate) && rate > 0) {
+    return {
+      ...bracket,
+      premium: Number.isFinite(premium) ? premium : null,
+      exchangeRate: rate,
+      usdPremium: Number.isFinite(usdPremium) ? usdPremium : premium,
+    };
+  }
+
+  const currency = String(policy?.policyCurrency || '').toUpperCase();
+  const defaultRate = Number(policy?.defaultExchangeRateValue || 0);
+  if (currency === 'USD' && Number.isFinite(defaultRate) && defaultRate > 0 && Number.isFinite(premium)) {
+    return {
+      ...bracket,
+      premium: premium * defaultRate,
+      usdPremium: Number.isFinite(usdPremium) ? usdPremium : premium,
+      exchangeRate: defaultRate,
+    };
+  }
+
+  return {
+    ...bracket,
+    premium: Number.isFinite(premium) ? premium : null,
+    usdPremium: Number.isFinite(usdPremium) ? usdPremium : null,
+    exchangeRate: Number.isFinite(rate) ? rate : 0,
   };
 };
 
@@ -415,7 +449,8 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
       .filter(p => coversRegion(p, form.destinationRegion))
       .filter(p => (requiresSeniorPolicy ? isSeniorPolicy(p) : true))
       .map(p => {
-        const computedBracket = (p.policyDayPremiums || []).find(b => days >= b.from && days <= b.to) || null;
+        const rawBracket = (p.policyDayPremiums || []).find(b => days >= b.from && days <= b.to) || null;
+        const computedBracket = normalizeBracketWithDefaultRate(p, rawBracket);
         return {
           ...p,
           computedBracket,
@@ -719,7 +754,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
                       ? <div>
                           <strong style={{ color: 'var(--gold)', fontSize: 15 }}>{fmt(tot)}</strong>
                           {usdMeta && (
-                            <div style={{ fontSize: 10, color: 'var(--slate)', marginTop: 2 }}>
+                            <div style={{ fontSize: 9, color: 'var(--slate)', marginTop: 2 }}>
                               {fmtUSD(usdMeta.usdTotal)} @ 1 USD = KES {fmtRate(usdMeta.rate)}
                             </div>
                           )}
@@ -733,8 +768,8 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
                       <div>
                         <div>{fmt(p.computedPremium)}</div>
                         {usdMeta && (
-                          <div style={{ fontSize: 10, color: 'var(--slate)', marginTop: 2 }}>
-                            {fmtUSD(usdMeta.usdPerPerson)}
+                          <div style={{ fontSize: 9, color: 'var(--slate)', marginTop: 2 }}>
+                            {fmtUSD(usdMeta.usdPerPerson)} @ 1 USD = KES {fmtRate(usdMeta.rate)}
                           </div>
                         )}
                       </div>
@@ -839,7 +874,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
                       <div style={{ fontSize: 10, color: 'var(--slate)' }}>{fmt(prem)} × {form.passengers}</div>
                       {usdMeta && (
                         <div style={{ fontSize: 9, color: 'var(--slate)', maxWidth: 170, textAlign: 'right' }}>
-                          {fmtUSD(usdMeta.usdTotal)} @ {fmtRate(usdMeta.rate)}
+                          {fmtUSD(usdMeta.usdTotal)} @ 1 USD = KES {fmtRate(usdMeta.rate)}
                         </div>
                       )}
                     </>
@@ -891,7 +926,8 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
 
   /* ── Step 3 — Personal Details ── */
   if (step === 3) {
-    const selectedBracket = (form.selectedPolicy?.policyDayPremiums || []).find(b => days >= b.from && days <= b.to) || null;
+    const selectedRawBracket = (form.selectedPolicy?.policyDayPremiums || []).find(b => days >= b.from && days <= b.to) || null;
+    const selectedBracket = normalizeBracketWithDefaultRate(form.selectedPolicy, selectedRawBracket);
     const prem  = selectedBracket ? selectedBracket.premium : null;
     const total = prem !== null ? prem * form.passengers : null;
     const usdMeta = getUsdMeta(selectedBracket, form.passengers);
@@ -918,7 +954,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontWeight: 800, color: 'var(--gold)', fontSize: 15 }}>{fmt(total)}</div>
                 {usdMeta && (
-                  <div style={{ fontSize: 10, color: 'var(--slate)', marginTop: 2 }}>
+                  <div style={{ fontSize: 9, color: 'var(--slate)', marginTop: 2 }}>
                     {fmtUSD(usdMeta.usdTotal)} @ 1 USD = KES {fmtRate(usdMeta.rate)}
                   </div>
                 )}

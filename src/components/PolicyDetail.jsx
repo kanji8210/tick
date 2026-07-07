@@ -248,7 +248,7 @@ const PolicyDetail = ({ policyId, searchData, onBack, onStartWizard, compareSele
                           <td style={{ padding: '10px 14px', color: 'var(--gold)' }}>
                             <div style={{ fontWeight: 700 }}>{currency} {p.premium.toLocaleString()}</div>
                             {(Number(p.exchangeRate || 0) > 0 && Number.isFinite(Number(p.usdPremium))) && (
-                              <div style={{ fontSize: 10, color: 'var(--slate)', marginTop: 2 }}>
+                              <div style={{ fontSize: 9, color: 'var(--slate)', marginTop: 2 }}>
                                 {fmtUSD(Number(p.usdPremium))} @ 1 USD = KES {fmtRate(p.exchangeRate)}
                               </div>
                             )}
@@ -324,7 +324,7 @@ const PolicyDetail = ({ policyId, searchData, onBack, onStartWizard, compareSele
                       <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--gold)' }}>{fmtKES(quoteTotal)}</div>
                       <div style={{ fontSize: 11, color: 'var(--slate)', marginTop: 3 }}>{quoteDays} day{quoteDays !== 1 ? 's' : ''} · {fmtKES(quotePremium)} × {passengers} traveller{passengers !== 1 ? 's' : ''}</div>
                       {hasUsdMeta && (
-                        <div style={{ fontSize: 10, color: 'var(--slate)', marginTop: 2 }}>
+                        <div style={{ fontSize: 9, color: 'var(--slate)', marginTop: 2 }}>
                           {fmtUSD(quoteUsd * passengers)} @ 1 USD = KES {fmtRate(quoteRate)}
                         </div>
                       )}

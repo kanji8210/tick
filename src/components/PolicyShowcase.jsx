@@ -703,11 +703,6 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
               const usdMeta = activeBracket && Number(activeBracket.exchangeRate || 0) > 0 && Number.isFinite(Number(activeBracket.usdPremium))
                 ? { usd: Number(activeBracket.usdPremium), rate: Number(activeBracket.exchangeRate) }
                 : null;
-              const displayCurrency = String(policy.policyCurrency || 'KES').toUpperCase();
-              const shillingAmount = price !== null && price !== undefined ? fmtKSH(price) : 'N/A';
-              const exchangeDebug = usdMeta
-                ? `Exchange rate: default: ${fmtRate(usdMeta.rate)}`
-                : `Exchange rate: default: set status unavailable from API`;
               const tags       = parseTags(policy.policyFeatureTags);
               const checked    = isInCompare(policy.id);
 
@@ -744,13 +739,10 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                       )}
                     </div>
                     {usdMeta && (
-                      <div style={{ marginTop: -10, marginBottom: 12, fontSize: 10, color: 'var(--slate)', lineHeight: 1.4 }}>
+                      <div style={{ marginTop: -10, marginBottom: 12, fontSize: 9, color: 'var(--slate)', lineHeight: 1.35 }}>
                         {fmtUSD(usdMeta.usd)} @ 1 USD = KES {fmtRate(usdMeta.rate)}
                       </div>
                     )}
-                    <div style={{ marginTop: usdMeta ? -4 : -10, marginBottom: 12, fontSize: 10, color: '#93c5fd', lineHeight: 1.45, background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 6, padding: '6px 8px' }}>
-                      {exchangeDebug}<br />Display currency: {displayCurrency}<br />Amount in shillings: {shillingAmount}
-                    </div>
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
                       {tags.slice(0, 3).map(t => (
