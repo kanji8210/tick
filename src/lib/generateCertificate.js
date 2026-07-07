@@ -14,6 +14,17 @@ const fmt = (d) =>
 
 const fmtKES = (n) => `KES ${Number(n || 0).toLocaleString('en-KE')}`;
 
+const splitHighlights = (raw) => {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw.map(String).map(s => s.trim()).filter(Boolean);
+  return String(raw)
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]*>/g, ' ')
+    .split(/\n|;|\u2022|\.|,/)
+    .map(s => s.trim())
+    .filter(s => s.length > 6 && s.length < 90);
+};
+
 const STATUS_COLOR = {
   active:              '#16a34a',
   confirmed:           '#2563eb',
@@ -36,6 +47,7 @@ export function generateCertificateHTML(policy) {
     policyNumber, policyTitle, insuredNames, passportNumber,
     region, departure, returnDate, days, amountPaid,
     policyStatus, createdAt, passengers,
+    policyBenefits, policyInsurerName, insuredPhone,
   } = policy;
 
   const statusLabel  = (policyStatus || 'unknown').toUpperCase().replace(/_/g, ' ');
@@ -45,6 +57,20 @@ export function generateCertificateHTML(policy) {
 
   const policyNo = policyNumber || '—';
   const names    = Array.isArray(insuredNames) ? insuredNames.join(', ') : (insuredNames || '—');
+  const insurer  = policyInsurerName || 'Partner Insurer';
+
+  const coverageHighlights = (() => {
+    const extracted = splitHighlights(policyBenefits).slice(0, 7);
+    if (extracted.length) return extracted;
+    return [
+      'Medical Expenses and Emergency Care',
+      'Medical Transportation and Repatriation',
+      'Personal Liability Protection',
+      'Baggage and Personal Effects Cover',
+      'Trip Delay and Interruption Support',
+      'Emergency Assistance Services',
+    ];
+  })();
 
   /* QR encodes the verify route on THIS site, pre-filled with the policy number.
    * When scanned the browser opens /verify?policy_no=TICK-XXX,
@@ -56,10 +82,10 @@ export function generateCertificateHTML(policy) {
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<title>Insurance Certificate — ${policyNo}</title>
+<title>Certificate of Travel Insurance - ${policyNo}</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0ede8; color: #1a1a1a; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #efefef; color: #122038; }
   @page { size: A4 portrait; margin: 0; }
   @media print {
     body { background: #fff; }
@@ -69,92 +95,408 @@ export function generateCertificateHTML(policy) {
 
   .page {
     width: 210mm; min-height: 297mm;
-    margin: 0 auto; background: #fff;
+    margin: 0 auto;
+    background: #fff;
     box-shadow: 0 0 60px rgba(0,0,0,0.18);
-    display: flex; flex-direction: column;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+  .page::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 10% 18%, rgba(20,43,92,0.05), transparent 34%),
+      radial-gradient(circle at 82% 16%, rgba(180,136,54,0.06), transparent 36%),
+      linear-gradient(180deg, rgba(245,247,252,0.65) 0%, rgba(255,255,255,0) 28%);
+    pointer-events: none;
+    z-index: 0;
   }
 
-  /* ── Header ── */
-  .hdr {
-    background: linear-gradient(135deg, #132b13 0%, #1e4a1e 55%, #316331 100%);
-    padding: 26px 40px 22px;
-    display: flex; justify-content: space-between; align-items: flex-start;
-  }
-  .hdr-brand-name { font-size: 36px; font-weight: 900; color: #F6A623; letter-spacing: -1.5px; }
-  .hdr-brand-sub  { font-size: 10px; letter-spacing: 0.14em; color: rgba(255,255,255,0.55); text-transform: uppercase; margin-top: 3px; }
-  .hdr-right { text-align: right; }
-  .hdr-right h1 { font-size: 17px; font-weight: 700; color: #fff; letter-spacing: 0.03em; }
-  .hdr-right p  { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 4px; }
-
-  /* ── Policy number banner ── */
-  .pn-bar {
-    background: #f7f4ef; border-bottom: 2px solid #e4ddd0;
-    padding: 16px 40px; display: flex; justify-content: space-between; align-items: center;
-  }
-  .pn-lbl { font-size: 9px; font-weight: 700; letter-spacing: 0.14em; color: #999; text-transform: uppercase; }
-  .pn-val { font-size: 28px; font-weight: 900; color: #132b13; letter-spacing: 0.05em; margin-top: 2px; font-family: 'Courier New', monospace; }
-  .status-pill {
-    display: inline-block; padding: 6px 18px; border-radius: 999px;
-    font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
-    border: 2px solid ${statusColor}; color: ${statusColor};
-    background: ${statusColor}18;
+  .content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 297mm;
   }
 
-  /* ── Details grid ── */
-  .grid-wrap { padding: 24px 40px 0; }
-  .grid {
-    display: grid; grid-template-columns: 1fr 1fr;
-    border: 1px solid #e4ddd0; border-radius: 10px; overflow: hidden;
+  .top {
+    padding: 22px 26px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
   }
-  .grid-col { padding: 22px 24px; }
-  .grid-col:first-child { border-right: 1px solid #e4ddd0; background: #faf8f5; }
-  .col-hd { font-size: 9px; font-weight: 800; letter-spacing: 0.16em; color: #316331; text-transform: uppercase; margin-bottom: 14px; }
-  .row { margin-bottom: 13px; }
-  .row:last-child { margin-bottom: 0; }
-  .row-lbl { font-size: 9px; font-weight: 600; color: #999; letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 3px; }
-  .row-val { font-size: 13px; font-weight: 700; color: #1a1a1a; }
-  .mono { font-family: 'Courier New', monospace; letter-spacing: 0.04em; }
-
-  /* ── QR / Verify block ── */
-  .verify {
-    margin: 22px 40px 0;
-    border: 2px dashed #c4dfc4; border-radius: 10px;
-    background: #f7fbf7; padding: 20px 24px;
-    display: flex; gap: 24px; align-items: flex-start;
+  .logo-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: flex-start;
   }
-  .qr-wrap img { display: block; width: 110px; height: 110px; border: 2px solid #dde8dd; border-radius: 8px; }
-  .qr-cap { font-size: 8px; color: #888; text-align: center; margin-top: 5px; letter-spacing: 0.06em; text-transform: uppercase; }
-  .vfy-hd { font-size: 11px; font-weight: 800; color: #132b13; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
-  .steps { list-style: none; padding: 0; }
-  .steps li { font-size: 11px; color: #333; margin-bottom: 7px; padding-left: 18px; position: relative; line-height: 1.55; }
-  .steps li::before { content: attr(data-n); position: absolute; left: 0; font-weight: 800; color: #316331; }
-  .vfy-url { font-size: 12px; font-weight: 700; color: #316331; font-family: 'Courier New', monospace; margin-top: 10px; }
-  .expected {
-    margin-top: 10px; padding: 7px 12px; border-radius: 6px;
-    background: #e8f4e8; border: 1px solid #b8ddb8;
-    font-size: 10px; color: #1e4a1e; font-weight: 600; line-height: 1.5;
+  .logo-left .name {
+    font-size: 34px;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    color: #0f172a;
+  }
+  .logo-left .sub {
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    color: #1e3a8a;
+    font-weight: 700;
+  }
+  .logo-left .country {
+    margin-top: 4px;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: #b48836;
+    font-weight: 700;
   }
 
-  /* ── Declaration ── */
-  .decl {
-    margin: 18px 40px 0; padding: 16px 22px; border-radius: 8px;
-    background: #faf8f5; border: 1px solid #e4ddd0;
-    font-size: 10.5px; color: #555; line-height: 1.7; font-style: italic;
+  .logo-right {
+    justify-self: end;
+    text-align: right;
   }
-  .decl strong { color: #1a1a1a; font-style: normal; }
-
-  /* ── Footer ── */
-  .ftr {
-    margin-top: auto; background: #132b13; color: rgba(255,255,255,0.65);
-    padding: 14px 40px; display: flex; justify-content: space-between; align-items: center;
+  .logo-right .tick {
+    font-size: 54px;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    color: #0b2e6f;
+    line-height: 1;
   }
-  .ftr-brand { font-size: 12px; font-weight: 800; color: #F6A623; }
-  .ftr-note  { font-size: 10px; }
+  .logo-right .tick-sub {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: #4b5563;
+    text-transform: uppercase;
+  }
 
-  /* ── Print button (hidden on print) ── */
+  .title-block {
+    text-align: center;
+    padding: 8px 26px 0;
+  }
+  .title-block h1 {
+    font-family: 'Times New Roman', Georgia, serif;
+    font-size: 60px;
+    line-height: 0.95;
+    letter-spacing: 0.04em;
+    color: #0b2e6f;
+    text-transform: uppercase;
+  }
+  .title-block .subline {
+    margin-top: 10px;
+    font-family: 'Times New Roman', Georgia, serif;
+    font-size: 14px;
+    color: #b48836;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .title-block .desc {
+    margin: 10px auto 0;
+    max-width: 640px;
+    font-size: 14px;
+    color: #1f2f46;
+    line-height: 1.5;
+  }
+
+  .primary-grid {
+    margin: 18px 26px 0;
+    display: grid;
+    grid-template-columns: 0.92fr 2fr;
+    gap: 10px;
+  }
+
+  .card {
+    border: 1.6px solid #d6c08f;
+    border-radius: 10px;
+    background: #fff;
+    overflow: hidden;
+  }
+
+  .card-head {
+    background: #0b2e6f;
+    color: #fff;
+    text-align: center;
+    font-family: 'Times New Roman', Georgia, serif;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 16px;
+    padding: 8px 10px;
+  }
+
+  .traveller {
+    padding: 16px 14px;
+    min-height: 212px;
+  }
+  .avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #0b2e6f;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+    margin-bottom: 10px;
+    border: 4px solid #e9d8ad;
+  }
+  .traveller .name {
+    font-size: 22px;
+    font-weight: 700;
+    color: #101f3a;
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+  .traveller .meta {
+    font-size: 12px;
+    color: #374151;
+    line-height: 1.55;
+  }
+
+  .details {
+    border-left: 1px solid #e3e7ef;
+    border-right: 1px solid #e3e7ef;
+    border-bottom: 1px solid #e3e7ef;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .cell {
+    padding: 11px 12px;
+    border-right: 1px solid #e3e7ef;
+    border-bottom: 1px solid #e3e7ef;
+    min-height: 58px;
+  }
+  .cell:nth-child(2n) { border-right: none; }
+  .cell .k {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #4b5563;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .cell .v {
+    font-size: 16px;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1.25;
+  }
+  .cell .v.small {
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .secondary-grid {
+    margin: 10px 26px 0;
+    display: grid;
+    grid-template-columns: 1fr 1.5fr 0.52fr;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .highlights {
+    padding: 12px 14px 10px;
+    min-height: 218px;
+  }
+  .highlights ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .highlights li {
+    font-size: 14px;
+    color: #10203b;
+    line-height: 1.35;
+    padding-left: 22px;
+    position: relative;
+  }
+  .highlights li::before {
+    content: '✦';
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: #0b2e6f;
+    font-size: 14px;
+    font-weight: 800;
+  }
+  .highlights .note {
+    margin-top: 10px;
+    font-size: 11px;
+    color: #4b5563;
+    font-style: italic;
+    line-height: 1.4;
+  }
+
+  .cert-note {
+    border: 1.6px solid #d4dbe8;
+    border-radius: 10px;
+    padding: 16px;
+    display: grid;
+    grid-template-columns: 88px 1fr;
+    gap: 12px;
+    background: linear-gradient(180deg, #ffffff 0%, #fafcff 100%);
+  }
+  .shield {
+    width: 88px;
+    height: 88px;
+    border-radius: 12px;
+    background: radial-gradient(circle at 50% 35%, #f9e6a7, #b48836);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #0b2e6f;
+    font-size: 44px;
+  }
+  .cert-note p {
+    font-size: 17px;
+    color: #1f2937;
+    line-height: 1.45;
+  }
+
+  .qr-card {
+    border: 1.6px solid #d6c08f;
+    border-radius: 10px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    gap: 8px;
+  }
+  .qr-card img {
+    width: 120px;
+    height: 120px;
+    border: 2px solid #d1d5db;
+    border-radius: 8px;
+    display: block;
+  }
+  .qr-card .cap {
+    font-size: 12px;
+    color: #334155;
+    text-align: center;
+    line-height: 1.35;
+    font-weight: 700;
+  }
+  .qr-card .url {
+    font-size: 10px;
+    color: #64748b;
+    letter-spacing: 0.04em;
+  }
+
+  .bottom {
+    margin-top: auto;
+    padding: 10px 26px 0;
+  }
+  .assist {
+    border: 1.6px solid #d6c08f;
+    border-radius: 10px;
+    background: #fff;
+    padding: 10px 14px;
+    display: grid;
+    grid-template-columns: 70px 1fr;
+    gap: 10px;
+    align-items: center;
+  }
+  .assist .icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    border: 3px solid #0b2e6f;
+    color: #0b2e6f;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  .assist .ttl {
+    font-family: 'Times New Roman', Georgia, serif;
+    color: #0b2e6f;
+    font-size: 22px;
+    text-transform: uppercase;
+    line-height: 1;
+    margin-bottom: 5px;
+  }
+  .assist .line {
+    font-size: 14px;
+    color: #1f2937;
+    line-height: 1.35;
+  }
+
+  .auth-row {
+    margin-top: 8px;
+    display: grid;
+    grid-template-columns: 1fr 240px;
+    gap: 10px;
+    align-items: end;
+  }
+  .signature {
+    border-top: 1px solid #cdd4e2;
+    padding-top: 8px;
+    min-height: 74px;
+  }
+  .signature .mark {
+    font-family: 'Brush Script MT', cursive;
+    font-size: 40px;
+    color: #6474b4;
+    line-height: 0.9;
+  }
+  .signature .lbl {
+    font-size: 13px;
+    color: #1f2937;
+    line-height: 1.35;
+    font-weight: 700;
+  }
+  .company-box {
+    border: 1.6px solid #6b7280;
+    border-radius: 6px;
+    padding: 8px;
+    text-align: center;
+    font-size: 10px;
+    color: #374151;
+    line-height: 1.3;
+    font-weight: 700;
+    background: #fff;
+  }
+
+  .legal {
+    margin-top: 8px;
+    background: #0b2e6f;
+    color: rgba(255,255,255,0.92);
+    border-radius: 8px;
+    padding: 10px 14px;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 5px;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid ${statusColor};
+    color: ${statusColor};
+    background: ${statusColor}1A;
+  }
+
   .print-btn {
     display: block; margin: 16px auto; padding: 10px 32px;
-    background: #316331; color: #fff; border: none; border-radius: 8px;
+    background: #0b2e6f; color: #fff; border: none; border-radius: 8px;
     font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit;
   }
 </style>
@@ -162,111 +504,119 @@ export function generateCertificateHTML(policy) {
 <body>
 
 <div class="no-print" style="text-align:center;padding:12px 0;background:#f0ede8;">
-  <button class="print-btn" onclick="window.print()">🖨&nbsp; Print / Save as PDF</button>
+  <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
 </div>
 
 <div class="page">
 
-  <!-- HEADER -->
-  <div class="hdr">
-    <div>
-      <div class="hdr-brand-name">TICK</div>
-      <div class="hdr-brand-sub">Travel Insurance Comparison Kenya</div>
+  <div class="content">
+    <div class="top">
+      <div class="logo-left">
+        <div class="name">${insurer}</div>
+        <div class="sub">INSURANCE</div>
+        <div class="country">KENYA</div>
+      </div>
+      <div class="logo-right">
+        <div class="tick">TICK</div>
+        <div class="tick-sub">Travel Insurance Center Kenya</div>
+      </div>
     </div>
-    <div class="hdr-right">
-      <h1>Insurance Certificate</h1>
-      <p>Issued: ${issueDate}</p>
-    </div>
-  </div>
 
-  <!-- POLICY NUMBER BANNER -->
-  <div class="pn-bar">
-    <div>
-      <div class="pn-lbl">Policy Number</div>
-      <div class="pn-val">${policyNo}</div>
+    <div class="title-block">
+      <h1>Certificate of<br/>Travel Insurance</h1>
+      <div class="subline">Official Proof of Insurance Coverage</div>
+      <p class="desc">
+        This certifies that the person named below is insured under a travel insurance policy issued by ${insurer},
+        subject to the stated terms, conditions and exclusions.
+      </p>
     </div>
-    <div class="status-pill">${statusLabel}</div>
-  </div>
 
-  <!-- DETAILS GRID -->
-  <div class="grid-wrap">
-    <div class="grid">
-      <div class="grid-col">
-        <div class="col-hd">Insured Details</div>
-        <div class="row">
-          <div class="row-lbl">Full Name(s)</div>
-          <div class="row-val">${names}</div>
-        </div>
-        ${passportNumber ? `
-        <div class="row">
-          <div class="row-lbl">Passport Number</div>
-          <div class="row-val mono">${passportNumber}</div>
-        </div>` : ''}
-        <div class="row">
-          <div class="row-lbl">Number of Travellers</div>
-          <div class="row-val">${passengers || 1}</div>
-        </div>
-        <div class="row">
-          <div class="row-lbl">Amount Paid</div>
-          <div class="row-val">${fmtKES(amountPaid)}</div>
+    <div class="primary-grid">
+      <div class="card">
+        <div class="card-head">Traveller</div>
+        <div class="traveller">
+          <div class="avatar">👤</div>
+          <div class="name">${names}</div>
+          <div class="meta">Passport: ${passportNumber || '—'}</div>
+          <div class="meta">Passengers: ${passengers || 1}</div>
+          <div class="meta">Issued: ${issueDate}</div>
+          <div class="status-badge">${statusLabel}</div>
         </div>
       </div>
-      <div class="grid-col">
-        <div class="col-hd">Coverage Details</div>
-        <div class="row">
-          <div class="row-lbl">Policy</div>
-          <div class="row-val">${policyTitle || '—'}</div>
-        </div>
-        <div class="row">
-          <div class="row-lbl">Destination Region</div>
-          <div class="row-val">${region || '—'}</div>
-        </div>
-        <div class="row">
-          <div class="row-lbl">Departure Date</div>
-          <div class="row-val">${fmt(departure)}</div>
-        </div>
-        <div class="row">
-          <div class="row-lbl">Return Date</div>
-          <div class="row-val">${fmt(returnDate)}</div>
-        </div>
-        <div class="row">
-          <div class="row-lbl">Duration</div>
-          <div class="row-val">${days || '—'} day${Number(days) !== 1 ? 's' : ''}</div>
+
+      <div class="card">
+        <div class="card-head">Policy Details</div>
+        <div class="details">
+          <div class="cell"><div class="k">Certificate No.</div><div class="v">${policyNo}</div></div>
+          <div class="cell"><div class="k">Coverage Period</div><div class="v small">${fmt(departure)} to ${fmt(returnDate)}</div></div>
+
+          <div class="cell"><div class="k">Policy Number</div><div class="v">${policyNo}</div></div>
+          <div class="cell"><div class="k">Policy Duration</div><div class="v">${days || '—'} Day(s)</div></div>
+
+          <div class="cell"><div class="k">Product</div><div class="v small">${policyTitle || 'Travel Insurance Plan'}</div></div>
+          <div class="cell"><div class="k">Number of Passengers</div><div class="v">${passengers || 1}</div></div>
+
+          <div class="cell"><div class="k">Country of Origin</div><div class="v small">Kenya</div></div>
+          <div class="cell"><div class="k">Issue Date</div><div class="v">${issueDate}</div></div>
+
+          <div class="cell" style="grid-column: 1 / -1;"><div class="k">Destination Area</div><div class="v small">${region || '—'}</div></div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- VERIFY / QR -->
-  <div class="verify">
-    <div class="qr-wrap">
-      <img src="${qrSrc}" alt="Verification QR Code" />
-      <div class="qr-cap">Scan to verify</div>
-    </div>
-    <div style="flex:1">
-      <div class="vfy-hd">🔐 Verify Authenticity</div>
-      <ol class="steps">
-        <li data-n="1.">Scan the QR code with your phone camera, <strong>OR</strong></li>
-        <li data-n="2.">Open your browser and visit <strong>${window.location.origin}/verify</strong></li>
-        <li data-n="3.">Enter policy number <strong>${policyNo}</strong> and the traveller's passport number</li>
-        <li data-n="4.">Submit — the system will display full policy details, insured names, validity dates and coverage status</li>
-      </ol>
-      <div class="vfy-url">${window.location.hostname}/verify</div>
-      <div class="expected">
-        ✓ Expected result: Insured name(s), travel dates, destination region, insurer, and policy status will be displayed. Any tampered or fictitious certificate will return "Not Found".
+    <div class="secondary-grid">
+      <div class="card">
+        <div class="card-head">Coverage Highlights</div>
+        <div class="highlights">
+          <ul>
+            ${coverageHighlights.map(item => `<li>${item}</li>`).join('')}
+          </ul>
+          <div class="note">Full details of cover are as per schedule attached to policy number ${policyNo}.</div>
+        </div>
+      </div>
+
+      <div class="cert-note">
+        <div class="shield">✓</div>
+        <p>
+          This certifies that the above-named insured is covered under the referenced travel insurance policy for
+          the stated period and destination, subject to policy terms, conditions and exclusions.
+        </p>
+      </div>
+
+      <div class="qr-card">
+        <img src="${qrSrc}" alt="Verification QR Code" />
+        <div class="cap">Scan to verify certificate online</div>
+        <div class="url">${window.location.hostname}/verify</div>
       </div>
     </div>
-  </div>
 
-  <!-- DECLARATION -->
-  <div class="decl">
-    <strong>Declaration:</strong> This certificate confirms that the above-named traveller(s) purchased a valid travel insurance policy through <strong>TICK</strong>, a licensed travel insurance comparison platform operated by <strong>Maljani Insurance Hub</strong>. This policy was issued in accordance with applicable insurance regulations. For claims or emergencies, contact the insurer directly quoting the policy number above. To confirm this document's authenticity, use the QR code or verification portal above — genuine certificates will display matching records instantly.
-  </div>
+    <div class="bottom">
+      <div class="assist">
+        <div class="icon">24/7</div>
+        <div>
+          <div class="ttl">24-Hour Emergency Assistance</div>
+          <div class="line">Assistance Number: +216 71 104 597</div>
+          <div class="line">WhatsApp Number: +216 29 67 72 76</div>
+        </div>
+      </div>
 
-  <!-- FOOTER -->
-  <div class="ftr">
-    <div class="ftr-brand">TICK™ — Maljani Insurance Hub</div>
-    <div class="ftr-note">Generated: ${today} &nbsp;|&nbsp; Verify online before accepting</div>
+      <div class="auth-row">
+        <div class="signature">
+          <div class="mark">S</div>
+          <div class="lbl">Authorized Representative<br/>${insurer}</div>
+        </div>
+        <div class="company-box">
+          ${insurer}<br/>
+          P.O. BOX 46680 - 00100<br/>
+          NAIROBI, KENYA
+        </div>
+      </div>
+
+      <div class="legal">
+        This certificate is issued as a matter of information only and confers no rights upon the certificate holder.
+        It does not amend, extend or alter the coverage afforded by the policy. Amount paid: <strong>${fmtKES(amountPaid)}</strong>.
+      </div>
+    </div>
   </div>
 
 </div>
