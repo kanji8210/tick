@@ -160,7 +160,7 @@ export function generateCertificateHTML(policy) {
    * When scanned the browser opens /verify?policy_no=TICK-XXX,
    * the VerifyPolicy component reads the param and pre-fills the form. */
   const verifyURL = `${window.location.origin}/verify?policy_no=${encodeURIComponent(policyNo)}`;
-  const qrSrc     = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(verifyURL)}&size=160x160&color=1a3a1a&bgcolor=ffffff&margin=8&format=png`;
+  const qrSrc     = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(verifyURL)}&size=240x240&color=1a3a1a&bgcolor=ffffff&margin=8&format=png`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -220,11 +220,11 @@ export function generateCertificateHTML(policy) {
     gap: 2px;
     align-items: flex-start;
     justify-content: center;
-    min-height: 56px;
+    min-height: 84px;
   }
   .logo-left .logo-img {
-    max-width: 220px;
-    max-height: 58px;
+    max-width: 330px;
+    max-height: 87px;
     width: auto;
     height: auto;
     object-fit: contain;
@@ -258,14 +258,14 @@ export function generateCertificateHTML(policy) {
   .logo-right {
     justify-self: end;
     text-align: right;
-    min-height: 56px;
+    min-height: 84px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
   }
   .logo-right .logo-img {
-    max-width: 230px;
-    max-height: 60px;
+    max-width: 345px;
+    max-height: 90px;
     width: auto;
     height: auto;
     object-fit: contain;
@@ -404,7 +404,7 @@ export function generateCertificateHTML(policy) {
   .secondary-grid {
     margin: 8px 26px 0;
     display: grid;
-    grid-template-columns: 1fr 1.5fr 0.52fr;
+    grid-template-columns: 1fr 1.25fr 0.8fr;
     gap: 10px;
     align-items: stretch;
   }
@@ -483,8 +483,8 @@ export function generateCertificateHTML(policy) {
     gap: 8px;
   }
   .qr-card img {
-    width: 104px;
-    height: 104px;
+    width: 158px;
+    height: 158px;
     border: 2px solid #d1d5db;
     border-radius: 8px;
     display: block;
@@ -642,12 +642,8 @@ export function generateCertificateHTML(policy) {
     </div>
 
     <div class="title-block">
-      <h1>Certificate of<br/>Travel Insurance</h1>
-      <div class="subline">Official Proof of Insurance Coverage</div>
-      <p class="desc">
-        This certifies that the person named below is insured under a travel insurance policy issued by ${insurer},
-        subject to the stated terms, conditions and exclusions.
-      </p>
+      <h1>Travel Policy<br/>Authentication Certificate</h1>
+      <div class="subline">Certificate No. ${policyNo} &nbsp;•&nbsp; Issued ${issueDate}</div>
     </div>
 
     <div class="primary-grid">
@@ -666,14 +662,14 @@ export function generateCertificateHTML(policy) {
       <div class="card">
         <div class="card-head">Policy Details</div>
         <div class="details">
-          <div class="cell"><div class="k">Certificate No.</div><div class="v">${policyNo}</div></div>
+          <div class="cell"><div class="k">Certificate / Policy No.</div><div class="v">${policyNo}</div></div>
           <div class="cell"><div class="k">Coverage Period</div><div class="v small">${fmt(departure)} to ${fmt(returnDate)}</div></div>
 
-          <div class="cell"><div class="k">Policy Number</div><div class="v">${policyNo}</div></div>
+          <div class="cell"><div class="k">Insurer</div><div class="v small">${insurer}</div></div>
           <div class="cell"><div class="k">Policy Duration</div><div class="v">${days || '—'} Day(s)</div></div>
 
           <div class="cell"><div class="k">Product</div><div class="v small">${policyTitle || 'Travel Insurance Plan'}</div></div>
-          <div class="cell"><div class="k">Number of Passengers</div><div class="v">${passengers || 1}</div></div>
+          <div class="cell"><div class="k">Amount Paid</div><div class="v">${fmtKES(amountPaid)}</div></div>
 
           <div class="cell"><div class="k">Country of Origin</div><div class="v small">Kenya</div></div>
           <div class="cell"><div class="k">Issue Date</div><div class="v">${issueDate}</div></div>
@@ -719,21 +715,12 @@ export function generateCertificateHTML(policy) {
         </div>
       </div>
 
-      <div class="auth-row">
-        <div class="signature">
-          <div class="mark">S</div>
-          <div class="lbl">Authorized Representative<br/>${insurer}</div>
-        </div>
-        <div class="company-box">
-          ${insurer}<br/>
-          P.O. BOX 46680 - 00100<br/>
-          NAIROBI, KENYA
-        </div>
-      </div>
+    
 
       <div class="legal">
-        This certificate is issued as a matter of information only and confers no rights upon the certificate holder.
-        It does not amend, extend or alter the coverage afforded by the policy. Amount paid: <strong>${fmtKES(amountPaid)}</strong>.
+        This certificate authenticates the referenced travel insurance policy for the named insured, subject to the
+        policy terms, conditions and exclusions. It does not amend, extend or alter the coverage afforded by the policy.
+        Verify authenticity at ${window.location.hostname}/verify using the QR code or certificate number.
       </div>
     </div>
   </div>
