@@ -14,6 +14,88 @@ const fmt = (d) =>
 
 const fmtKES = (n) => `KES ${Number(n || 0).toLocaleString('en-KE')}`;
 
+const DEFAULT_SITE_LOGO = 'https://mtj.ivk.mybluehost.me/website_e48ea083/wp-content/uploads/2026/07/Gemini_Generated_Image_wb8qgqwb8qgqwb8q-scaled.png';
+const GRAPHQL_ENDPOINT = import.meta.env.VITE_GRAPHQL_URL || '/graphql';
+const APP_SECRET = import.meta.env.VITE_APP_SECRET ?? '';
+
+const GET_POLICY_BRANDING_QUERY = `
+  query CertificatePolicyBranding($id: ID!) {
+    policy(id: $id, idType: DATABASE_ID) {
+      policyInsurerName
+      policyInsurerLogo
+    }
+  }
+`;
+
+const resolveSiteLogo = (policy) => {
+  const fromPolicy = policy?.siteLogo || policy?.tickLogo || policy?.platformLogo;
+  if (fromPolicy) return fromPolicy;
+
+  const fromWindow =
+    (typeof window !== 'undefined' && (
+      window.__MALJANI_SITE_LOGO__ ||
+      window.maljaniSiteLogo ||
+      window.tickSiteLogo ||
+      window.siteLogo
+    )) || '';
+  if (fromWindow) return fromWindow;
+
+  if (typeof document !== 'undefined') {
+    const domCandidate = document.querySelector(
+      'header img[src*="logo"], .tic-header img[src*="logo"], footer img[src*="logo"], img[alt*="TICK" i], img[alt*="Maljani" i]'
+    );
+    const src = domCandidate?.getAttribute('src') || '';
+    if (src) return src;
+  }
+
+  return DEFAULT_SITE_LOGO;
+};
+
+const resolvePolicyBranding = async (policy) => {
+  if (!policy?.policyId) {
+    return {
+      policyInsurerName: policy?.policyInsurerName || '',
+      policyInsurerLogo: policy?.policyInsurerLogo || '',
+    };
+  }
+
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (APP_SECRET) headers['X-Maljani-App-Secret'] = APP_SECRET;
+
+    try {
+      const saved = localStorage.getItem('maljani_auth');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed?.token) headers['Authorization'] = `Bearer ${parsed.token}`;
+      }
+    } catch {
+      // ignore auth parsing failures and continue unauthenticated
+    }
+
+    const res = await fetch(GRAPHQL_ENDPOINT, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        query: GET_POLICY_BRANDING_QUERY,
+        variables: { id: String(policy.policyId) },
+      }),
+    });
+
+    const json = await res.json();
+    const gqlPolicy = json?.data?.policy;
+    return {
+      policyInsurerName: gqlPolicy?.policyInsurerName || policy?.policyInsurerName || '',
+      policyInsurerLogo: gqlPolicy?.policyInsurerLogo || policy?.policyInsurerLogo || '',
+    };
+  } catch {
+    return {
+      policyInsurerName: policy?.policyInsurerName || '',
+      policyInsurerLogo: policy?.policyInsurerLogo || '',
+    };
+  }
+};
+
 const splitHighlights = (raw) => {
   if (!raw) return [];
   if (Array.isArray(raw)) return raw.map(String).map(s => s.trim()).filter(Boolean);
@@ -47,7 +129,7 @@ export function generateCertificateHTML(policy) {
     policyNumber, policyTitle, insuredNames, passportNumber,
     region, departure, returnDate, days, amountPaid,
     policyStatus, createdAt, passengers,
-    policyBenefits, policyInsurerName, insuredPhone,
+    policyBenefits, policyInsurerName, policyInsurerLogo, insuredPhone,
   } = policy;
 
   const statusLabel  = (policyStatus || 'unknown').toUpperCase().replace(/_/g, ' ');
@@ -58,6 +140,8 @@ export function generateCertificateHTML(policy) {
   const policyNo = policyNumber || '—';
   const names    = Array.isArray(insuredNames) ? insuredNames.join(', ') : (insuredNames || '—');
   const insurer  = policyInsurerName || 'Partner Insurer';
+  const insurerLogo = policyInsurerLogo || '';
+  const siteLogo = DEFAULT_SITE_LOGO;
 
   const coverageHighlights = (() => {
     const extracted = splitHighlights(policyBenefits).slice(0, 7);
@@ -90,7 +174,8 @@ export function generateCertificateHTML(policy) {
   @media print {
     body { background: #fff; }
     .no-print { display: none !important; }
-    .page { box-shadow: none !important; }
+    .page { box-shadow: none !important; height: 297mm; overflow: hidden; }
+    .content { height: 297mm; }
   }
 
   .page {
@@ -124,12 +209,27 @@ export function generateCertificateHTML(policy) {
   }
 
   .top {
-    padding: 22px 26px 0;
+    padding: 12px 26px 0;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    align-items: start;
+    align-items: center;
   }
   .logo-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 56px;
+  }
+  .logo-left .logo-img {
+    max-width: 220px;
+    max-height: 58px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+  }
+  .logo-left .brand-fallback {
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -158,6 +258,17 @@ export function generateCertificateHTML(policy) {
   .logo-right {
     justify-self: end;
     text-align: right;
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+  .logo-right .logo-img {
+    max-width: 230px;
+    max-height: 60px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
   }
   .logo-right .tick {
     font-size: 54px;
@@ -175,35 +286,35 @@ export function generateCertificateHTML(policy) {
 
   .title-block {
     text-align: center;
-    padding: 8px 26px 0;
+    padding: 4px 26px 0;
   }
   .title-block h1 {
     font-family: 'Times New Roman', Georgia, serif;
-    font-size: 60px;
-    line-height: 0.95;
+    font-size: 36px;
+    line-height: 0.98;
     letter-spacing: 0.04em;
     color: #0b2e6f;
     text-transform: uppercase;
   }
   .title-block .subline {
-    margin-top: 10px;
+    margin-top: 5px;
     font-family: 'Times New Roman', Georgia, serif;
-    font-size: 14px;
+    font-size: 12px;
     color: #b48836;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
   .title-block .desc {
-    margin: 10px auto 0;
-    max-width: 640px;
-    font-size: 14px;
+    margin: 5px auto 0;
+    max-width: 620px;
+    font-size: 12px;
     color: #1f2f46;
-    line-height: 1.5;
+    line-height: 1.4;
   }
 
   .primary-grid {
-    margin: 18px 26px 0;
+    margin: 10px 26px 0;
     display: grid;
     grid-template-columns: 0.92fr 2fr;
     gap: 10px;
@@ -223,38 +334,38 @@ export function generateCertificateHTML(policy) {
     font-family: 'Times New Roman', Georgia, serif;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    font-size: 16px;
-    padding: 8px 10px;
+    font-size: 14px;
+    padding: 6px 10px;
   }
 
   .traveller {
-    padding: 16px 14px;
-    min-height: 212px;
+    padding: 12px 14px;
+    min-height: 168px;
   }
   .avatar {
-    width: 72px;
-    height: 72px;
+    width: 58px;
+    height: 58px;
     border-radius: 50%;
     background: #0b2e6f;
     color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 34px;
-    margin-bottom: 10px;
+    font-size: 28px;
+    margin-bottom: 8px;
     border: 4px solid #e9d8ad;
   }
   .traveller .name {
-    font-size: 22px;
+    font-size: 19px;
     font-weight: 700;
     color: #101f3a;
     line-height: 1.2;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
   .traveller .meta {
     font-size: 12px;
     color: #374151;
-    line-height: 1.55;
+    line-height: 1.5;
   }
 
   .details {
@@ -265,10 +376,10 @@ export function generateCertificateHTML(policy) {
     grid-template-columns: 1fr 1fr;
   }
   .cell {
-    padding: 11px 12px;
+    padding: 8px 12px;
     border-right: 1px solid #e3e7ef;
     border-bottom: 1px solid #e3e7ef;
-    min-height: 58px;
+    min-height: 48px;
   }
   .cell:nth-child(2n) { border-right: none; }
   .cell .k {
@@ -291,7 +402,7 @@ export function generateCertificateHTML(policy) {
   }
 
   .secondary-grid {
-    margin: 10px 26px 0;
+    margin: 8px 26px 0;
     display: grid;
     grid-template-columns: 1fr 1.5fr 0.52fr;
     gap: 10px;
@@ -299,8 +410,8 @@ export function generateCertificateHTML(policy) {
   }
 
   .highlights {
-    padding: 12px 14px 10px;
-    min-height: 218px;
+    padding: 10px 14px 8px;
+    min-height: 150px;
   }
   .highlights ul {
     list-style: none;
@@ -308,13 +419,13 @@ export function generateCertificateHTML(policy) {
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
   }
   .highlights li {
-    font-size: 14px;
+    font-size: 12.5px;
     color: #10203b;
-    line-height: 1.35;
-    padding-left: 22px;
+    line-height: 1.3;
+    padding-left: 20px;
     position: relative;
   }
   .highlights li::before {
@@ -327,37 +438,37 @@ export function generateCertificateHTML(policy) {
     font-weight: 800;
   }
   .highlights .note {
-    margin-top: 10px;
-    font-size: 11px;
+    margin-top: 8px;
+    font-size: 10.5px;
     color: #4b5563;
     font-style: italic;
-    line-height: 1.4;
+    line-height: 1.35;
   }
 
   .cert-note {
     border: 1.6px solid #d4dbe8;
     border-radius: 10px;
-    padding: 16px;
+    padding: 12px;
     display: grid;
-    grid-template-columns: 88px 1fr;
+    grid-template-columns: 68px 1fr;
     gap: 12px;
     background: linear-gradient(180deg, #ffffff 0%, #fafcff 100%);
   }
   .shield {
-    width: 88px;
-    height: 88px;
+    width: 68px;
+    height: 68px;
     border-radius: 12px;
     background: radial-gradient(circle at 50% 35%, #f9e6a7, #b48836);
     display: flex;
     align-items: center;
     justify-content: center;
     color: #0b2e6f;
-    font-size: 44px;
+    font-size: 34px;
   }
   .cert-note p {
-    font-size: 17px;
+    font-size: 13.5px;
     color: #1f2937;
-    line-height: 1.45;
+    line-height: 1.4;
   }
 
   .qr-card {
@@ -372,8 +483,8 @@ export function generateCertificateHTML(policy) {
     gap: 8px;
   }
   .qr-card img {
-    width: 120px;
-    height: 120px;
+    width: 104px;
+    height: 104px;
     border: 2px solid #d1d5db;
     border-radius: 8px;
     display: block;
@@ -393,21 +504,21 @@ export function generateCertificateHTML(policy) {
 
   .bottom {
     margin-top: auto;
-    padding: 10px 26px 0;
+    padding: 8px 26px 0;
   }
   .assist {
     border: 1.6px solid #d6c08f;
     border-radius: 10px;
     background: #fff;
-    padding: 10px 14px;
+    padding: 8px 14px;
     display: grid;
-    grid-template-columns: 70px 1fr;
+    grid-template-columns: 60px 1fr;
     gap: 10px;
     align-items: center;
   }
   .assist .icon {
-    width: 58px;
-    height: 58px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     border: 3px solid #0b2e6f;
     color: #0b2e6f;
@@ -415,20 +526,20 @@ export function generateCertificateHTML(policy) {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: 14px;
   }
   .assist .ttl {
     font-family: 'Times New Roman', Georgia, serif;
     color: #0b2e6f;
-    font-size: 22px;
+    font-size: 18px;
     text-transform: uppercase;
     line-height: 1;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
   }
   .assist .line {
-    font-size: 14px;
+    font-size: 12.5px;
     color: #1f2937;
-    line-height: 1.35;
+    line-height: 1.3;
   }
 
   .auth-row {
@@ -440,25 +551,25 @@ export function generateCertificateHTML(policy) {
   }
   .signature {
     border-top: 1px solid #cdd4e2;
-    padding-top: 8px;
-    min-height: 74px;
+    padding-top: 6px;
+    min-height: 60px;
   }
   .signature .mark {
     font-family: 'Brush Script MT', cursive;
-    font-size: 40px;
+    font-size: 32px;
     color: #6474b4;
     line-height: 0.9;
   }
   .signature .lbl {
-    font-size: 13px;
+    font-size: 12px;
     color: #1f2937;
-    line-height: 1.35;
+    line-height: 1.3;
     font-weight: 700;
   }
   .company-box {
     border: 1.6px solid #6b7280;
     border-radius: 6px;
-    padding: 8px;
+    padding: 7px;
     text-align: center;
     font-size: 10px;
     color: #374151;
@@ -472,10 +583,10 @@ export function generateCertificateHTML(policy) {
     background: #0b2e6f;
     color: rgba(255,255,255,0.92);
     border-radius: 8px;
-    padding: 10px 14px;
+    padding: 8px 14px;
     text-align: center;
-    font-size: 12px;
-    line-height: 1.4;
+    font-size: 11px;
+    line-height: 1.35;
   }
 
   .status-badge {
@@ -512,13 +623,21 @@ export function generateCertificateHTML(policy) {
   <div class="content">
     <div class="top">
       <div class="logo-left">
-        <div class="name">${insurer}</div>
-        <div class="sub">INSURANCE</div>
-        <div class="country">KENYA</div>
+        ${insurerLogo
+          ? `<img class="logo-img" src="${insurerLogo}" alt="${insurer} logo" />`
+          : `<div class="brand-fallback">
+              <div class="name">${insurer}</div>
+              <div class="sub">INSURANCE</div>
+              <div class="country">KENYA</div>
+            </div>`}
       </div>
       <div class="logo-right">
-        <div class="tick">TICK</div>
-        <div class="tick-sub">Travel Insurance Center Kenya</div>
+        ${siteLogo
+          ? `<img class="logo-img" src="${siteLogo}" alt="TICK logo" />`
+          : `<div>
+              <div class="tick">TICK</div>
+              <div class="tick-sub">Travel Insurance Center Kenya</div>
+            </div>`}
       </div>
     </div>
 
@@ -628,8 +747,13 @@ export function generateCertificateHTML(policy) {
  * openCertificate — opens the certificate in a new tab and triggers the print dialog.
  * @param {object} policy — myPolicySales record (full object, not just id)
  */
-export function openCertificate(policy) {
-  const html = generateCertificateHTML(policy);
+export async function openCertificate(policy) {
+  const branding = await resolvePolicyBranding(policy);
+  const html = generateCertificateHTML({
+    ...policy,
+    ...branding,
+    siteLogo: DEFAULT_SITE_LOGO,
+  });
   const win  = window.open('', '_blank');
   if (!win) {
     alert('Pop-up blocked. Please allow pop-ups for this site and try again.');
