@@ -914,7 +914,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
         })}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 20 }}>
+      <div className="responsive-action-grid" style={{ gap: 12, marginTop: 20 }}>
         <button style={{ padding: '11px', borderRadius: 8, border: '1px solid var(--glass-border)', background: 'none', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}
           onClick={() => { setStep(1); setCompareIds(new Set()); }}>← Back</button>
         <button style={{ padding: '11px', borderRadius: 8, border: 'none', background: form.selectedPolicy ? 'var(--indigo)' : 'var(--glass-bg)', color: '#fff', cursor: form.selectedPolicy ? 'pointer' : 'not-allowed', opacity: form.selectedPolicy ? 1 : 0.5, fontSize: 13, fontWeight: 800 }}
@@ -1152,7 +1152,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
           )}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 22 }}>
+        <div className="responsive-action-grid" style={{ gap: 12, marginTop: 22 }}>
           <button style={{ padding: '11px', borderRadius: 8, border: '1px solid var(--glass-border)', background: 'none', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}
             onClick={() => setStep(2)}>← Back</button>
           <button
@@ -1215,7 +1215,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
           </h2>
           <p style={{ color: 'var(--slate)', fontSize: 16, maxWidth: 400, margin: '0 auto 30px', lineHeight: 1.6 }}>
             Your booking for policy <strong style={{ color: '#fff' }}>{saleData?.policyNumber || '—'}</strong> has been registered. 
-            It will be activated as soon as your payment is processed.
+            Our team will submit the details to the insurer manually and update your status when the insurer document is available.
           </p>
           {!user && !accountCreated && (
             <p style={{ color: 'rgba(255,255,255,0.78)', fontSize: 13, maxWidth: 520, margin: '0 auto 24px', lineHeight: 1.7 }}>
@@ -1258,7 +1258,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
             <div style={{ marginTop: 32, padding: '16px', background: 'rgba(34,197,94,0.05)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 12, fontSize: 13, textAlign: 'left' }}>
               <div style={{ fontWeight: 800, color: '#4ade80', marginBottom: 4 }}>Account Created Successfully</div>
               <p style={{ margin: 0, opacity: 0.8, lineHeight: 1.5 }}>
-                You can now log in with <strong>{form.email}</strong> to track your applications and download certificates.
+                You can now log in with <strong>{form.email}</strong> to track your applications and insurer-issued documents.
               </p>
             </div>
           )}

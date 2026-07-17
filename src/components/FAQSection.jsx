@@ -3,7 +3,7 @@ import { useResponsive } from '../lib/useResponsive';
 
 const FAQS = [
   { q: 'Which destinations are covered?',            a: 'Maljani covers East Africa, Southern Africa, West Africa, Schengen/Europe, Middle East, Asia, and Worldwide plans. Your selected destination auto-filters policies from our network of 15+ verified insurers.' },
-  { q: 'How fast is my certificate issued?',         a: 'Certificates are generated in under 3 minutes after payment confirmation. You receive a downloadable PDF immediately and an email copy within 5 minutes. QR-verified embassy letters are included at no extra cost.' },
+  { q: 'How are policy documents issued?',           a: 'Policy documents are issued by the insurer. For now, TIC-Kenya submits the details manually to the insurer and updates your application when the insurer document is available. Insurer-facing API handling can be added later.' },
   { q: 'Is Maljani itself a licensed insurer?',      a: 'No. Maljani is a licensed insurance aggregation and distribution platform. All policies are underwritten directly by IRA-approved insurance companies. We are a regulated intermediary — not the risk carrier.' },
   { q: 'Does the policy meet Schengen requirements?', a: 'Yes. Policies labelled “Schengen Approved” meet the EU minimum of â‚¬30,000 medical cover. Our embassy letters are accepted at all Schengen embassies operating in East Africa.' },
   { q: 'Can I buy group or family policies?',        a: 'Yes. Select “Group” on the quote card to compare prices for 2–20+ travellers. Travel agencies can issue bulk policies from their partner dashboard.' },

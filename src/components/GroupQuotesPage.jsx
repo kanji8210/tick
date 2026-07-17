@@ -3,13 +3,16 @@ import GroupQuoteWizard from './GroupQuoteWizard';
 
 const GroupQuotesPage = ({ onNavigate }) => {
   return (
-    <div className="fade-in container" style={{ paddingTop: 'clamp(5rem, 10vw, 6rem)', paddingBottom: '3rem', maxWidth: '800px' }}>
-      <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 32, marginBottom: 24, color: 'var(--gold)' }}>
-        Group Travel & Agency Quotes
-      </h1>
-      <p style={{ color: 'var(--slate)', fontSize: 16, marginBottom: 32, maxWidth: 600 }}>
-        Request a custom group travel or agency travel insurance quotation. Fill in the details below and our team will send you a tailored quote.
-      </p>
+    <div className="fade-in container" style={{ paddingTop: 'clamp(6rem, 12vw, 7rem)', paddingBottom: '4rem', maxWidth: '860px' }}>
+      <div className="section-header" style={{ textAlign: 'left', marginBottom: 28 }}>
+        <p className="section-label">Custom Quote Desk</p>
+        <h1 className="section-title" style={{ fontSize: 'clamp(30px,4vw,44px)', color: 'var(--white)', marginBottom: 14 }}>
+          Group Travel & Agency Quotes
+        </h1>
+        <p style={{ color: 'var(--slate)', fontSize: 16, maxWidth: 620, margin: 0 }}>
+          Request a custom group travel or agency travel insurance quotation. Fill in the details below and our team will send you a tailored quote.
+        </p>
+      </div>
       <GroupQuoteWizard onClose={() => onNavigate('landing')} onNavigate={onNavigate} />
       <button
         className="btn-luxury"

@@ -11,7 +11,7 @@ const POLICY_SALES_COUNT = `
   }
 `;
 
-const CHIPS = ['🏛️ Embassy-accepted', '⚡ 4-min issuance', '🔒 Fraud-proof'];
+const CHIPS = ['🏛️ Embassy-accepted', '📄 Insurer-issued', '🔒 Fraud-proof'];
 
 /* ── Animated count-up hook ── */
 const useCountUp = (target, { duration = 1800, startOnMount = false } = {}) => {

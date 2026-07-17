@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useQuery, gql } from 'urql';
 import { useAuth } from '../lib/AuthContext';
 import { useResponsive } from '../lib/useResponsive';
-import { openCertificate } from '../lib/generateCertificate';
 import ProfileEditModal from './ProfileEditModal';
 import NotificationPanel from './NotificationPanel';
 
@@ -108,9 +107,6 @@ const InsuredDashboard = ({ user, onNavigate, initialTab }) => {
       setActionLoading(null);
     }
   };
-
-  /** Open printable certificate in a new tab (generated on the frontend) */
-  const handlePrintCertificate = (policy) => openCertificate(policy);
 
   /** Redirect to Pesapal payment page */
   const handleProceedToPayment = async (saleId) => {
@@ -284,13 +280,12 @@ const InsuredDashboard = ({ user, onNavigate, initialTab }) => {
                               {actionLoading === p.id ? 'Loading…' : '📄 Invoice'}
                             </button>
                             <span style={{ color: 'var(--glass-border)', fontSize: 11 }}>|</span>
-                            <button
-                              onClick={() => handlePrintCertificate(p)}
-                              title="TICK authenticity certificate with QR code — verify at verify.maljani.co.ke"
-                              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', fontSize: 12, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'var(--font-body)', padding: 0 }}
+                            <span
+                              title="Policy documents are issued by the insurer after manual processing."
+                              style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, fontFamily: 'var(--font-body)' }}
                             >
-                              🖨 Certificate
-                            </button>
+                              📄 Insurer document pending
+                            </span>
                             <button
                               onClick={() => handleEditPolicy(p)}
                               style={{ background: 'none', border: '1px solid var(--glass-border)', borderRadius: 6, color: 'var(--slate)', fontSize: 11, cursor: 'pointer', padding: '4px 10px', fontFamily: 'var(--font-body)', transition: 'all 0.2s' }}
@@ -302,7 +297,7 @@ const InsuredDashboard = ({ user, onNavigate, initialTab }) => {
                           </div>
                         )}
 
-                        {/* Invoice + Certificate — always visible for non-pending policies */}
+                        {/* Invoice and insurer-issued document status */}
                         {!isPending && (
                           <div style={{ marginTop: 12, display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
                             <button
@@ -314,13 +309,12 @@ const InsuredDashboard = ({ user, onNavigate, initialTab }) => {
                               {actionLoading === p.id ? 'Loading…' : '📄 Invoice'}
                             </button>
                             <span style={{ color: 'var(--glass-border)', fontSize: 11 }}>|</span>
-                            <button
-                              onClick={() => handlePrintCertificate(p)}
-                              title="TICK authenticity certificate with QR code — verify at verify.maljani.co.ke"
-                              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', fontSize: 12, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'var(--font-body)', padding: 0 }}
+                            <span
+                              title="Policy documents are issued by the insurer after manual processing."
+                              style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, fontFamily: 'var(--font-body)' }}
                             >
-                              🖨 Certificate
-                            </button>
+                              📄 Insurer document
+                            </span>
                           </div>
                         )}
                       </div>
@@ -397,7 +391,7 @@ const InsuredDashboard = ({ user, onNavigate, initialTab }) => {
             <div style={{ fontSize: 22, marginBottom: 8 }}>🛡️</div>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#86efac', marginBottom: 6 }}>Embassy-Verified</div>
             <p style={{ fontSize: 12, color: 'var(--slate)', lineHeight: 1.6 }}>
-              Your certificates are cryptographically signed. Any embassy can confirm authenticity at verify.maljani.co.ke.
+              Policy documents are issued by the insurer. TIC-Kenya keeps verification records so documents can be checked when available.
             </p>
           </div>
 

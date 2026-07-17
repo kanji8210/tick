@@ -6,7 +6,6 @@ import ProfileEditModal from './ProfileEditModal';
 import NotificationPanel from './NotificationPanel';
 import PolicyEditModal from './PolicyEditModal';
 import AssignClientModal from './AssignClientModal';
-import { openCertificate } from '../lib/generateCertificate';
 
 /* ═══════════════════════════════════════════════════════════════════
  *  GRAPHQL
@@ -291,8 +290,6 @@ const AgentDashboard = ({ user, onNavigate }) => {
     } catch (e) { alert(`Could not load invoice. ${e.message}`); }
     finally { setActionLoading(null); }
   };
-
-  const handlePrintCertificate = (policy) => openCertificate(policy);
 
   /** Change policy status and notify the notification panel instantly */
   const handleUpdateStatus = async (sale) => {
@@ -615,14 +612,13 @@ const AgentDashboard = ({ user, onNavigate }) => {
                     color: '#22c55e', fontSize: '0.78rem', fontWeight: 700, opacity: loading ? 0.6 : 1,
                   }}>{loading ? 'Loading…' : '📄 Invoice'}</button>
               )}
-              <button
-                onClick={() => handlePrintCertificate(s)}
-                title="TICK authenticity certificate with QR code — verify at verify.maljani.co.ke"
+              <span
+                title="Policy documents are issued by the insurer after manual processing."
                 style={{
                   background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.3)',
-                  borderRadius: '8px', padding: '0.5rem 1rem', cursor: 'pointer',
+                  borderRadius: '8px', padding: '0.5rem 1rem',
                   color: 'var(--gold)', fontSize: '0.78rem', fontWeight: 700,
-                }}>🖨 Certificate</button>
+                }}>📄 Insurer document pending</span>
               <button onClick={() => onNavigate?.('policy-detail', s.policyId)} style={{
                 background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
                 borderRadius: '8px', padding: '0.5rem 1rem', cursor: 'pointer',

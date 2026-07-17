@@ -304,7 +304,7 @@ const Hero = ({ onStart, onNavigate }) => {
 
                     <div style={{ display: "flex", gap: 8 }}>
                       <button onClick={() => onNavigate?.("dashboard")} style={{ flex: 1, padding: "9px", borderRadius: 8, border: "none", background: "var(--indigo)", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
-                        ⬇ Download Certificate
+                        📄 View Document Status
                       </button>
                       <button onClick={() => onNavigate?.("dashboard")} style={{ padding: "9px 14px", borderRadius: 8, border: "1px solid var(--glass-border)", background: "transparent", color: "var(--slate)", fontSize: 11, cursor: "pointer" }}>
                         View All

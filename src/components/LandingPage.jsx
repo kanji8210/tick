@@ -1053,7 +1053,7 @@ const LandingPage = ({ onStartWizard, onNavigate, compareSelected = [], onAddCom
             <div style={{ position: 'absolute', top: -40, right: -40, width: 300, height: 300, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', pointerEvents: 'none' }} aria-hidden="true" />
             <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', opacity: 0.7, marginBottom: 14 }}>Ready to travel?</p>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px,3.5vw,52px)', fontWeight: 800, marginBottom: 18, lineHeight: 1.1 }}>Get Covered in 3 Minutes.</h2>
-            <p style={{ opacity: 0.85, fontSize: 17, marginBottom: 36, maxWidth: 480, margin: '0 auto 36px' }}>Compare Africa's best travel insurance policies and receive your certificate instantly.</p>
+            <p style={{ opacity: 0.85, fontSize: 17, marginBottom: 36, maxWidth: 480, margin: '0 auto 36px' }}>Compare Africa's best travel insurance policies and track your insurer-issued document status.</p>
             <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
               {isAgent
                 ? <button className="btn btn--gold btn--lg" onClick={() => onNavigate('dashboard')}>Open Dashboard →</button>

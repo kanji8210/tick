@@ -2,8 +2,8 @@ import React from 'react';
 import { useResponsive } from '../lib/useResponsive';
 
 const VALUES = [
-  { icon: '�️', title: 'Cryptographic Authentication', desc: 'Every certificate we issue contains a unique hash code. Embassies, hotels, and employers can verify it in 3 seconds at verify.maljani.co.ke.' },
-  { icon: '⚡', title: '4-Minute Issuance', desc: 'From comparison to signed PDF certificate in under 4 minutes. No broker visits, no waiting rooms, no fax machines.' },
+  { icon: '🔐', title: 'Cryptographic Authentication', desc: 'Every certificate we issue contains a unique hash code. Embassies, hotels, and employers can verify it in 3 seconds at verify.maljani.co.ke.' },
+  { icon: '⚡', title: 'Fast Insurer Submission', desc: 'From comparison to a prepared insurer submission without broker visits, waiting rooms, or fax machines.' },
   { icon: '🌍', title: 'Africa-Native Design', desc: 'Built for KES, TZS, UGX and East African travel corridors — not retrofitted from a Western product.' },
   { icon: '🏛️', title: 'Embassy-Trusted', desc: 'All certificates comply with FRA standards and are accepted at Schengen embassies, hotels, and border control across 40+ countries.' },
 ];
@@ -68,7 +68,7 @@ const AboutPage = ({ onNavigate }) => {
       {/* ── Stats ── */}
       <section style={{ position: 'relative', zIndex: 1, padding: '0 0 96px' }}>
         <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: mobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 1, background: 'var(--glass-border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--glass-border)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: mobile ? 'repeat(2,minmax(0,1fr))' : 'repeat(4,minmax(0,1fr))', gap: 1, background: 'var(--glass-border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--glass-border)' }}>
             {[['50,000+','Travelers Insured'],['200+','Agency Partners'],['15+','Insurer Partners'],['4 min','Avg. Certificate Time']].map(([n,l]) => (
               <div key={l} style={{ background: 'var(--navy)', padding: '36px 28px', textAlign: 'center' }}>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: 40, fontWeight: 800, color: 'var(--gold)', lineHeight: 1 }}>{n}</div>
@@ -103,7 +103,7 @@ const AboutPage = ({ onNavigate }) => {
               {/* visual: mission pillars */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {[['Cryptographic Verification', 'Every certificate has a unique code tied to our records. Enter it at verify.maljani.co.ke — authentic or flagged in 3 seconds.', '#86efac'],
-                  ['4-Minute Issuance', 'Compare, pay, download — faster than it takes to brew tea. Certificate arrives in your inbox instantly.', 'var(--gold)'],
+                  ['Insurer-Issued Documents', 'Compare and submit details through TIC-Kenya. The policy document comes from the insurer after manual entry for now.', 'var(--gold)'],
                   ['Zero Hidden Clauses', 'Every exclusion, sublimit, and term is shown before you buy. No asterisks pointing to 48-page appendices.', '#6ee7b7'],
                   ['Embassy-Accepted', 'All policies are FRA-compliant and accepted at Schengen embassies, hotels, and border crossings in 40+ countries.', '#a78bfa']
                 ].map(([title, desc, color]) => (
@@ -187,9 +187,9 @@ const AboutPage = ({ onNavigate }) => {
             <p className="section-label">What We Stand For</p>
             <h2 className="section-title">Our Values</h2>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: mobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 20, marginTop: 48 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: mobile ? 'repeat(2,minmax(0,1fr))' : 'repeat(4,minmax(0,1fr))', gap: 20, marginTop: 48 }}>
             {VALUES.map(v => (
-              <div key={v.title} className="value-card" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-lg)', padding: '28px 22px', textAlign: 'center' }}>
+              <div key={v.title} className="value-card" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-lg)', padding: '28px 22px', textAlign: 'center', minWidth: 0, overflowWrap: 'anywhere' }}>
                 <div style={{ fontSize: 36, marginBottom: 16 }}>{v.icon}</div>
                 <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, marginBottom: 10 }}>{v.title}</h3>
                 <p style={{ color: 'var(--slate)', fontSize: 13, lineHeight: 1.75 }}>{v.desc}</p>
@@ -248,14 +248,14 @@ const AboutPage = ({ onNavigate }) => {
       <section style={{ position: 'relative', zIndex: 1, padding: '0 0 120px' }}>
         <div className="container">
           <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', gap: 20 }}>
-            <div style={{ background: 'linear-gradient(135deg,var(--indigo),var(--indigo-glow))', borderRadius: 'var(--radius-xl)', padding: '52px 44px', position: 'relative', overflow: 'hidden' }}>
+            <div className="about-cta-card" style={{ background: 'linear-gradient(135deg,var(--indigo),var(--indigo-glow))', borderRadius: 'var(--radius-xl)', padding: '52px 44px', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: -30, right: -30, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', pointerEvents: 'none' }} />
               <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', opacity: 0.7, marginBottom: 12 }}>Travelers</p>
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 800, marginBottom: 14, lineHeight: 1.2 }}>Get Covered in 4 Minutes.</h3>
-              <p style={{ opacity: 0.82, fontSize: 14, lineHeight: 1.75, marginBottom: 28 }}>Compare 15+ policies and get your certificate instantly. No account required.</p>
+              <p style={{ opacity: 0.82, fontSize: 14, lineHeight: 1.75, marginBottom: 28 }}>Compare 15+ policies and track insurer document status. No account required.</p>
               <button className="btn btn--gold btn--lg" onClick={() => onNavigate('catalog')}>Compare Policies &rarr;</button>
             </div>
-            <div style={{ background: 'linear-gradient(135deg,rgba(49,99,49,0.3),rgba(49,99,49,0.12))', border: '1px solid rgba(49,99,49,0.4)', borderRadius: 'var(--radius-xl)', padding: '52px 44px', position: 'relative', overflow: 'hidden' }}>
+            <div className="about-cta-card" style={{ background: 'linear-gradient(135deg,rgba(49,99,49,0.3),rgba(49,99,49,0.12))', border: '1px solid rgba(49,99,49,0.4)', borderRadius: 'var(--radius-xl)', padding: '52px 44px', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: -30, right: -30, width: 180, height: 180, borderRadius: '50%', background: 'rgba(49,99,49,0.1)', pointerEvents: 'none' }} />
               <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#86efac', opacity: 0.9, marginBottom: 12 }}>Agencies</p>
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 800, marginBottom: 14, lineHeight: 1.2 }}>Partner with Maljani.</h3>

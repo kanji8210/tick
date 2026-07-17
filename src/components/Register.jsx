@@ -86,7 +86,7 @@ const Register = ({ onNavigate }) => {
 
   return (
     <div className="fade-in" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', padding: '120px 16px 60px' }}>
-      <div style={{ width: '100%', maxWidth: 560, background: 'var(--glass-bg-md)', border: '1px solid var(--glass-border-bright)', borderRadius: 'var(--radius-xl)', padding: '40px 44px', backdropFilter: 'blur(24px)' }}>
+      <div className="app-panel auth-panel" style={{ width: '100%', maxWidth: 560, padding: '40px 44px' }}>
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
@@ -128,7 +128,7 @@ const Register = ({ onNavigate }) => {
 
         <form onSubmit={handleSubmit} noValidate>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div className="responsive-two-col" style={{ gap: 14 }}>
               {field('fullName', 'Full Name', 'text', 'Jane Doe')}
               {field('phone', 'Phone Number', 'tel', '+254 700 000 000')}
             </div>
@@ -137,7 +137,7 @@ const Register = ({ onNavigate }) => {
 
             {accountType === 'agent' && field('agencyName', 'Agency Name', 'text', 'Safara Travels Ltd')}
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div className="responsive-two-col" style={{ gap: 14 }}>
               {field('password', 'Password', 'password', '8+ characters')}
               {field('confirmPassword', 'Confirm Password', 'password', 'Repeat password')}
             </div>

@@ -3,8 +3,8 @@ import { useResponsive } from '../lib/useResponsive';
 
 const STEPS = [
   { n: 1, emoji: '🔍', title: 'Compare Policies',       desc: 'Enter your trip details and compare from 15+ insurers — sorted by price, coverage quality, and verified reviews.' },
-  { n: 2, emoji: '💳', title: 'Pay Securely',           desc: 'Checkout via Pesapal with M-Pesa, Visa, or bank transfer. Every transaction is encrypted end-to-end.' },
-  { n: 3, emoji: '🔄', title: 'Download Certificate',  desc: 'Receive your PDF travel certificate and QR-verified embassy letter instantly upon payment confirmation.' },
+  { n: 2, emoji: '📝', title: 'Submit Request',          desc: 'Share traveler details so TIC-Kenya can prepare the application for insurer processing.' },
+  { n: 3, emoji: '📄', title: 'Insurer Document',        desc: 'The insurer issues the policy document. For now, our team handles insurer entry manually and updates your status.' },
 ];
 
 const ProcessSection = () => {
@@ -15,7 +15,7 @@ const ProcessSection = () => {
       <div className="section-header">
         <p className="section-label">3 Simple Steps</p>
         <h2 className="section-title reveal" style={{ fontSize: 'clamp(30px,3.5vw,50px)', marginBottom: 16 }}>Covered in Minutes</h2>
-        <p className="reveal reveal-delay-1">From comparison to issued certificate — no broker visits, no waiting rooms.</p>
+        <p className="reveal reveal-delay-1">From comparison to insurer submission — clear status updates without broker visits.</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(3,1fr)', gap: 28, position: 'relative' }}>
