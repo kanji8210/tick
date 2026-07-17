@@ -18,8 +18,12 @@ import AgenciesPage from './components/AgenciesPage'
 import GroupQuotesPage from './components/GroupQuotesPage'
 
 function AppContent() {
-  const { user, role } = useAuth();
+  const { role } = useAuth();
   const isAgent = role === 'agent' || role === 'administrator';
+  const [theme, setTheme] = React.useState(() => {
+    if (typeof window === 'undefined') return 'dark';
+    return window.localStorage.getItem('tic-theme') || 'dark';
+  });
 
   /* ── Global compare state ─────────────────────────────────── */
   const [compareSelected,  setCompareSelected]  = React.useState([]);
@@ -29,6 +33,16 @@ function AppContent() {
 
   const onAddCompare    = (p)   => setCompareSelected(prev => prev.length < 3 && !prev.find(x => x.id === p.id) ? [...prev, p] : prev);
   const onRemoveCompare = (id)  => setCompareSelected(prev => prev.filter(p => p.id !== id));
+
+  React.useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+    window.localStorage.setItem('tic-theme', theme);
+  }, [theme]);
+
+  const handleThemeToggle = () => {
+    setTheme((current) => current === 'light' ? 'dark' : 'light');
+  };
 
   const compareProps = { compareSelected, onAddCompare, onRemoveCompare };
   /* ── URL ↔ view mapping ─────────────────────────────────────── */
@@ -116,7 +130,7 @@ function AppContent() {
                 marginTop: '2rem',
                 background: 'transparent',
                 border: '1px solid var(--glass-border)',
-                color: 'white',
+                color: 'var(--white)',
                 width: '100%'
               }}
               onClick={() => handleNavigate('landing')}
@@ -172,6 +186,8 @@ function AppContent() {
         canGoForward={canGoForward}
         onBack={handleBack}
         onForward={handleForward}
+        theme={theme}
+        onToggleTheme={handleThemeToggle}
       />
       <main style={{ position: 'relative', zIndex: 1 }}>
         {renderView()}

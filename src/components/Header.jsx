@@ -2,7 +2,25 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '../lib/AuthContext';
 import { useResponsive } from '../lib/useResponsive';
 
-const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onForward }) => {
+const ThemeToggle = ({ theme = 'dark', onToggleTheme, full = false }) => {
+  const themeLabel = theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
+  const themeIcon = theme === 'light' ? '☾' : '☀';
+
+  return (
+    <button
+      type="button"
+      onClick={onToggleTheme}
+      aria-label={themeLabel}
+      title={themeLabel}
+      className={full ? 'theme-toggle theme-toggle--full' : 'theme-toggle'}
+    >
+      <span aria-hidden="true">{themeIcon}</span>
+      {full && <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>}
+    </button>
+  );
+};
+
+const Header = ({ onNavigate, activeView, theme = 'dark', onToggleTheme }) => {
   const { user, logout, loading } = useAuth();
   const { mobile, tablet } = useResponsive();
   const compact = mobile || tablet;
@@ -72,9 +90,9 @@ const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onFor
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
         padding: compact ? '14px 0' : '20px 0',
         transition: 'background 0.35s, backdrop-filter 0.35s, border-color 0.35s',
-        background: scrolled ? 'rgba(8,14,39,0.88)' : 'transparent',
+        background: scrolled ? 'var(--header-bg)' : 'transparent',
         backdropFilter: scrolled ? 'blur(24px)' : 'none',
-        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.10)' : '1px solid transparent',
+        borderBottom: scrolled ? '1px solid var(--glass-border)' : '1px solid transparent',
       }}
       role="navigation" aria-label="Main navigation"
     >
@@ -96,7 +114,7 @@ const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onFor
                   alt="TIC-Kenya"
                   style={{ width: mobile ? 32 : 38, height: mobile ? 32 : 38, objectFit: 'contain', borderRadius: 10, flexShrink: 0 }}
                 />
-                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: mobile ? 15 : 18, color: '#fff', lineHeight: 1.1 }}>
+                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: mobile ? 15 : 18, color: 'var(--header-text)', lineHeight: 1.1 }}>
                   TIC<span style={{ color: 'var(--gold)' }}>-Kenya</span>
                 </span>
               </button>
@@ -115,7 +133,7 @@ const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onFor
                         aria-current={isActive ? 'page' : undefined}
                         style={{
                           background: 'none', border: 'none', cursor: 'pointer',
-                          color: isActive ? '#fff' : 'rgba(255,255,255,0.65)',
+                          color: isActive ? 'var(--header-text)' : 'var(--header-muted)',
                           fontSize: 14, fontWeight: isActive ? 600 : 500,
                           fontFamily: 'var(--font-body)', padding: '4px 0',
                           borderBottom: isActive ? '2px solid var(--gold)' : '2px solid transparent',
@@ -132,6 +150,7 @@ const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onFor
 
             {/* Actions area */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {!mobile && <ThemeToggle theme={theme} onToggleTheme={onToggleTheme} />}
               {/* Mobile hamburger */}
               {mobile && (
                 <div ref={menuRef}>
@@ -140,11 +159,11 @@ const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onFor
                     aria-label={menuOpen ? 'Close menu' : 'Open menu'}
                     aria-expanded={menuOpen}
                     style={{
-                      background: menuOpen ? 'rgba(255,255,255,0.1)' : 'none',
-                      border: '1px solid rgba(255,255,255,0.15)',
+                      background: menuOpen ? 'var(--header-control-bg-active)' : 'var(--header-control-bg)',
+                      border: '1px solid var(--header-control-border)',
                       borderRadius: 8, width: 44, height: 44,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      cursor: 'pointer', color: 'rgba(255,255,255,0.85)',
+                      cursor: 'pointer', color: 'var(--header-text)',
                       transition: 'all 0.25s ease', flexShrink: 0,
                       position: 'relative', zIndex: 101,
                     }}
@@ -182,11 +201,12 @@ const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onFor
                       );
                     })}
                   </nav>
-                  <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ paddingTop: 24, borderTop: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <ThemeToggle theme={theme} onToggleTheme={onToggleTheme} full />
                     {user ? (
                       <>
                         <div style={{ fontSize: 13, color: 'var(--slate)', marginBottom: 4 }}>
-                          Signed in as <span style={{ color: '#fff', fontWeight: 600 }}>{user.name}</span>
+                          Signed in as <span style={{ color: 'var(--white)', fontWeight: 600 }}>{user.name}</span>
                         </div>
                         <button className="btn btn--primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { onNavigate('dashboard'); setMenuOpen(false); }}>Dashboard</button>
                         <button className="btn btn--ghost" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { logout(); setMenuOpen(false); }}>Logout</button>
@@ -214,9 +234,9 @@ const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onFor
                     aria-expanded={dropdownOpen}
                     style={{
                       width: 44, height: 44, borderRadius: '50%',
-                      background: user ? 'var(--gold, #d4a053)' : 'rgba(255,255,255,0.12)',
-                      border: '2px solid rgba(255,255,255,0.2)',
-                      color: user ? '#0a0e1a' : 'rgba(255,255,255,0.6)',
+                      background: user ? 'var(--gold, #d4a053)' : 'var(--header-control-bg)',
+                      border: '2px solid var(--header-control-border)',
+                      color: user ? 'var(--navy)' : 'var(--header-muted)',
                       fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16,
                       cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                       transition: 'all 0.25s ease',
@@ -233,9 +253,9 @@ const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onFor
                     <div
                       style={{
                         position: 'absolute', top: 'calc(100% + 10px)', right: 0,
-                        background: 'rgba(12,18,44,0.96)',
+                        background: 'var(--dropdown-bg)',
                         backdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(255,255,255,0.12)',
+                        border: '1px solid var(--glass-border-bright)',
                         borderRadius: 12, padding: '8px 0',
                         minWidth: 200, boxShadow: '0 16px 48px rgba(0,0,0,0.4)',
                         animation: 'ticDropIn 0.2s ease',
@@ -243,20 +263,20 @@ const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onFor
                     >
                       {user ? (
                         <>
-                          <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>Signed in as</div>
-                            <div style={{ fontSize: 15, fontWeight: 600, color: '#fff' }}>{user.name}</div>
+                          <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--glass-border)' }}>
+                            <div style={{ fontSize: 13, color: 'var(--slate)', marginBottom: 4 }}>Signed in as</div>
+                            <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--white)' }}>{user.name}</div>
                           </div>
                           <button
                             onClick={() => { onNavigate('dashboard'); setDropdownOpen(false); }}
                             style={{
                               display: 'block', width: '100%', padding: '11px 18px',
                               background: 'none', border: 'none', textAlign: 'left',
-                              color: 'rgba(255,255,255,0.75)', fontSize: 14,
+                              color: 'var(--header-muted)', fontSize: 14,
                               cursor: 'pointer', transition: 'background 0.15s, color 0.15s',
                             }}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = '#fff'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--glass-bg)'; e.currentTarget.style.color = 'var(--header-text)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--header-muted)'; }}
                           >Dashboard</button>
                           <button
                             onClick={() => { logout(); setDropdownOpen(false); }}
@@ -277,11 +297,11 @@ const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onFor
                             style={{
                               display: 'block', width: '100%', padding: '11px 18px',
                               background: 'none', border: 'none', textAlign: 'left',
-                              color: 'rgba(255,255,255,0.75)', fontSize: 14,
+                              color: 'var(--header-muted)', fontSize: 14,
                               cursor: 'pointer', transition: 'background 0.15s, color 0.15s',
                             }}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = '#fff'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--glass-bg)'; e.currentTarget.style.color = 'var(--header-text)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--header-muted)'; }}
                           >Login</button>
                           <button
                             onClick={() => { onNavigate('register'); setDropdownOpen(false); }}
@@ -304,7 +324,7 @@ const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onFor
                 user ? (
                   <>
                     <span style={{ fontSize: 13, color: 'var(--slate)', marginRight: 10, fontWeight: 500 }}>
-                      Welcome, <span style={{ color: '#fff' }}>{user.name}</span>
+                      Welcome, <span style={{ color: 'var(--header-text)' }}>{user.name}</span>
                     </span>
                     <button
                       className="btn btn--primary btn--sm"
@@ -340,7 +360,7 @@ const Header = ({ onNavigate, activeView, canGoBack, canGoForward, onBack, onFor
                       aria-current={isActive ? 'page' : undefined}
                       style={{
                         background: 'none', border: 'none', cursor: 'pointer',
-                        color: isActive ? '#fff' : 'rgba(255,255,255,0.55)',
+                        color: isActive ? 'var(--header-text)' : 'var(--header-muted)',
                         fontSize: 13, fontWeight: isActive ? 600 : 500,
                         fontFamily: 'var(--font-body)', padding: '6px 0',
                         borderBottom: isActive ? '2px solid var(--gold)' : '2px solid transparent',

@@ -110,7 +110,6 @@ const fmtUSD = (n) => {
 };
 
 const fmtRate = (n) => Number(n || 0).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
-const fmtKSH = (n) => `KSH ${Number(n).toLocaleString('en-KE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
 /** Strip HTML tags from a string. */
 const stripHtml = (s) => (s || '').replace(/<[^>]*>/g, ' ').replace(/\s{2,}/g, ' ').trim();
@@ -175,17 +174,17 @@ const filterSelectStyle = {
   padding: '12px 14px',
   borderRadius: 10,
   border: '1px solid var(--glass-border)',
-  background: 'rgba(15,23,42,0.92)',
-  color: '#fff',
+  background: 'var(--field-bg)',
+  color: 'var(--field-text)',
   fontSize: 14,
   fontFamily: 'var(--font-body)',
   outline: 'none',
-  colorScheme: 'dark',
+  colorScheme: 'inherit',
 };
 
 const filterOptionStyle = {
-  backgroundColor: '#0f172a',
-  color: '#fff',
+  backgroundColor: 'var(--field-option-bg)',
+  color: 'var(--field-text)',
 };
 
 /* ── Insurer logo ────────────────────────────────────────────────────────────────── */
@@ -564,7 +563,7 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                   type="date"
                   value={departure}
                   onChange={(e) => setDeparture(e.target.value)}
-                  style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 14, fontFamily: 'var(--font-body)', outline: 'none', colorScheme: 'dark' }}
+                  style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--glass-border)', background: 'var(--field-bg)', color: 'var(--field-text)', fontSize: 14, fontFamily: 'var(--font-body)', outline: 'none', colorScheme: 'inherit' }}
                 />
               </label>
               <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -574,10 +573,10 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                   value={returnDate}
                   min={departure || undefined}
                   onChange={(e) => setReturnDate(e.target.value)}
-                  style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 14, fontFamily: 'var(--font-body)', outline: 'none', colorScheme: 'dark' }}
+                  style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--glass-border)', background: 'var(--field-bg)', color: 'var(--field-text)', fontSize: 14, fontFamily: 'var(--font-body)', outline: 'none', colorScheme: 'inherit' }}
                 />
               </label>
-              <div style={{ fontSize: 12, color: hasDates ? '#86efac' : 'var(--slate-dark)', fontWeight: 700, whiteSpace: 'nowrap', padding: mobile ? '4px 0' : '0 4px 12px' }}>
+              <div style={{ fontSize: 12, color: hasDates ? 'var(--success-text)' : 'var(--slate-dark)', fontWeight: 700, whiteSpace: 'nowrap', padding: mobile ? '4px 0' : '0 4px 12px' }}>
                 {hasDates ? `${days} day${days > 1 ? 's' : ''} trip — showing exact premium` : 'Pick dates for exact premium'}
               </div>
             </div>
@@ -632,7 +631,7 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                   <button
                     type="button"
                     onClick={() => { setSelectedRegion('all'); setSelectedPolicyType('all'); }}
-                    style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${selectedRegion === 'all' ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: selectedRegion === 'all' ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: selectedRegion === 'all' ? '#86efac' : 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                    style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${selectedRegion === 'all' ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: selectedRegion === 'all' ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: selectedRegion === 'all' ? 'var(--success-text)' : 'var(--white)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                   >
                     All Regions
                   </button>
@@ -641,7 +640,7 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                       key={parent.slug}
                       type="button"
                       onClick={() => { setSelectedRegion(parent.slug); setSelectedPolicyType('all'); }}
-                      style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${selectedRegion === parent.slug ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: selectedRegion === parent.slug ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: selectedRegion === parent.slug ? '#86efac' : 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                      style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${selectedRegion === parent.slug ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: selectedRegion === parent.slug ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: selectedRegion === parent.slug ? 'var(--success-text)' : 'var(--white)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                     >
                       {parent.name}
                     </button>
@@ -655,7 +654,7 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                       <button
                         type="button"
                         onClick={() => setSelectedPolicyType('all')}
-                        style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${selectedPolicyType === 'all' ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: selectedPolicyType === 'all' ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: selectedPolicyType === 'all' ? '#86efac' : 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                        style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${selectedPolicyType === 'all' ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: selectedPolicyType === 'all' ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: selectedPolicyType === 'all' ? 'var(--success-text)' : 'var(--white)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                       >
                         All Types
                       </button>
@@ -664,7 +663,7 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                           key={option.slug}
                           type="button"
                           onClick={() => setSelectedPolicyType(option.slug)}
-                          style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${selectedPolicyType === option.slug ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: selectedPolicyType === option.slug ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: selectedPolicyType === option.slug ? '#86efac' : 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                          style={{ padding: '6px 12px', borderRadius: 999, border: `1px solid ${selectedPolicyType === option.slug ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`, background: selectedPolicyType === option.slug ? 'rgba(49,99,49,0.2)' : 'var(--glass-bg)', color: selectedPolicyType === option.slug ? 'var(--success-text)' : 'var(--white)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                         >
                           {option.name}
                         </button>
@@ -718,7 +717,7 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                         onClick={() => setSelectedInsurerPolicy(policy)}
                       />
                       <div style={{ minWidth: 0, flex: 1 }}>
-                        <button type="button" onClick={() => setSelectedInsurerPolicy(policy)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.85)', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: 0, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', display: 'block', textDecoration: 'underline', textUnderlineOffset: 3, textDecorationColor: 'rgba(255,255,255,0.25)' }} title="View insurer profile">{policy.policyInsurerName || 'Insurer'}</button>
+                        <button type="button" onClick={() => setSelectedInsurerPolicy(policy)} style={{ background: 'none', border: 'none', color: 'var(--white)', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: 0, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', display: 'block', textDecoration: 'underline', textUnderlineOffset: 3, textDecorationColor: 'var(--glass-border-bright)' }} title="View insurer profile">{policy.policyInsurerName || 'Insurer'}</button>
                         <div style={{ display: 'flex', gap: 2, marginTop: 2 }}>
                           {'★★★★★'.split('').map((s, i) => <span key={i} style={{ color: i < 5 ? '#FBBF24' : 'var(--slate-dark)', fontSize: 11 }}>{s}</span>)}
                           <span style={{ color: 'var(--slate-dark)', fontSize: 11, marginLeft: 3 }}>5.0</span>
@@ -735,7 +734,7 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                       </span>
                       <span style={{ fontSize: 13, color: 'var(--slate)' }}>{isExact ? `/ ${days}d trip` : '/trip'}</span>
                       {isExact && (
-                        <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, color: '#86efac', background: 'rgba(49,99,49,0.18)', border: '1px solid rgba(49,99,49,0.4)', padding: '3px 8px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Exact</span>
+                        <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, color: 'var(--success-text)', background: 'rgba(49,99,49,0.18)', border: '1px solid rgba(49,99,49,0.4)', padding: '3px 8px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Exact</span>
                       )}
                     </div>
                     {usdMeta && (
@@ -746,7 +745,7 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
                       {tags.slice(0, 3).map(t => (
-                        <span key={t} style={{ padding: '4px 10px', borderRadius: 100, background: 'rgba(49,99,49,0.12)', border: '1px solid rgba(49,99,49,0.22)', fontSize: 11, fontWeight: 600, color: '#86efac' }}>{t}</span>
+                        <span key={t} style={{ padding: '4px 10px', borderRadius: 100, background: 'rgba(49,99,49,0.12)', border: '1px solid rgba(49,99,49,0.22)', fontSize: 11, fontWeight: 600, color: 'var(--success-text)' }}>{t}</span>
                       ))}
                     </div>
 
@@ -762,7 +761,7 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                       type="button"
                       className="btn btn--ghost btn--sm"
                       disabled={compareSelected.length >= 3 && !checked}
-                      style={{ opacity: compareSelected.length >= 3 && !checked ? 0.45 : 1, background: checked ? 'rgba(49,99,49,0.2)' : undefined, borderColor: checked ? 'rgba(49,99,49,0.6)' : undefined, color: checked ? '#86efac' : undefined }}
+                      style={{ opacity: compareSelected.length >= 3 && !checked ? 0.45 : 1, background: checked ? 'rgba(49,99,49,0.2)' : undefined, borderColor: checked ? 'rgba(49,99,49,0.6)' : undefined, color: checked ? 'var(--success-text)' : undefined }}
                       onClick={() => toggleCompare(policy)}
                     >{checked ? '✓ Comparing' : 'Compare'}</button>
                     <button type="button" className="btn btn--ghost btn--sm" style={{ justifyContent: 'center' }} onClick={() => setSelectedPolicy(policy)}>

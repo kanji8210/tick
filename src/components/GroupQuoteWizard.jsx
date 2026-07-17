@@ -39,6 +39,20 @@ const normalizeBracketWithDefaultRate = (policy, bracket) => {
   const premium = Number(bracket.premium);
   const rate = Number(bracket.exchangeRate || 0);
   const usdPremium = Number(bracket.usdPremium);
+  const currency = String(policy?.policyCurrency || 'KES').toUpperCase();
+  const isLocalCurrency = currency === 'KES' || currency === 'KSH' || currency === '';
+
+  // Local currency (KES or legacy KSH): premium is already in shillings — never reconvert.
+  if (isLocalCurrency) {
+    return {
+      ...bracket,
+      premium: Number.isFinite(premium) ? premium : null,
+      usdPremium: Number.isFinite(usdPremium) ? usdPremium : null,
+      exchangeRate: Number.isFinite(rate) ? rate : 0,
+    };
+  }
+
+  // Backend already converted this bracket to KES (per-bracket rate present).
   if (Number.isFinite(rate) && rate > 0) {
     return {
       ...bracket,
@@ -48,7 +62,6 @@ const normalizeBracketWithDefaultRate = (policy, bracket) => {
     };
   }
 
-  const currency = String(policy?.policyCurrency || '').toUpperCase();
   const defaultRate = Number(policy?.defaultExchangeRateValue || 0);
   if (currency === 'USD' && Number.isFinite(defaultRate) && defaultRate > 0 && Number.isFinite(premium)) {
     return {
@@ -80,8 +93,21 @@ const TRAVELER_FACTORS = {
   children: 0.85,
 };
 
-const fmtKES = (n, currency = 'KES') =>
-  `${currency} ${Number(n || 0).toLocaleString('en-KE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+const fmtKES = (n, currency = 'KES') => {
+  const cur = String(currency || 'KES').toUpperCase() === 'KSH' ? 'KES' : (currency || 'KES');
+  return `${cur} ${Number(n || 0).toLocaleString('en-KE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+};
+
+const fmtUSD = (n) =>
+  `USD ${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+/** Original pre-conversion amount when a KES figure was derived from a USD bracket. */
+const originalUsdAmount = (kesAmount, bracket) => {
+  const rate = Number(bracket?.exchangeRate || 0);
+  if (!Number.isFinite(rate) || rate <= 0) return null;
+  const usd = Number(kesAmount) / rate;
+  return Number.isFinite(usd) && usd > 0 ? usd : null;
+};
 
 const stripHtml = (value) => (value || '').replace(/<[^>]*>/g, ' ').replace(/\s{2,}/g, ' ').trim();
 
@@ -344,7 +370,11 @@ const GroupQuoteWizard = ({ onClose, isAgency = false, onNavigate }) => {
         const activeBracket = bracketPremium(p, days);
         const basePerTraveler = activeBracket?.premium;
         if (!basePerTraveler) return null;
-        const resolvedCurrency = Number(activeBracket.exchangeRate || 0) > 0 ? 'KES' : (p.policyCurrency || 'KES');
+        const rawCurrency = String(p.policyCurrency || 'KES').toUpperCase();
+        const isLocalCurrency = rawCurrency === 'KES' || rawCurrency === 'KSH';
+        const resolvedCurrency = (isLocalCurrency || Number(activeBracket.exchangeRate || 0) > 0)
+          ? 'KES'
+          : rawCurrency;
         const tierAdjustedRate = basePerTraveler;
         const lineItems = [
           { key: 'adults', label: 'Adults', count: travelerMix.adults, factor: TRAVELER_FACTORS.adults },
@@ -967,6 +997,9 @@ const GroupQuoteWizard = ({ onClose, isAgency = false, onNavigate }) => {
                       <div style={{ fontSize: 12, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#fff' }}>{p.title}</div>
                       <div style={{ fontSize: 10, color: 'var(--slate)', marginTop: 1 }}>
                         {p.policyInsurerName} · Base {fmtKES(p.basePerTraveler, p.policyCurrency)}/traveler
+                        {originalUsdAmount(p.basePerTraveler, p.activeBracket) && (
+                          <span style={{ color: 'rgba(255,255,255,0.4)' }}> (orig. {fmtUSD(originalUsdAmount(p.basePerTraveler, p.activeBracket))})</span>
+                        )}
                       </div>
                       <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.65)', marginTop: 4, lineHeight: 1.5 }}>
                         {p.lineItems.map(item => `${item.label}: ${item.count} x ${fmtKES(item.rate, p.policyCurrency)}`).join(' · ')}
@@ -981,6 +1014,11 @@ const GroupQuoteWizard = ({ onClose, isAgency = false, onNavigate }) => {
                       <div style={{ fontWeight: 800, fontSize: 14, color: i === 0 ? '#86efac' : 'var(--white)' }}>
                         {fmtKES(p.total, p.policyCurrency)}
                       </div>
+                      {originalUsdAmount(p.total, p.activeBracket) && (
+                        <div style={{ fontSize: 9, color: 'var(--slate)', marginTop: 1 }}>
+                          orig. {fmtUSD(originalUsdAmount(p.total, p.activeBracket))}
+                        </div>
+                      )}
                       <div style={{ fontSize: 10, color: 'var(--slate)' }}>group total</div>
                     </div>
 
@@ -1103,7 +1141,14 @@ const GroupQuoteWizard = ({ onClose, isAgency = false, onNavigate }) => {
                 <div key={`cmp-${p.id}`} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--glass-border)', borderRadius: 10, padding: '10px 12px' }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{p.title}</div>
                   <div style={{ fontSize: 11, color: 'var(--slate)', marginBottom: 8 }}>{p.policyInsurerName}</div>
-                  <div style={{ fontSize: 12, color: '#86efac', fontWeight: 800, marginBottom: 8 }}>{fmtKES(p.total, p.policyCurrency)}</div>
+                  <div style={{ fontSize: 12, color: '#86efac', fontWeight: 800, marginBottom: 8 }}>
+                    {fmtKES(p.total, p.policyCurrency)}
+                    {originalUsdAmount(p.total, p.activeBracket) && (
+                      <span style={{ display: 'block', fontSize: 9, fontWeight: 600, color: 'var(--slate)', marginTop: 1 }}>
+                        orig. {fmtUSD(originalUsdAmount(p.total, p.activeBracket))}
+                      </span>
+                    )}
+                  </div>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, marginBottom: 10 }}>
                     {p.lineItems.map((item) => `${item.label}: ${item.count}`).join(' · ')}
                   </div>
