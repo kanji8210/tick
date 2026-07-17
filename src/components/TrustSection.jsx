@@ -12,6 +12,7 @@ const POLICY_SALES_COUNT = `
 `;
 
 const CHIPS = ['🏛️ Embassy-accepted', '📄 Insurer-issued', '🔒 Fraud-proof'];
+const SHOW_STATS = false;
 
 /* ── Animated count-up hook ── */
 const useCountUp = (target, { duration = 1800, startOnMount = false } = {}) => {
@@ -105,7 +106,7 @@ const TrustSection = ({ onNavigate }) => {
   <section style={{ position: 'relative', zIndex: 1 }}>
 
     {/* Stats bar — hidden */}
-    {false && (
+    {SHOW_STATS && (
     <div style={{
       borderTop: '1px solid var(--glass-border)',
       borderBottom: '1px solid var(--glass-border)',
@@ -152,7 +153,7 @@ const TrustSection = ({ onNavigate }) => {
               🛡️
             </div>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#86efac', marginBottom: 2 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--white)', marginBottom: 2 }}>
                 Cryptographically Verified Certificates
               </div>
               <p style={{ fontSize: 13, color: 'var(--slate)', margin: 0, lineHeight: 1.5 }}>
@@ -165,8 +166,8 @@ const TrustSection = ({ onNavigate }) => {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             {CHIPS.map(chip => (
               <span key={chip} style={{
-                fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.6)',
-                background: 'rgba(255,255,255,0.04)', border: '1px solid var(--glass-border)',
+                fontSize: 12, fontWeight: 600, color: 'var(--white)',
+                background: 'var(--glass-bg)', border: '1px solid var(--glass-border)',
                 borderRadius: 999, padding: '5px 12px', whiteSpace: 'nowrap',
               }}>
                 {chip}
