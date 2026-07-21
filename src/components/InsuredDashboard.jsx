@@ -57,6 +57,26 @@ const toNumericId = (id) => {
   try { return atob(String(id)).split(':').pop(); } catch { return String(id); }
 };
 
+const readRestError = async (res, fallback) => {
+  const raw = await res.text().catch(() => '');
+  let message = '';
+
+  try {
+    const data = raw ? JSON.parse(raw) : null;
+    message = data?.error || data?.message || data?.data?.message || '';
+  } catch {
+    message = raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  console.error('Payment initiation failed:', {
+    status: res.status,
+    statusText: res.statusText,
+    body: raw,
+  });
+
+  return message || `${fallback} (HTTP ${res.status})`;
+};
+
 const InsuredDashboard = ({ user, onNavigate, initialTab }) => {
   const { user: authUser } = useAuth();
   const { mobile } = useResponsive();
@@ -117,8 +137,8 @@ const InsuredDashboard = ({ user, onNavigate, initialTab }) => {
         headers: { ...restHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ saleId: toNumericId(saleId) }),
       });
+      if (!res.ok) throw new Error(await readRestError(res, 'Payment initiation failed'));
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Payment initiation failed');
       if (data.paymentUrl) {
         window.location.href = data.paymentUrl;
       }

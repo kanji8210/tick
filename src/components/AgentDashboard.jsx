@@ -243,6 +243,26 @@ const toNumericId = (id) => {
 
 const WP_REST_BASE = '/wp-json';
 
+const readRestError = async (res, fallback) => {
+  const raw = await res.text().catch(() => '');
+  let message = '';
+
+  try {
+    const data = raw ? JSON.parse(raw) : null;
+    message = data?.error || data?.message || data?.data?.message || '';
+  } catch {
+    message = raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  console.error('Payment initiation failed:', {
+    status: res.status,
+    statusText: res.statusText,
+    body: raw,
+  });
+
+  return message || `${fallback} (HTTP ${res.status})`;
+};
+
 const AgentDashboard = ({ user, onNavigate }) => {
   const { user: authUser } = useAuth();
   const { mobile } = useResponsive();
@@ -324,8 +344,8 @@ const AgentDashboard = ({ user, onNavigate }) => {
         headers: { ...restHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ saleId: toNumericId(saleId) }),
       });
+      if (!res.ok) throw new Error(await readRestError(res, 'Payment initiation failed'));
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Payment initiation failed');
       if (data.paymentUrl) window.location.href = data.paymentUrl;
     } catch (e) { alert(e.message || 'Could not start payment.'); }
     finally { setActionLoading(null); }
