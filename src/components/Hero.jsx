@@ -149,7 +149,7 @@ const Hero = ({ onStart, onNavigate }) => {
                 {["\u2713 White-labelled PDF certificates", "\u2713 Commission dashboard (real-time)", "\u2713 Sub-agent accounts & role controls", "\u2713 API access for system integrations"].map(f => (
                   <div key={f} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 15 }}>
                     <span style={{ color: "#22c55e", fontSize: 16 }}>{f[0]}</span>
-                    <span style={{ color: "rgba(255,255,255,0.8)" }}>{f.slice(1)}</span>
+                    <span style={{ color: "var(--white)" }}>{f.slice(1)}</span>
                   </div>
                 ))}
               </div>

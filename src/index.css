@@ -413,6 +413,16 @@ body {
   color: var(--white) !important;
 }
 
+:root[data-theme='light'] :is(p, span, div, h1, h2, h3, h4, h5, h6, li, strong, em, td, th, label, a)[style*="color: white"],
+:root[data-theme='light'] :is(p, span, div, h1, h2, h3, h4, h5, h6, li, strong, em, td, th, label, a)[style*="color: #fff"],
+:root[data-theme='light'] :is(p, span, div, h1, h2, h3, h4, h5, h6, li, strong, em, td, th, label, a)[style*="color: #FFF"],
+:root[data-theme='light'] :is(p, span, div, h1, h2, h3, h4, h5, h6, li, strong, em, td, th, label, a)[style*="color: rgb(255, 255, 255"],
+:root[data-theme='light'] :is(p, span, div, h1, h2, h3, h4, h5, h6, li, strong, em, td, th, label, a)[style*="color: rgb(255,255,255"],
+:root[data-theme='light'] :is(p, span, div, h1, h2, h3, h4, h5, h6, li, strong, em, td, th, label, a)[style*="color: rgba(255, 255, 255"],
+:root[data-theme='light'] :is(p, span, div, h1, h2, h3, h4, h5, h6, li, strong, em, td, th, label, a)[style*="color: rgba(255,255,255"] {
+  color: var(--white) !important;
+}
+
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
   .fade-in { animation: none; opacity: 1; transform: none; }

@@ -13,7 +13,7 @@ const TrustedPartners = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: 40, animation: 'scroll-lr 28s linear infinite', width: 'max-content' }}>
           <style>{`@keyframes scroll-lr { from{transform:translateX(0)} to{transform:translateX(-50%)} }`}</style>
           {[...PARTNERS, ...PARTNERS].map((p, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '11px 22px', borderRadius: 100, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '11px 22px', borderRadius: 100, background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', fontSize: 13, fontWeight: 600, color: 'var(--white)', whiteSpace: 'nowrap', flexShrink: 0 }}>
               <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--indigo)', flexShrink: 0 }} />
               {p}
             </div>
