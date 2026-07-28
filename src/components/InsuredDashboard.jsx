@@ -170,7 +170,7 @@ const InsuredDashboard = ({ user, onNavigate, initialTab }) => {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+    <div className="insured-dashboard" style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
       {showProfileEdit && <ProfileEditModal onClose={() => setShowProfileEdit(false)} />}
       <style>{`
         .pd-card { background:var(--glass-bg); border:1px solid var(--glass-border); border-radius:var(--radius-lg); transition:border-color 0.2s, transform 0.2s; }
@@ -180,6 +180,10 @@ const InsuredDashboard = ({ user, onNavigate, initialTab }) => {
         .tab-btn { background:none; border:none; color:var(--slate); font-family:var(--font-display); font-size:14px; font-weight:700; padding:8px 0; margin-right:${mobile ? '16px' : '32px'}; cursor:pointer; position:relative; transition:color 0.2s; }
         .tab-btn.active { color:#fff; }
         .tab-btn.active::after { content:''; position:absolute; bottom:0; left:0; width:100%; height:2px; background:var(--gold); }
+        :root[data-theme='light'] .insured-dashboard .pd-card { background:rgba(255,252,246,0.96); border-color:rgba(31,44,63,0.26); }
+        :root[data-theme='light'] .insured-dashboard .qa-btn { background:#fff; border-color:rgba(31,44,63,0.22); color:var(--white); box-shadow:0 1px 0 rgba(255,255,255,0.8) inset; }
+        :root[data-theme='light'] .insured-dashboard .qa-btn:hover { background:rgba(39,98,56,0.08); border-color:rgba(39,98,56,0.36); }
+        :root[data-theme='light'] .insured-dashboard .tab-btn.active { color:var(--white); }
       `}</style>
 
       {/* Stats row */}
@@ -382,6 +386,7 @@ const InsuredDashboard = ({ user, onNavigate, initialTab }) => {
             <div style={{ fontSize: 12, color: 'var(--slate)' }}>{user?.email}</div>
             {user?.phone && <div style={{ fontSize: 12, color: 'var(--slate)', marginTop: 4 }}>📞 {user.phone}</div>}
             <button
+              className="profile-edit-action"
               type="button"
               onClick={() => setShowProfileEdit(true)}
               style={{

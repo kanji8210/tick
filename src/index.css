@@ -51,43 +51,43 @@
 }
 
 :root[data-theme='light'] {
-  --navy:        #F7F3EA;
-  --navy-mid:    #ECE5D8;
-  --navy-light:  #FFF9EF;
-  --indigo:      #2F6B3E;
-  --indigo-glow: #3C8553;
-  --gold:        #B87514;
-  --gold-light:  #F2C76B;
-  --slate:       #5D6B7B;
-  --slate-dark:  #7B8794;
+  --navy:        #F4ECDE;
+  --navy-mid:    #E8DDCD;
+  --navy-light:  #FFFCF6;
+  --indigo:      #276238;
+  --indigo-glow: #347947;
+  --gold:        #9F640F;
+  --gold-light:  #D99527;
+  --slate:       #465568;
+  --slate-dark:  #2F3D4F;
   --white:       #122033;
   --off-white:   #1B2B40;
 
-  --glass-bg:            rgba(255,255,255,0.62);
-  --glass-bg-md:         rgba(255,255,255,0.78);
-  --glass-border:        rgba(37,52,74,0.14);
-  --glass-border-bright: rgba(37,52,74,0.22);
-  --page-bg:             #F7F3EA;
-  --header-bg:           rgba(255,249,239,0.9);
+  --glass-bg:            rgba(255,252,246,0.86);
+  --glass-bg-md:         rgba(255,252,246,0.96);
+  --glass-border:        rgba(31,44,63,0.20);
+  --glass-border-bright: rgba(31,44,63,0.34);
+  --page-bg:             #F4ECDE;
+  --header-bg:           rgba(255,252,246,0.94);
   --header-text:         #122033;
-  --header-muted:        rgba(18,32,51,0.68);
-  --header-control-bg:   rgba(18,32,51,0.06);
-  --header-control-bg-active: rgba(18,32,51,0.1);
-  --header-control-border: rgba(18,32,51,0.18);
-  --dropdown-bg:         rgba(255,249,239,0.97);
-  --field-bg:            rgba(255,255,255,0.92);
+  --header-muted:        rgba(18,32,51,0.76);
+  --header-control-bg:   rgba(18,32,51,0.08);
+  --header-control-bg-active: rgba(18,32,51,0.14);
+  --header-control-border: rgba(18,32,51,0.24);
+  --dropdown-bg:         rgba(255,252,246,0.98);
+  --field-bg:            #FFFFFF;
   --field-text:          #122033;
-  --field-option-bg:     #FFF9EF;
-  --success-text:        #2F6B3E;
+  --field-option-bg:     #FFFCF6;
+  --success-text:        #276238;
 
-  --shadow-glow: 0 0 34px rgba(47,107,62,0.18);
-  --shadow-card: 0 22px 46px rgba(55,65,81,0.14);
-  --shadow-gold: 0 0 20px rgba(184,117,20,0.24);
-  --text-muted:  #5D6B7B;
-  --glass:       rgba(255,255,255,0.68);
-  --matte-black: #F7F3EA;
-  --crimson:     #2F6B3E;
-  --forest:      #FFF9EF;
+  --shadow-glow: 0 0 34px rgba(39,98,56,0.20);
+  --shadow-card: 0 18px 44px rgba(31,44,63,0.18), 0 1px 0 rgba(255,255,255,0.8) inset;
+  --shadow-gold: 0 0 20px rgba(159,100,15,0.22);
+  --text-muted:  #465568;
+  --glass:       rgba(255,252,246,0.9);
+  --matte-black: #F4ECDE;
+  --crimson:     #276238;
+  --forest:      #FFFCF6;
 }
 
 * {
@@ -116,6 +116,19 @@ body {
   color: var(--white);
 }
 
+:root[data-theme='light'] .glass-card,
+:root[data-theme='light'] .policy-card,
+:root[data-theme='light'] .app-panel {
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,252,246,0.94));
+  border-color: var(--glass-border-bright);
+  box-shadow: var(--shadow-card);
+}
+
+:root[data-theme='light'] .glass-card:hover,
+:root[data-theme='light'] .policy-card:hover {
+  border-color: rgba(39,98,56,0.42);
+}
+
 :root[data-theme='light'] input,
 :root[data-theme='light'] select,
 :root[data-theme='light'] textarea {
@@ -124,15 +137,15 @@ body {
 
 :root[data-theme='light'] .bg-mesh {
   background:
-    radial-gradient(ellipse 90% 60% at 15% 20%, rgba(47,107,62,0.14) 0%, transparent 60%),
-    radial-gradient(ellipse 70% 50% at 85% 75%, rgba(242,199,107,0.18) 0%, transparent 55%),
-    radial-gradient(ellipse 50% 45% at 60% 8%, rgba(255,255,255,0.45) 0%, transparent 50%);
+    radial-gradient(ellipse 90% 60% at 15% 20%, rgba(39,98,56,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 85% 75%, rgba(217,149,39,0.14) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 45% at 60% 8%, rgba(255,255,255,0.58) 0%, transparent 50%);
 }
 
 :root[data-theme='light'] .bg-grid {
   background-image:
-    linear-gradient(rgba(18,32,51,0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(18,32,51,0.045) 1px, transparent 1px);
+    linear-gradient(rgba(18,32,51,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(18,32,51,0.07) 1px, transparent 1px);
 }
 
 h1, h2, h3, h4 { font-family: var(--font-display); }
@@ -259,6 +272,27 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   .btn--gold:hover { background: #FBBF24; transform: translateY(-2px); }
   .btn--ghost:hover { background: var(--glass-bg-md); border-color: rgba(255,255,255,0.4); }
 }
+
+:root[data-theme='light'] .btn--primary {
+  box-shadow: 0 10px 24px rgba(39,98,56,0.24);
+}
+
+:root[data-theme='light'] .btn--gold {
+  color: #1B2B40;
+}
+
+:root[data-theme='light'] .btn--ghost {
+  background: rgba(255,255,255,0.72);
+  border-color: rgba(31,44,63,0.28);
+  color: var(--white);
+}
+
+@media (hover: hover) {
+  :root[data-theme='light'] .btn--ghost:hover {
+    background: #FFFFFF;
+    border-color: rgba(39,98,56,0.44);
+  }
+}
 .btn--lg { padding: 18px 36px; font-size: 16px; border-radius: var(--radius-lg); }
 @media (max-width: 768px) { .btn--lg { padding: 15px 24px; font-size: 15px; } }
 .btn--sm { padding: 10px 18px; font-size: 13px; border-radius: var(--radius-sm); }
@@ -360,6 +394,30 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
 .form-input::placeholder, .input-field::placeholder { color: var(--slate-dark); }
 .form-input option { background: var(--navy-mid); color: var(--white); }
 
+:root[data-theme='light'] .form-input,
+:root[data-theme='light'] .input-field,
+:root[data-theme='light'] input,
+:root[data-theme='light'] select,
+:root[data-theme='light'] textarea {
+  background-color: var(--field-bg) !important;
+  border-color: rgba(31,44,63,0.28) !important;
+  color: var(--field-text) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.8) inset;
+}
+
+:root[data-theme='light'] .form-input::placeholder,
+:root[data-theme='light'] .input-field::placeholder,
+:root[data-theme='light'] input::placeholder,
+:root[data-theme='light'] textarea::placeholder {
+  color: #64748B;
+}
+
+:root[data-theme='light'] .form-input option,
+:root[data-theme='light'] select option {
+  background: var(--field-option-bg);
+  color: var(--field-text);
+}
+
 .fade-in { animation: fadeIn 0.8s ease-out forwards; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
 
@@ -386,6 +444,75 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
 @media (hover: hover) {
   .brand-logo:hover { opacity: 0.8; }
   .footer-link:hover { color: var(--white) !important; }
+}
+
+:root[data-theme='light'] footer {
+  background: linear-gradient(180deg, rgba(255,252,246,0), rgba(232,221,205,0.48));
+}
+
+:root[data-theme='light'] footer .brand-logo {
+  background: var(--indigo);
+  border: 1px solid rgba(31,44,63,0.18);
+  box-shadow: 0 8px 18px rgba(39,98,56,0.16);
+  padding: 4px;
+}
+
+:root[data-theme='light'] footer a[aria-label="Social"] {
+  background: #fff !important;
+  border-color: rgba(31,44,63,0.22) !important;
+  color: var(--white) !important;
+}
+
+:root[data-theme='light'] footer a[aria-label="Social"]:hover {
+  border-color: rgba(39,98,56,0.38) !important;
+}
+
+:root[data-theme='light'] footer span[style*="color: #6ee7b7"] {
+  color: #276238 !important;
+  background: rgba(39,98,56,0.10) !important;
+  border-color: rgba(39,98,56,0.28) !important;
+}
+
+:root[data-theme='light'] .insured-dashboard aside button[style*="color: rgba(255,255,255"] {
+  color: var(--white) !important;
+}
+
+:root[data-theme='light'] .insured-dashboard aside button[style*="background: rgba(255,255,255"] {
+  background: #fff !important;
+  border-color: rgba(31,44,63,0.24) !important;
+}
+
+:root[data-theme='light'] .insured-dashboard .profile-edit-action {
+  background: #fff !important;
+  border-color: rgba(31,44,63,0.24) !important;
+  color: var(--white) !important;
+}
+
+:root[data-theme='light'] .insured-dashboard .profile-edit-action:hover {
+  border-color: rgba(159,100,15,0.46) !important;
+}
+
+:root[data-theme='light'] .agent-dashboard button[style*="background: rgba(255,255,255"],
+:root[data-theme='light'] .agent-dashboard button[style*="background: 'rgba(255,255,255"] {
+  background: #fff !important;
+  border-color: rgba(31,44,63,0.24) !important;
+  color: var(--white) !important;
+}
+
+:root[data-theme='light'] .agent-dashboard :is(div, span)[style*="border-bottom: 1px solid rgba(255,255,255"] {
+  border-bottom-color: rgba(31,44,63,0.12) !important;
+}
+
+:root[data-theme='light'] .agent-dashboard :is(button, span)[style*="color: rgba(255,255,255"],
+:root[data-theme='light'] .agent-dashboard :is(button, span)[style*="color: white"] {
+  color: var(--white) !important;
+}
+
+:root[data-theme='light'] .agent-dashboard select,
+:root[data-theme='light'] .agent-dashboard input {
+  background: #fff !important;
+  border-color: rgba(31,44,63,0.28) !important;
+  color: var(--white) !important;
 }
 
 /* ── Scrollbar ── */
@@ -421,6 +548,32 @@ body {
 :root[data-theme='light'] :is(p, span, div, h1, h2, h3, h4, h5, h6, li, strong, em, td, th, label, a)[style*="color: rgba(255, 255, 255"],
 :root[data-theme='light'] :is(p, span, div, h1, h2, h3, h4, h5, h6, li, strong, em, td, th, label, a)[style*="color: rgba(255,255,255"] {
   color: var(--white) !important;
+}
+
+:root[data-theme='light'] :is(p, span, div, li, td, th, label)[style*="color: var(--slate)"],
+:root[data-theme='light'] :is(p, span, div, li, td, th, label)[style*="color: var(--slate-dark)"] {
+  color: var(--slate) !important;
+}
+
+:root[data-theme='light'] :is(div, section, article, aside, button, td, th)[style*="background: rgba(255, 255, 255"],
+:root[data-theme='light'] :is(div, section, article, aside, button, td, th)[style*="background: rgba(255,255,255"] {
+  background: rgba(255,255,255,0.86) !important;
+}
+
+:root[data-theme='light'] :is(div, section, article, aside, button, td, th)[style*="border: 1px solid rgba(255, 255, 255"],
+:root[data-theme='light'] :is(div, section, article, aside, button, td, th)[style*="border: 1px solid rgba(255,255,255"] {
+  border-color: rgba(31,44,63,0.24) !important;
+}
+
+:root[data-theme='light'] .tic-header__nav--row2 {
+  border-top-color: rgba(31,44,63,0.14);
+}
+
+:root[data-theme='light'] .tic-header button[aria-label="Travel Insurance Center-Kenya Home"] img {
+  background: var(--indigo);
+  border: 1px solid rgba(31,44,63,0.18);
+  box-shadow: 0 8px 18px rgba(39,98,56,0.18);
+  padding: 4px;
 }
 
 /* ── Reduced motion ── */

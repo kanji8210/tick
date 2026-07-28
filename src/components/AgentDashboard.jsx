@@ -493,7 +493,7 @@ const AgentDashboard = ({ user, onNavigate }) => {
    *  RENDER
    * ══════════════════════════════════════════════════════ */
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: mobile ? '1.25rem' : '1.75rem' }}>
+    <div className="agent-dashboard" style={{ display: 'flex', flexDirection: 'column', gap: mobile ? '1.25rem' : '1.75rem' }}>
 
       {/* ── HEADER BAR ────────────────────────────────── */}
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>

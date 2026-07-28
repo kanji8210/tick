@@ -3,7 +3,7 @@ import { useResponsive } from '../lib/useResponsive';
 
 const LinkColumn = ({ title, links, mobile, onNavigate }) => (
   <div>
-    <h4 style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, marginBottom: mobile ? 12 : 18, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.04em' }}>{title}</h4>
+    <h4 style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, marginBottom: mobile ? 12 : 18, color: 'var(--white)', letterSpacing: '0.04em' }}>{title}</h4>
     <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: mobile ? 9 : 11 }}>
       {links.map((l) => (
         <li key={l.label}>
@@ -51,11 +51,12 @@ const Footer = ({ onNavigate }) => {
             <div style={{ marginBottom: 28 }}>
               <button onClick={() => onNavigate('landing')} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: 12 }}>
                 <img
+                  className="brand-logo"
                   src="https://mtj.ivk.mybluehost.me/website_e48ea083/wp-content/uploads/2026/03/logo-type.png"
                   alt="TIC-Kenya"
                   style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 8, flexShrink: 0 }}
                 />
-                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 17, color: '#fff' }}>TIC<span style={{ color: 'var(--gold)' }}>-Kenya</span></span>
+                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 17, color: 'var(--white)' }}>TIC<span style={{ color: 'var(--gold)' }}>-Kenya</span></span>
               </button>
               <p style={{ color: 'var(--slate)', fontSize: 13, lineHeight: 1.7, marginBottom: 14, maxWidth: 280 }}>
                 Kenya's trusted travel insurance aggregator. Compare, buy, and travel protected.
@@ -75,7 +76,7 @@ const Footer = ({ onNavigate }) => {
 
             {/* Support — inline row */}
             <div>
-              <h4 style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, marginBottom: 10, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.04em' }}>Support</h4>
+              <h4 style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, marginBottom: 10, color: 'var(--white)', letterSpacing: '0.04em' }}>Support</h4>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {supportLinks.map((l) => (
                   <button
@@ -102,11 +103,12 @@ const Footer = ({ onNavigate }) => {
             <div>
               <button onClick={() => onNavigate('landing')} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: 16 }}>
                 <img
+                  className="brand-logo"
                   src="https://mtj.ivk.mybluehost.me/website_e48ea083/wp-content/uploads/2026/03/logo-type.png"
                   alt="TIC-Kenya"
                   style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 9, flexShrink: 0 }}
                 />
-                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 19, color: '#fff' }}>TIC<span style={{ color: 'var(--gold)' }}>-Kenya</span></span>
+                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 19, color: 'var(--white)' }}>TIC<span style={{ color: 'var(--gold)' }}>-Kenya</span></span>
               </button>
               <p style={{ color: 'var(--slate)', fontSize: 14, lineHeight: 1.75, maxWidth: 270, marginBottom: 20 }}>
                 Kenya's trusted travel insurance aggregator. Compare, buy, and travel protected.
@@ -122,7 +124,7 @@ const Footer = ({ onNavigate }) => {
             <LinkColumn title="For Agencies" links={agencyLinks} mobile={mobile} onNavigate={onNavigate} />
 
             <div>
-              <h4 style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, marginBottom: 18, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.04em' }}>Support</h4>
+              <h4 style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, marginBottom: 18, color: 'var(--white)', letterSpacing: '0.04em' }}>Support</h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 11 }}>
                 {supportLinks.map((l) => (
                   <li key={l.label}>

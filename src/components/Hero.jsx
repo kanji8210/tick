@@ -178,7 +178,7 @@ const Hero = ({ onStart, onNavigate }) => {
                 Travel Insurance{" "}
                 <em style={{ fontStyle: "normal", backgroundImage: "linear-gradient(135deg,var(--indigo-glow),#86efac)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Center.</em>
               </h1>
-              <p className="reveal reveal-delay-2" style={{ fontSize: 18, color: "var(--slate)", lineHeight: 1.75, marginBottom: 36, width: '100%', textAlign: 'center' }}>
+              <p className="reveal reveal-delay-2" style={{ fontSize: mobile ? 16 : 18, color: "var(--slate)", lineHeight: 1.75, margin: '0 auto 36px', width: '100%', maxWidth: 760, textAlign: 'center' }}>
                 Compare policies from Africa&apos;s leading insurers in seconds.
                 Instant certificates. Zero paperwork. Built for travelers and agencies.
               </p>
