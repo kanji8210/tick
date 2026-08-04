@@ -38,6 +38,8 @@ const GET_POLICIES = `
           from
           to
           premium
+          usdPremium
+          exchangeRate
         }
         policyTypes {
           nodes {
@@ -698,7 +700,7 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
               const isExact    = hasDates && exactPrice !== null;
               const activeBracket = isExact
                 ? (policy.policyDayPremiums || []).find(b => days >= b.from && days <= b.to)
-                : null;
+                : (policy.policyDayPremiums || []).find(b => Number(b.premium) === minPrice);
               const usdMeta = activeBracket && Number(activeBracket.exchangeRate || 0) > 0 && Number.isFinite(Number(activeBracket.usdPremium))
                 ? { usd: Number(activeBracket.usdPremium), rate: Number(activeBracket.exchangeRate) }
                 : null;

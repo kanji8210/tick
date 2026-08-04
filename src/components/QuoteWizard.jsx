@@ -1214,8 +1214,8 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
             Application <span style={{ color: 'var(--gold)' }}>Received</span>
           </h2>
           <p style={{ color: 'var(--slate)', fontSize: 16, maxWidth: 400, margin: '0 auto 30px', lineHeight: 1.6 }}>
-            Your booking for policy <strong style={{ color: '#fff' }}>{saleData?.policyNumber || '—'}</strong> has been registered. 
-            Our team will submit the details to the insurer manually and update your status when the insurer document is available.
+            Your policy request <strong style={{ color: '#fff' }}>#{saleData?.saleId || '—'}</strong> has been registered.
+            Our team will enter your details on the insurer website and send the policy number when the insurer issues it.
           </p>
           {!user && !accountCreated && (
             <p style={{ color: 'rgba(255,255,255,0.78)', fontSize: 13, maxWidth: 520, margin: '0 auto 24px', lineHeight: 1.7 }}>
