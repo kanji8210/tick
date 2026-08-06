@@ -17,6 +17,8 @@ import AboutPage from './components/AboutPage'
 import AgenciesPage from './components/AgenciesPage'
 import GroupQuotesPage from './components/GroupQuotesPage'
 import ClaimsPage from './components/ClaimsPage'
+import ClaimSupportPage from './components/ClaimSupportPage'
+import ClaimsRefundChoice from './components/ClaimsRefundChoice'
 
 function AppContent() {
   const { role } = useAuth();
@@ -59,6 +61,8 @@ function AppContent() {
     agencies:      '/agencies',
     'group-quotes': '/group-quotes',
     claims:        '/claims-refunds',
+    claim:         '/claims/new',
+    refunds:       '/refunds/new',
     'policy-detail': '/policy',
   };
   const PATH_VIEWS = Object.fromEntries(Object.entries(VIEW_PATHS).map(([v, p]) => [p, v]));
@@ -156,6 +160,10 @@ function AppContent() {
       case 'group-quotes':
         return <GroupQuotesPage onNavigate={handleNavigate} />;
       case 'claims':
+        return <ClaimsRefundChoice onNavigate={handleNavigate} />;
+      case 'claim':
+        return <ClaimSupportPage />;
+      case 'refunds':
         return <ClaimsPage />;
       case 'policy-detail':
         return (
