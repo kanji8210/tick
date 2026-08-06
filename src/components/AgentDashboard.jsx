@@ -550,6 +550,15 @@ const AgentDashboard = ({ user, onNavigate }) => {
             <span style={{ marginRight: '0.35rem' }}>{t.icon}</span>{t.label}
           </button>
         ))}
+        <button type="button" onClick={() => onNavigate?.('claims')} style={{
+          background: 'none', border: 'none', cursor: 'pointer',
+          padding: mobile ? '0.6rem 0.7rem' : '0.7rem 1.1rem',
+          fontSize: mobile ? '0.72rem' : '0.78rem', fontWeight: 600,
+          color: 'var(--text-muted)', borderBottom: '2px solid transparent',
+          whiteSpace: 'nowrap', textDecoration: 'none', transition: 'all 0.2s',
+        }}>
+          <span style={{ marginRight: '0.35rem' }}>◐</span>Claims &amp; Refunds
+        </button>
       </div>
 
       {/* ═══════════════════════════════════════════════════

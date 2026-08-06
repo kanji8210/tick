@@ -16,6 +16,7 @@ import VerifyPolicy from './components/VerifyPolicy'
 import AboutPage from './components/AboutPage'
 import AgenciesPage from './components/AgenciesPage'
 import GroupQuotesPage from './components/GroupQuotesPage'
+import ClaimsPage from './components/ClaimsPage'
 
 function AppContent() {
   const { role } = useAuth();
@@ -57,12 +58,13 @@ function AppContent() {
     about:         '/about',
     agencies:      '/agencies',
     'group-quotes': '/group-quotes',
+    claims:        '/claims-refunds',
     'policy-detail': '/policy',
   };
   const PATH_VIEWS = Object.fromEntries(Object.entries(VIEW_PATHS).map(([v, p]) => [p, v]));
 
   const urlToEntry = () => {
-    const path = window.location.pathname;
+    const path = window.location.pathname === '/' ? '/' : window.location.pathname.replace(/\/+$/, '');
     const view = PATH_VIEWS[path] || 'landing';
     return { view, policyId: null, searchData: null, forceStep: null };
   };
@@ -153,6 +155,8 @@ function AppContent() {
         return <AgenciesPage onNavigate={handleNavigate} />;
       case 'group-quotes':
         return <GroupQuotesPage onNavigate={handleNavigate} />;
+      case 'claims':
+        return <ClaimsPage />;
       case 'policy-detail':
         return (
           <PolicyDetail 

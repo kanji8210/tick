@@ -70,6 +70,7 @@ const Header = ({ onNavigate, activeView, theme = 'dark', onToggleTheme }) => {
     }
 
     links.push({ label: 'Verify Policy', view: 'verify' });
+    links.push({ label: 'Claims & Refunds', view: 'claims' });
     links.push({ label: 'About', view: 'about' });
 
     if (!user) {
@@ -124,10 +125,23 @@ const Header = ({ onNavigate, activeView, theme = 'dark', onToggleTheme }) => {
             {!compact && (
               <ul className="tic-header__nav" style={{ display: 'flex', alignItems: 'center', gap: 36, listStyle: 'none', margin: 0, padding: 0 }}>
                 {navLinks.map((item) => {
-                  const isActive = activeView === item.view;
+                  const isActive = item.view && activeView === item.view;
                   return (
-                    <li key={item.view}>
-                      <button
+                    <li key={item.view || item.href}>
+                      {item.href ? (
+                        <a
+                          className="nav-link-luxury"
+                          href={item.href}
+                          style={{
+                            color: 'var(--header-muted)', fontSize: 14, fontWeight: 500,
+                            fontFamily: 'var(--font-body)', padding: '4px 0', textDecoration: 'none',
+                            borderBottom: '2px solid transparent', transition: 'color 0.2s, border-color 0.2s',
+                          }}
+                        >
+                          {item.label}
+                        </a>
+                      ) : (
+                        <button
                         className="nav-link-luxury"
                         onClick={() => onNavigate(item.view)}
                         aria-current={isActive ? 'page' : undefined}
@@ -142,6 +156,7 @@ const Header = ({ onNavigate, activeView, theme = 'dark', onToggleTheme }) => {
                       >
                         {item.label}
                       </button>
+                      )}
                     </li>
                   );
                 })}
@@ -188,16 +203,22 @@ const Header = ({ onNavigate, activeView, theme = 'dark', onToggleTheme }) => {
                 <div className="tic-mobile-menu" ref={menuRef}>
                   <nav style={{ flex: 1 }}>
                     {navLinks.map((item) => {
-                      const isActive = activeView === item.view;
+                      const isActive = item.view && activeView === item.view;
                       return (
-                        <button
-                          key={item.view}
-                          className={`tic-mobile-menu__link${isActive ? ' tic-mobile-menu__link--active' : ''}`}
-                          onClick={() => { onNavigate(item.view); setMenuOpen(false); }}
-                          aria-current={isActive ? 'page' : undefined}
-                        >
-                          {item.label}
-                        </button>
+                        item.href ? (
+                          <a key={item.href} className="tic-mobile-menu__link" href={item.href} onClick={() => setMenuOpen(false)}>
+                            {item.label}
+                          </a>
+                        ) : (
+                          <button
+                            key={item.view}
+                            className={`tic-mobile-menu__link${isActive ? ' tic-mobile-menu__link--active' : ''}`}
+                            onClick={() => { onNavigate(item.view); setMenuOpen(false); }}
+                            aria-current={isActive ? 'page' : undefined}
+                          >
+                            {item.label}
+                          </button>
+                        )
                       );
                     })}
                   </nav>
@@ -351,10 +372,24 @@ const Header = ({ onNavigate, activeView, theme = 'dark', onToggleTheme }) => {
           {compact && !mobile && (
             <ul className="tic-header__nav tic-header__nav--row2">
               {navLinks.map((item) => {
-                const isActive = activeView === item.view;
+                const isActive = item.view && activeView === item.view;
                 return (
-                  <li key={item.view}>
-                    <button
+                  <li key={item.view || item.href}>
+                    {item.href ? (
+                      <a
+                        className="nav-link-luxury"
+                        href={item.href}
+                        style={{
+                          color: 'var(--header-muted)', fontSize: 13, fontWeight: 500,
+                          fontFamily: 'var(--font-body)', padding: '6px 0', textDecoration: 'none',
+                          borderBottom: '2px solid transparent', transition: 'color 0.2s, border-color 0.2s',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {item.label}
+                      </a>
+                    ) : (
+                      <button
                       className="nav-link-luxury"
                       onClick={() => onNavigate(item.view)}
                       aria-current={isActive ? 'page' : undefined}
@@ -370,6 +405,7 @@ const Header = ({ onNavigate, activeView, theme = 'dark', onToggleTheme }) => {
                     >
                       {item.label}
                     </button>
+                    )}
                   </li>
                 );
               })}

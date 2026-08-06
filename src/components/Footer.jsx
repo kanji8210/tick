@@ -7,9 +7,13 @@ const LinkColumn = ({ title, links, mobile, onNavigate }) => (
     <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: mobile ? 9 : 11 }}>
       {links.map((l) => (
         <li key={l.label}>
-          <button className="footer-link" onClick={() => onNavigate(l.view)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--slate)', fontSize: 14, padding: 0, fontFamily: 'var(--font-body)' }}>
-            {l.label}
-          </button>
+          {l.href ? (
+            <a className="footer-link" href={l.href} style={{ color: 'var(--slate)', fontSize: 14, fontFamily: 'var(--font-body)', textDecoration: 'none' }}>{l.label}</a>
+          ) : (
+            <button className="footer-link" onClick={() => onNavigate(l.view)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--slate)', fontSize: 14, padding: 0, fontFamily: 'var(--font-body)' }}>
+              {l.label}
+            </button>
+          )}
         </li>
       ))}
     </ul>
@@ -35,7 +39,7 @@ const Footer = ({ onNavigate }) => {
 
   const supportLinks = [
     { label: 'Verify a Policy', view: 'verify' },
-    { label: 'File a Claim',    view: 'catalog' },
+    { label: 'Claims & Refunds', view: 'claims' },
     { label: 'Contact Us',      view: 'about' },
     { label: 'FAQ',             view: 'about' },
   ];
@@ -79,19 +83,25 @@ const Footer = ({ onNavigate }) => {
               <h4 style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, marginBottom: 10, color: 'var(--white)', letterSpacing: '0.04em' }}>Support</h4>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {supportLinks.map((l) => (
-                  <button
-                    key={l.label}
-                    className="footer-link"
-                    onClick={() => onNavigate(l.view)}
-                    style={{
-                      background: 'var(--glass-bg)', border: '1px solid var(--glass-border)',
-                      borderRadius: 100, padding: '10px 16px',
-                      cursor: 'pointer', color: 'var(--slate)', fontSize: 13, fontFamily: 'var(--font-body)',
-                      transition: 'all 0.2s',
-                    }}
-                  >
-                    {l.label}
-                  </button>
+                  l.href ? (
+                    <a key={l.label} className="footer-link" href={l.href} style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: 100, padding: '10px 16px', color: 'var(--slate)', fontSize: 13, fontFamily: 'var(--font-body)', textDecoration: 'none' }}>
+                      {l.label}
+                    </a>
+                  ) : (
+                    <button
+                      key={l.label}
+                      className="footer-link"
+                      onClick={() => onNavigate(l.view)}
+                      style={{
+                        background: 'var(--glass-bg)', border: '1px solid var(--glass-border)',
+                        borderRadius: 100, padding: '10px 16px',
+                        cursor: 'pointer', color: 'var(--slate)', fontSize: 13, fontFamily: 'var(--font-body)',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      {l.label}
+                    </button>
+                  )
                 ))}
               </div>
             </div>
@@ -128,9 +138,13 @@ const Footer = ({ onNavigate }) => {
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 11 }}>
                 {supportLinks.map((l) => (
                   <li key={l.label}>
-                    <button className="footer-link" onClick={() => onNavigate(l.view)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--slate)', fontSize: 14, padding: 0, fontFamily: 'var(--font-body)' }}>
-                      {l.label}
-                    </button>
+                    {l.href ? (
+                      <a className="footer-link" href={l.href} style={{ color: 'var(--slate)', fontSize: 14, fontFamily: 'var(--font-body)', textDecoration: 'none' }}>{l.label}</a>
+                    ) : (
+                      <button className="footer-link" onClick={() => onNavigate(l.view)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--slate)', fontSize: 14, padding: 0, fontFamily: 'var(--font-body)' }}>
+                        {l.label}
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>

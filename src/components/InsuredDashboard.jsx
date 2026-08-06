@@ -409,6 +409,7 @@ const InsuredDashboard = ({ user, onNavigate, initialTab }) => {
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>Quick Actions</div>
             <button className="qa-btn" onClick={() => onNavigate('catalog')}>🛡️ Compare &amp; Buy Policy</button>
             <button className="qa-btn" onClick={() => onNavigate('verify')}>🔍 Verify a Certificate</button>
+            <button className="qa-btn" onClick={() => onNavigate('claims')}>Claims &amp; Refunds</button>
           </div>
 
           {/* Verified badge */}
