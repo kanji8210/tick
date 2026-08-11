@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery } from 'urql';
-import { useAuth } from '../lib/AuthContext';
-import { useResponsive } from '../lib/useResponsive';
+import { useAuth } from '../../lib/AuthContext';
+import { useResponsive } from '../../lib/useResponsive';
 
 const MY_POLICIES = `
   query RefundEligiblePolicies {

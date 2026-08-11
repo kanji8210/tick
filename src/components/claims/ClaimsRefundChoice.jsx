@@ -1,5 +1,5 @@
 import React from 'react';
-import { useResponsive } from '../lib/useResponsive';
+import { useResponsive } from '../../lib/useResponsive';
 
 const OPTIONS = [
   {

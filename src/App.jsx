@@ -16,9 +16,7 @@ import VerifyPolicy from './components/VerifyPolicy'
 import AboutPage from './components/AboutPage'
 import AgenciesPage from './components/AgenciesPage'
 import GroupQuotesPage from './components/GroupQuotesPage'
-import ClaimsPage from './components/ClaimsPage'
-import ClaimSupportPage from './components/ClaimSupportPage'
-import ClaimsRefundChoice from './components/ClaimsRefundChoice'
+import { ClaimsPage, ClaimsRefundChoice, ClaimSupportPage } from './components/claims'
 
 function AppContent() {
   const { role } = useAuth();
