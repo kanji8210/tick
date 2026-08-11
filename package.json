@@ -16,8 +16,10 @@
   "dependencies": {
     "graphify": "^1.0.0",
     "graphql": "^16.13.1",
+    "pdf-lib": "^1.17.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "react-signature-canvas": "^1.1.0-alpha.2",
     "urql": "^5.0.1"
   },
   "devDependencies": {
