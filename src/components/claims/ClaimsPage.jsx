@@ -6,7 +6,7 @@ import { useResponsive } from '../../lib/useResponsive';
 const MY_POLICIES = `
   query RefundEligiblePolicies {
     myPolicySales {
-      id policyNumber policyTitle policyInsurerName policyStatus
+      id policyNumber policyTitle policyInsurerName policyStatus paymentStatus
     }
   }
 `;
@@ -17,16 +17,27 @@ const REASONS = [
   ['DUPLICATE_PURCHASE', 'Duplicate purchase'],
   ['OTHER', 'Other'],
 ];
-const INSURERS = ['Jubilee', 'UAP Old Mutual', 'AIG', 'APA', 'Britam', 'CIC'];
 const TODAY = new Date().toISOString().slice(0, 10);
+const ELIGIBLE_POLICY_STATUSES = ['active', 'approved', 'confirmed', 'verification_ready'];
+const CONFIRMED_PAYMENT_STATUSES = ['confirmed', 'paid'];
 
-const ClaimsPage = () => {
+const isEligibleOwnedPolicy = (policy) => {
+  const policyStatus = String(policy?.policyStatus || '').toLowerCase();
+  const paymentStatus = String(policy?.paymentStatus || '').toLowerCase();
+  return Boolean(policy?.policyNumber) && (
+    ELIGIBLE_POLICY_STATUSES.includes(policyStatus) || CONFIRMED_PAYMENT_STATUSES.includes(paymentStatus)
+  );
+};
+
+const ClaimsPage = ({ initialContext }) => {
   const { user } = useAuth();
   const { mobile } = useResponsive();
-  const [config, setConfig] = useState({ fee: 0, currency: 'KSH', nonce: '' });
+  const [config, setConfig] = useState({ fee: 0, currency: 'KSH', nonce: '', insurers: [] });
   const [reason, setReason] = useState('VISA_REJECTION');
   const [payoutMethod, setPayoutMethod] = useState('MPESA');
   const [selectedPolicy, setSelectedPolicy] = useState('');
+  const [selectedInsurer, setSelectedInsurer] = useState('');
+  const [useExternalPolicy, setUseExternalPolicy] = useState(Boolean(initialContext?.externalPolicy));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [reference, setReference] = useState('');
@@ -42,17 +53,42 @@ const ClaimsPage = () => {
         fee: Number(data.fee || 0),
         currency: data.currency || 'KSH',
         nonce: data.nonce || '',
+        insurers: Array.isArray(data.insurers) ? data.insurers : [],
       }))
       .catch(() => setError('The refund service is temporarily unavailable. Please try again shortly.'));
   }, []);
 
-  const activePolicies = (policyData?.myPolicySales || []).filter((policy) =>
-    ['active', 'approved', 'confirmed'].includes(String(policy.policyStatus || '').toLowerCase()) && policy.policyNumber
-  );
-  const chosenPolicy = activePolicies.find((policy) => String(policy.id) === selectedPolicy);
+  const activePolicies = (policyData?.myPolicySales || []).filter(isEligibleOwnedPolicy);
+  const chosenPolicy = useExternalPolicy ? null : activePolicies.find((policy) => String(policy.id) === selectedPolicy);
+  const insurerOptions = Array.from(new Set([
+    ...config.insurers,
+    ...(policyData?.myPolicySales || []).map((policy) => policy.policyInsurerName || policy.policyTitle).filter(Boolean),
+  ])).sort((a, b) => a.localeCompare(b));
   const feeLabel = config.fee > 0
     ? `${config.currency} ${config.fee.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     : 'No fee';
+
+  useEffect(() => {
+    if (chosenPolicy?.policyInsurerName || chosenPolicy?.policyTitle) {
+      setSelectedInsurer(chosenPolicy.policyInsurerName || chosenPolicy.policyTitle);
+    }
+  }, [chosenPolicy]);
+
+  useEffect(() => {
+    if (!initialContext) return;
+    if (initialContext.externalPolicy) {
+      setUseExternalPolicy(true);
+      setSelectedPolicy('');
+      setSelectedInsurer(initialContext.insurerName || '');
+      return;
+    }
+    if (initialContext.policySaleId) {
+      setSelectedPolicy(String(initialContext.policySaleId));
+    }
+    if (initialContext.insurerName) {
+      setSelectedInsurer(initialContext.insurerName);
+    }
+  }, [initialContext]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -69,7 +105,7 @@ const ClaimsPage = () => {
     formData.set('consent', '1');
     if (chosenPolicy) {
       formData.set('policy_number', chosenPolicy.policyNumber);
-      formData.set('insurer_name', chosenPolicy.policyInsurerName || chosenPolicy.policyTitle || 'Unknown insurer');
+      formData.set('insurer_name', selectedInsurer || chosenPolicy.policyInsurerName || chosenPolicy.policyTitle || '');
     }
 
     setSubmitting(true);
@@ -82,6 +118,8 @@ const ClaimsPage = () => {
       setReference(result.reference);
       form.reset();
       setSelectedPolicy('');
+      setSelectedInsurer('');
+      setUseExternalPolicy(false);
       setReason('VISA_REJECTION');
       setPayoutMethod('MPESA');
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -137,16 +175,32 @@ const ClaimsPage = () => {
         <section>
           <h2 style={{ fontSize: 22, marginBottom: 6 }}>Policy selection</h2>
           <p style={{ color: 'var(--slate)', fontSize: 13, marginBottom: 20 }}>Choose an active policy or enter external policy details.</p>
-          {user && activePolicies.length > 0 ? (
-            <label style={labelStyle}>Your active policy<select className="refund-field" style={fieldStyle} value={selectedPolicy} onChange={(event) => setSelectedPolicy(event.target.value)} required><option value="">Select a policy</option>{activePolicies.map((policy) => <option key={policy.id} value={policy.id}>{policy.policyNumber} - {policy.policyInsurerName || policy.policyTitle}</option>)}</select></label>
-          ) : (
-            <div style={gridStyle}>
-              <label style={labelStyle}>Policy number<input className="refund-field" style={fieldStyle} type="text" name="policy_number" required /></label>
-              <label style={labelStyle}>Insurer<select className="refund-field" style={fieldStyle} name="insurer_name" defaultValue="" required><option value="" disabled>Select insurer</option>{INSURERS.map((insurer) => <option key={insurer} value={insurer}>{insurer}</option>)}<option value="Other">Other</option></select></label>
+          {user && activePolicies.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
+              <button type="button" className="btn btn--ghost" onClick={() => { setUseExternalPolicy(false); setError(''); }} style={{ minHeight: 42, opacity: useExternalPolicy ? 0.72 : 1 }}>
+                Claim from my DIMP policy
+              </button>
+              <button type="button" className="btn btn--ghost" onClick={() => { setUseExternalPolicy(true); setSelectedPolicy(''); setError(''); }} style={{ minHeight: 42, opacity: useExternalPolicy ? 1 : 0.72 }}>
+                Use a policy not bought through DIMP
+              </button>
             </div>
           )}
+          <div style={gridStyle}>
+            {!useExternalPolicy && user && activePolicies.length > 0 ? (
+              <label style={labelStyle}>Your active policy<select className="refund-field" style={fieldStyle} value={selectedPolicy} onChange={(event) => setSelectedPolicy(event.target.value)} required><option value="">Select a policy</option>{activePolicies.map((policy) => <option key={policy.id} value={policy.id}>{policy.policyNumber} - {policy.policyInsurerName || policy.policyTitle}</option>)}</select></label>
+            ) : (
+              <label style={labelStyle}>Policy number<input className="refund-field" style={fieldStyle} type="text" name="policy_number" required /></label>
+            )}
+            {chosenPolicy ? (
+              <label style={labelStyle}>Insurer<input className="refund-field" style={{ ...fieldStyle, opacity: 0.85 }} type="text" value={selectedInsurer} readOnly /></label>
+            ) : (
+              <label style={labelStyle}>Insurer<select className="refund-field" style={fieldStyle} name="insurer_name" value={selectedInsurer} onChange={(event) => setSelectedInsurer(event.target.value)} required><option value="" disabled>Select insurer</option>{insurerOptions.map((insurer) => <option key={insurer} value={insurer}>{insurer}</option>)}</select></label>
+            )}
+          </div>
           {user && policiesLoading && <p style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--slate)', fontSize: 12, marginTop: 10 }}><span className="refund-spinner" aria-hidden="true" />Loading your active policies...</p>}
-          {user && !policiesLoading && activePolicies.length === 0 && <p style={{ color: 'var(--slate)', fontSize: 12, marginTop: 10 }}>No active policy was found, so you can enter the policy manually.</p>}
+          {user && !policiesLoading && activePolicies.length === 0 && <p style={{ color: 'var(--slate)', fontSize: 12, marginTop: 10 }}>No active policy was found, so enter the policy number manually and choose the insurer below.</p>}
+          {user && activePolicies.length > 0 && useExternalPolicy && <p style={{ color: 'var(--slate)', fontSize: 12, marginTop: 10 }}>Using an external policy lets you file a refund or claim for cover that was not bought through DIMP.</p>}
+          {chosenPolicy && <p style={{ color: 'var(--slate)', fontSize: 12, marginTop: 10 }}>The insurer is matched to the selected policy so we can load the correct refund or claim form.</p>}
         </section>
 
         <section className="refund-section">

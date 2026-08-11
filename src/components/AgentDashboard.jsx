@@ -41,6 +41,7 @@ const MY_POLICIES = gql`
   query MyPolicySales {
     myPolicySales {
       id policyId policyTitle policyNumber region premium days
+      policyInsurerName
       departure returnDate passengers insuredNames insuredEmail insuredPhone
       passportNumber insuredDob nationalId insuredAddress countryOfOrigin
       amountPaid paymentStatus policyStatus createdAt
@@ -242,6 +243,7 @@ const toNumericId = (id) => {
 };
 
 const WP_REST_BASE = '/wp-json';
+const canPrintCertificate = (sale) => sale?.paymentStatus === 'confirmed' || ['active', 'verification_ready', 'approved'].includes(String(sale?.policyStatus || '').toLowerCase());
 
 const readRestError = async (res, fallback) => {
   const raw = await res.text().catch(() => '');
@@ -309,6 +311,37 @@ const AgentDashboard = ({ user, onNavigate }) => {
       else throw new Error('No invoice content returned');
     } catch (e) { alert(`Could not load invoice. ${e.message}`); }
     finally { setActionLoading(null); }
+  };
+
+  const handleViewCertificate = async (saleId) => {
+    setActionLoading(saleId);
+    const numId = toNumericId(saleId);
+    try {
+      const res = await fetch(`${WP_REST_BASE}/maljani/v1/certificate/${numId}`, { headers: restHeaders() });
+      if (!res.ok) throw new Error(await readRestError(res, 'Could not load certificate'));
+      const data = await res.json();
+      if (data.html) { const w = window.open('', '_blank'); if (w) { w.document.write(data.html); w.document.close(); } }
+      else throw new Error('No certificate content returned');
+    } catch (e) { alert(`Could not load certificate. ${e.message}`); }
+    finally { setActionLoading(null); }
+  };
+
+  const openClaimRequest = (sale, externalPolicy = false) => {
+    onNavigate?.('claim', null, {
+      policySaleId: sale?.id ? String(sale.id) : null,
+      policyNumber: sale?.policyNumber || '',
+      insurerName: sale?.policyInsurerName || '',
+      externalPolicy,
+    });
+  };
+
+  const openRefundRequest = (sale, externalPolicy = false) => {
+    onNavigate?.('refunds', null, {
+      policySaleId: sale?.id ? String(sale.id) : null,
+      policyNumber: sale?.policyNumber || '',
+      insurerName: sale?.policyInsurerName || '',
+      externalPolicy,
+    });
   };
 
   /** Change policy status and notify the notification panel instantly */
@@ -640,6 +673,29 @@ const AgentDashboard = ({ user, onNavigate }) => {
                     borderRadius: '8px', padding: '0.5rem 1rem', cursor: loading ? 'wait' : 'pointer',
                     color: '#22c55e', fontSize: '0.78rem', fontWeight: 700, opacity: loading ? 0.6 : 1,
                   }}>{loading ? 'Loading…' : '📄 Invoice'}</button>
+              )}
+              <button onClick={() => openClaimRequest(s, false)} style={{
+                background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)',
+                borderRadius: '8px', padding: '0.5rem 1rem', cursor: 'pointer',
+                color: '#93c5fd', fontSize: '0.78rem', fontWeight: 700,
+              }}>Start claim</button>
+              <button onClick={() => openRefundRequest(s, false)} style={{
+                background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.25)',
+                borderRadius: '8px', padding: '0.5rem 1rem', cursor: 'pointer',
+                color: '#d8b4fe', fontSize: '0.78rem', fontWeight: 700,
+              }}>Request refund</button>
+              {canPrintCertificate(s) && (
+                <button
+                  disabled={loading}
+                  onClick={() => handleViewCertificate(s.id)}
+                  style={{
+                    background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)',
+                    borderRadius: '8px', padding: '0.5rem 1rem', cursor: loading ? 'wait' : 'pointer',
+                    color: '#86efac', fontSize: '0.78rem', fontWeight: 700, opacity: loading ? 0.6 : 1,
+                  }}
+                >
+                  {loading ? 'Loading…' : '🖨 Print certificate'}
+                </button>
               )}
               <span
                 title="Policy documents are issued by the insurer after manual processing."
@@ -983,6 +1039,7 @@ const AgentDashboard = ({ user, onNavigate }) => {
                   const pay = getPay(p.paymentStatus);
                   const isSelf = authUser?.email && p.insuredEmail?.toLowerCase() === authUser.email.toLowerCase();
                   const isUnpaid = p.paymentStatus !== 'confirmed';
+                  const canPrint = canPrintCertificate(p);
                   return (
                     <tr key={p.id} style={{ cursor: 'pointer', background: isSelf ? 'rgba(245,158,11,0.04)' : 'transparent' }} onClick={() => setSelectedSale(p)}>
                       <td style={tdStyle}><span style={{ color: 'var(--gold)', fontWeight: 600, fontSize: '0.78rem' }}>{p.policyNumber}</span></td>
@@ -1004,6 +1061,23 @@ const AgentDashboard = ({ user, onNavigate }) => {
                       <td style={tdStyle}><Badge {...ps} /></td>
                       <td style={tdStyle}>
                         <div style={{ display: 'flex', gap: '0.3rem' }} onClick={e => e.stopPropagation()}>
+                          <button title="Start a claim" onClick={() => openClaimRequest(p, false)} style={{
+                            background: 'rgba(59,130,246,0.12)', border: 'none', borderRadius: '6px',
+                            padding: '0.3rem 0.55rem', cursor: 'pointer', color: '#93c5fd',
+                            fontSize: '0.68rem', fontWeight: 700, whiteSpace: 'nowrap',
+                          }}>Claim</button>
+                          <button title="Request a refund" onClick={() => openRefundRequest(p, false)} style={{
+                            background: 'rgba(168,85,247,0.12)', border: 'none', borderRadius: '6px',
+                            padding: '0.3rem 0.55rem', cursor: 'pointer', color: '#d8b4fe',
+                            fontSize: '0.68rem', fontWeight: 700, whiteSpace: 'nowrap',
+                          }}>Refund</button>
+                          {canPrint && (
+                            <button title="Print verification certificate" onClick={() => handleViewCertificate(p.id)} style={{
+                              background: 'rgba(34,197,94,0.12)', border: 'none', borderRadius: '6px',
+                              padding: '0.3rem 0.55rem', cursor: 'pointer', color: '#86efac',
+                              fontSize: '0.68rem', fontWeight: 700, whiteSpace: 'nowrap',
+                            }}>Print cert</button>
+                          )}
                           {isUnpaid && (
                             <button title="Edit policy details" onClick={() => setEditPolicy(p)} style={{
                               background: 'rgba(59,130,246,0.12)', border: 'none', borderRadius: '6px',

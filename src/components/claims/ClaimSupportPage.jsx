@@ -6,7 +6,7 @@ import { useResponsive } from '../../lib/useResponsive';
 const MY_POLICIES = `
   query ClaimEligiblePolicies {
     myPolicySales {
-      id policyNumber policyTitle policyInsurerName policyStatus
+      id policyNumber policyTitle policyInsurerName policyStatus paymentStatus
     }
   }
 `;
@@ -65,13 +65,22 @@ const CLAIM_DOCUMENT_FIELDS = [
   },
 ];
 
-const INSURERS = ['Jubilee', 'UAP Old Mutual', 'AIG', 'APA', 'Britam', 'CIC'];
 const STEPS = ['Policy', 'Incident', 'Documents', 'Payout', 'Review'];
 const TODAY = new Date().toISOString().slice(0, 10);
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 const ACCEPTED_FILE_INPUT = '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png';
 const DEFAULT_MAX_DOCUMENTS = 16;
+const ELIGIBLE_POLICY_STATUSES = ['active', 'approved', 'confirmed', 'verification_ready'];
+const CONFIRMED_PAYMENT_STATUSES = ['confirmed', 'paid'];
+
+const isEligibleOwnedPolicy = (policy) => {
+  const policyStatus = String(policy?.policyStatus || '').toLowerCase();
+  const paymentStatus = String(policy?.paymentStatus || '').toLowerCase();
+  return Boolean(policy?.policyNumber) && (
+    ELIGIBLE_POLICY_STATUSES.includes(policyStatus) || CONFIRMED_PAYMENT_STATUSES.includes(paymentStatus)
+  );
+};
 
 const createEmptyDocuments = () => CLAIM_DOCUMENT_FIELDS.reduce((accumulator, field) => {
   accumulator[field.key] = [];
@@ -127,7 +136,7 @@ const ClaimDocumentField = ({
   </div>
 );
 
-const ClaimSupportPage = () => {
+const ClaimSupportPage = ({ initialContext }) => {
   const { user } = useAuth();
   const { mobile } = useResponsive();
   const [step, setStep] = useState(0);
@@ -138,12 +147,14 @@ const ClaimSupportPage = () => {
     claimFormUrl: '',
     claimFormLabel: '',
     claimDocumentsMax: DEFAULT_MAX_DOCUMENTS,
+    insurers: [],
   });
   const [selectedPolicy, setSelectedPolicy] = useState('');
+  const [useExternalPolicy, setUseExternalPolicy] = useState(Boolean(initialContext?.externalPolicy));
+  const [selectedInsurer, setSelectedInsurer] = useState('');
   const [payoutMethod, setPayoutMethod] = useState('MPESA');
   const [formValues, setFormValues] = useState({
     policy_number: '',
-    insurer_name: '',
     incident_date: TODAY,
     claim_type: 'MEDICAL_EXPENSE',
     description: '',
@@ -173,11 +184,13 @@ const ClaimSupportPage = () => {
     }));
   }, [user]);
 
-  const activePolicies = (policyData?.myPolicySales || []).filter((policy) =>
-    ['active', 'approved', 'confirmed'].includes(String(policy.policyStatus || '').toLowerCase()) && policy.policyNumber
-  );
-  const chosenPolicy = activePolicies.find((policy) => String(policy.id) === selectedPolicy);
-  const activeInsurerName = (chosenPolicy?.policyInsurerName || chosenPolicy?.policyTitle || formValues.insurer_name || '').trim();
+  const activePolicies = (policyData?.myPolicySales || []).filter(isEligibleOwnedPolicy);
+  const chosenPolicy = useExternalPolicy ? null : activePolicies.find((policy) => String(policy.id) === selectedPolicy);
+  const activeInsurerName = (chosenPolicy?.policyInsurerName || chosenPolicy?.policyTitle || selectedInsurer || '').trim();
+  const insurerOptions = Array.from(new Set([
+    ...config.insurers,
+    ...(policyData?.myPolicySales || []).map((policy) => policy.policyInsurerName || policy.policyTitle).filter(Boolean),
+  ])).sort((a, b) => a.localeCompare(b));
 
   useEffect(() => {
     let cancelled = false;
@@ -206,6 +219,7 @@ const ClaimSupportPage = () => {
           claimFormUrl: data.claim_form_url || '',
           claimFormLabel: data.claim_form_label || '',
           claimDocumentsMax: Number(data.claim_documents_max || DEFAULT_MAX_DOCUMENTS),
+          insurers: Array.isArray(data.insurers) ? data.insurers : [],
         });
       })
       .catch((fetchError) => {
@@ -218,6 +232,32 @@ const ClaimSupportPage = () => {
       controller.abort();
     };
   }, [activeInsurerName]);
+
+  useEffect(() => {
+    if (chosenPolicy?.policyInsurerName || chosenPolicy?.policyTitle) {
+      setSelectedInsurer(chosenPolicy.policyInsurerName || chosenPolicy.policyTitle);
+    }
+  }, [chosenPolicy]);
+
+  useEffect(() => {
+    if (!initialContext) return;
+    if (initialContext.externalPolicy) {
+      setUseExternalPolicy(true);
+      setSelectedPolicy('');
+      setSelectedInsurer(initialContext.insurerName || '');
+      setFormValues((current) => ({
+        ...current,
+        policy_number: initialContext.policyNumber || current.policy_number,
+      }));
+      return;
+    }
+    if (initialContext.policySaleId) {
+      setSelectedPolicy(String(initialContext.policySaleId));
+    }
+    if (initialContext.insurerName) {
+      setSelectedInsurer(initialContext.insurerName);
+    }
+  }, [initialContext]);
 
   const feeLabel = config.fee > 0
     ? `${config.currency} ${config.fee.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -373,6 +413,7 @@ const ClaimSupportPage = () => {
       }
       setReference(result.reference);
       setCheckout(result.checkout || null);
+      setUseExternalPolicy(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (submissionError) {
       setError(submissionError.message || 'We could not submit your claim.');
@@ -468,7 +509,18 @@ const ClaimSupportPage = () => {
           <section>
             <h2 style={sectionTitle}>Policy &amp; insurer details</h2>
             <p style={{ color: 'var(--slate)', fontSize: 13, marginBottom: 22 }}>Choose an active TIC-Kenya policy or enter an external policy.</p>
-            {user && activePolicies.length > 0 ? (
+            {user && activePolicies.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
+              <button type="button" className="btn btn--ghost" onClick={() => { setUseExternalPolicy(false); setError(''); }} style={{ minHeight: 42, opacity: useExternalPolicy ? 0.72 : 1 }}>
+                Claim from my DIMP policy
+              </button>
+              <button type="button" className="btn btn--ghost" onClick={() => { setUseExternalPolicy(true); setSelectedPolicy(''); setError(''); }} style={{ minHeight: 42, opacity: useExternalPolicy ? 1 : 0.72 }}>
+                Use a policy not bought through DIMP
+              </button>
+            </div>
+            )}
+            <div style={gridStyle}>
+            {!useExternalPolicy && user && activePolicies.length > 0 ? (
               <label style={labelStyle}>
                 Your active policy
                 <select className="claim-field" style={fieldStyle} value={selectedPolicy} onChange={(event) => setSelectedPolicy(event.target.value)}>
@@ -481,23 +533,30 @@ const ClaimSupportPage = () => {
                 </select>
               </label>
             ) : (
-              <div style={gridStyle}>
                 <label style={labelStyle}>
                   Policy number
                   <input className="claim-field" style={fieldStyle} name="policy_number" value={formValues.policy_number} onChange={updateValue} />
                 </label>
-                <label style={labelStyle}>
-                  Insurer
-                  <select className="claim-field" style={fieldStyle} name="insurer_name" value={formValues.insurer_name} onChange={updateValue}>
-                    <option value="">Select insurer</option>
-                    {INSURERS.map((insurer) => <option key={insurer}>{insurer}</option>)}
-                    <option>Other</option>
-                  </select>
-                </label>
-              </div>
             )}
+            {chosenPolicy ? (
+              <label style={labelStyle}>
+                Insurer
+                <input className="claim-field" style={{ ...fieldStyle, opacity: 0.85 }} type="text" value={selectedInsurer} readOnly />
+              </label>
+            ) : (
+              <label style={labelStyle}>
+                Insurer
+                <select className="claim-field" style={fieldStyle} value={selectedInsurer} onChange={(event) => setSelectedInsurer(event.target.value)}>
+                  <option value="">Select insurer</option>
+                  {insurerOptions.map((insurer) => <option key={insurer} value={insurer}>{insurer}</option>)}
+                </select>
+              </label>
+            )}
+            </div>
             {user && policiesLoading && <p style={{ display: 'flex', gap: 8, marginTop: 12, color: 'var(--slate)', fontSize: 12 }}><span className="claim-spinner" />Loading active policies...</p>}
-            {user && !policiesLoading && activePolicies.length === 0 && <p style={{ color: 'var(--slate)', fontSize: 12, marginTop: 12 }}>No active policy was found. Enter the external policy details above.</p>}
+            {user && !policiesLoading && activePolicies.length === 0 && <p style={{ color: 'var(--slate)', fontSize: 12, marginTop: 12 }}>No active policy was found. Enter the policy number manually and choose the insurer from the list above.</p>}
+            {user && activePolicies.length > 0 && useExternalPolicy && <p style={{ color: 'var(--slate)', fontSize: 12, marginTop: 12 }}>Using an external policy lets you file a claim for cover that was not bought through DIMP.</p>}
+            {chosenPolicy && <p style={{ color: 'var(--slate)', fontSize: 12, marginTop: 12 }}>The insurer is matched to the selected policy so we can load the correct claim form.</p>}
           </section>
         )}
 

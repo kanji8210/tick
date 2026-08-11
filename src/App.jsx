@@ -160,9 +160,9 @@ function AppContent() {
       case 'claims':
         return <ClaimsRefundChoice onNavigate={handleNavigate} />;
       case 'claim':
-        return <ClaimSupportPage />;
+        return <ClaimSupportPage initialContext={history[historyIdx].searchData} />;
       case 'refunds':
-        return <ClaimsPage />;
+        return <ClaimsPage initialContext={history[historyIdx].searchData} />;
       case 'policy-detail':
         return (
           <PolicyDetail 
