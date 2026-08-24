@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="https://mtj.ivk.mybluehost.me/website_e48ea083/wp-content/uploads/2026/03/cropped-logo-type.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <script>
+      const savedTheme = localStorage.getItem('tic-theme');
+      const initialTheme = savedTheme === 'dark' ? 'dark' : 'light';
+      document.documentElement.dataset.theme = initialTheme;
+      document.documentElement.style.colorScheme = initialTheme;
+    </script>
     <title>Travel Insurance Center-Kenya</title>
   </head>
   <body>

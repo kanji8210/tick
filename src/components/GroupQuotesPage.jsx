@@ -15,8 +15,8 @@ const GroupQuotesPage = ({ onNavigate }) => {
       </div>
       <GroupQuoteWizard onClose={() => onNavigate('landing')} onNavigate={onNavigate} />
       <button
-        className="btn-luxury"
-        style={{ marginTop: '2rem', background: 'transparent', border: '1px solid var(--glass-border)', color: 'white', width: '100%' }}
+        className="btn btn--ghost"
+        style={{ marginTop: '2rem', width: '100%', justifyContent: 'center' }}
         onClick={() => onNavigate('landing')}
       >
         Back to Home

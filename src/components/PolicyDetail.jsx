@@ -131,29 +131,29 @@ const PolicyDetail = ({ policyId, searchData, onBack, onStartWizard, compareSele
     <div className="fade-in" style={{ paddingBottom: '6rem' }}>
 
       {/* â”€â”€ Hero â”€â”€ */}
-      <section style={{
-        position: 'relative', height: mobile ? 280 : 360,
+      <section className="policy-detail-hero" style={{
+        position: 'relative', height: mobile ? 360 : 360,
         background: policy.featuredImage?.node?.sourceUrl
           ? `url(${policy.featuredImage.node.sourceUrl}) center/cover`
           : 'linear-gradient(135deg,var(--indigo),#1e1b4b)',
-        borderRadius: '0 0 32px 32px', overflow: 'hidden', marginBottom: 48,
+        borderRadius: '0 0 32px 32px', overflow: 'hidden', marginBottom: mobile ? 24 : 48,
       }}>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(8,14,39,0.3), rgba(8,14,39,0.88))' }} />
-        <div style={{ position: 'absolute', bottom: 36, left: 0, right: 0 }} className="container">
-          <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.55)', fontSize: 13, cursor: 'pointer', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6, padding: 0, fontFamily: 'var(--font-body)' }}>
+        <div style={{ position: 'absolute', top: mobile ? 84 : 'auto', bottom: mobile ? 'auto' : 36, left: 0, right: 0 }} className="container">
+          <button className="policy-detail-hero__back" onClick={onBack} style={{ minHeight: 44, background: 'none', border: 'none', color: 'rgba(255,255,255,0.75)', fontSize: 14, cursor: 'pointer', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6, padding: '0 4px', fontFamily: 'var(--font-body)' }}>
             ← Back to policies
           </button>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 18, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: mobile ? 'flex-start' : 'flex-end', gap: mobile ? 12 : 18, flexWrap: mobile ? 'nowrap' : 'wrap' }}>
             {policy.policyInsurerLogo && (
-              <img src={policy.policyInsurerLogo} alt={policy.policyInsurerName} style={{ width: 52, height: 52, borderRadius: 12, objectFit: 'contain', background: '#fff', padding: 4, flexShrink: 0 }} />
+              <img src={policy.policyInsurerLogo} alt={policy.policyInsurerName} style={{ width: mobile ? 44 : 52, height: mobile ? 44 : 52, borderRadius: 12, objectFit: 'contain', background: '#fff', padding: 4, flexShrink: 0 }} />
             )}
-            <div>
+            <div style={{ minWidth: 0, flex: mobile ? 1 : undefined }}>
               {policy.policyInsurerName && (
                 <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--gold)', margin: '0 0 6px' }}>
                   {policy.policyInsurerName}
                 </p>
               )}
-              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(24px,4vw,40px)', fontWeight: 800, color: '#fff', margin: 0 }}>
+              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: mobile ? 22 : 'clamp(24px,4vw,40px)', lineHeight: mobile ? 1.12 : undefined, fontWeight: 800, color: '#fff', margin: 0 }}>
                 {policy.title}
               </h1>
             </div>
@@ -174,7 +174,7 @@ const PolicyDetail = ({ policyId, searchData, onBack, onStartWizard, compareSele
         <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : tablet ? '1fr 300px' : '1fr 340px', gap: mobile ? 24 : 40, alignItems: 'start' }}>
 
           {/* â”€â”€ Main column â”€â”€ */}
-          <div className="glass-card" style={{ padding: '2.5rem' }}>
+          <div className="glass-card" style={{ minWidth: 0, padding: mobile ? '1.25rem' : '2.5rem', order: mobile ? 2 : undefined }}>
 
             {/* Description / excerpt */}
             {(policy.policyDescription || policy.excerpt) && (
@@ -209,7 +209,7 @@ const PolicyDetail = ({ policyId, searchData, onBack, onStartWizard, compareSele
               <Section title="Key" accent="Benefits">
                 <div 
                   className="policy-benefits-table"
-                  style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, lineHeight: 1.6 }}
+                  style={{ maxWidth: '100%', overflowX: 'auto', color: 'rgba(255,255,255,0.8)', fontSize: 13, lineHeight: 1.6 }}
                   dangerouslySetInnerHTML={{ __html: policy.policyBenefits }} 
                 />
               </Section>
@@ -272,17 +272,18 @@ const PolicyDetail = ({ policyId, searchData, onBack, onStartWizard, compareSele
           </div>
 
           {/* â”€â”€ Sidebar â”€â”€ */}
-          <aside style={{ display: 'flex', flexDirection: 'column', gap: 20, position: 'sticky', top: 100 }}>
+          <aside style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 20, position: mobile ? 'static' : 'sticky', top: mobile ? 'auto' : 100, order: mobile ? 1 : undefined }}>
 
             {/* Quote CTA */}
-            <div className="glass-card" style={{ padding: '2rem', border: '1px solid rgba(49,99,49,0.4)' }}>
+            <div className="glass-card" style={{ padding: mobile ? '1.25rem' : '2rem', border: '1px solid rgba(49,99,49,0.4)' }}>
               <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--gold)', margin: '0 0 14px' }}>Your Trip Quote</p>
 
               {/* Date pickers */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <label style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'rgba(255,255,255,0.5)' }}>Departure</label>
+                  <label htmlFor="policy-quote-departure" style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'rgba(255,255,255,0.5)' }}>Departure</label>
                   <input
+                    id="policy-quote-departure"
                     type="date"
                     min={today}
                     value={departure}
@@ -290,28 +291,29 @@ const PolicyDetail = ({ policyId, searchData, onBack, onStartWizard, compareSele
                       setDeparture(e.target.value);
                       if (returnDate < e.target.value) setReturnDate(e.target.value);
                     }}
-                    style={{ padding: '8px 10px', borderRadius: 7, border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, fontFamily: 'var(--font-body)', outline: 'none', width: '100%', boxSizing: 'border-box' }}
+                    style={{ minHeight: 44, padding: '8px 10px', borderRadius: 7, border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: mobile ? 16 : 13, fontFamily: 'var(--font-body)', width: '100%', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <label style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'rgba(255,255,255,0.5)' }}>Return</label>
+                  <label htmlFor="policy-quote-return" style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'rgba(255,255,255,0.5)' }}>Return</label>
                   <input
+                    id="policy-quote-return"
                     type="date"
                     min={departure}
                     value={returnDate}
                     onChange={e => setReturnDate(e.target.value)}
-                    style={{ padding: '8px 10px', borderRadius: 7, border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, fontFamily: 'var(--font-body)', outline: 'none', width: '100%', boxSizing: 'border-box' }}
+                    style={{ minHeight: 44, padding: '8px 10px', borderRadius: 7, border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: mobile ? 16 : 13, fontFamily: 'var(--font-body)', width: '100%', boxSizing: 'border-box' }}
                   />
                 </div>
                 {/* Travellers */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                   <label style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'rgba(255,255,255,0.5)' }}>Travellers</label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <button type="button" onClick={() => setPassengers(p => Math.max(1, p - 1))}
-                      style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>−</button>
+                    <button type="button" aria-label="Remove traveller" onClick={() => setPassengers(p => Math.max(1, p - 1))}
+                      style={{ width: 44, height: 44, borderRadius: 8, border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff', cursor: 'pointer', fontSize: 20, lineHeight: 1 }}>−</button>
                     <span style={{ fontWeight: 800, minWidth: 18, textAlign: 'center' }}>{passengers}</span>
-                    <button type="button" onClick={() => setPassengers(p => p + 1)}
-                      style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>+</button>
+                    <button type="button" aria-label="Add traveller" onClick={() => setPassengers(p => p + 1)}
+                      style={{ width: 44, height: 44, borderRadius: 8, border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: '#fff', cursor: 'pointer', fontSize: 20, lineHeight: 1 }}>+</button>
                   </div>
                 </div>
               </div>

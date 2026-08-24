@@ -225,6 +225,112 @@ const inputStyle = {
   boxSizing: 'border-box', minHeight: 48, colorScheme: 'dark',
 };
 
+const DOB_MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+const BirthDateInput = ({ value, onChange }) => {
+  const initialParts = value ? value.split('-') : ['', '', ''];
+  const [year, setYear] = useState(initialParts[0] || '');
+  const [month, setMonth] = useState(initialParts[1] || '');
+  const [day, setDay] = useState(initialParts[2] || '');
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+  const currentDay = today.getDate();
+  const years = Array.from({ length: 121 }, (_, index) => String(currentYear - index));
+  const calendarDays = year && month ? new Date(Number(year), Number(month), 0).getDate() : 31;
+  const daysInMonth = Number(year) === currentYear && Number(month) === currentMonth
+    ? Math.min(calendarDays, currentDay)
+    : calendarDays;
+  const selectStyle = (enabled) => ({
+    ...inputStyle,
+    minWidth: 0,
+    cursor: enabled ? 'pointer' : 'not-allowed',
+    opacity: enabled ? 1 : 0.5,
+  });
+
+  const publishDate = (nextYear, nextMonth, nextDay) => {
+    if (nextYear && nextMonth && nextDay) {
+      onChange(`${nextYear}-${nextMonth}-${nextDay}`);
+    } else {
+      onChange('');
+    }
+  };
+
+  const handleYear = (nextYear) => {
+    setYear(nextYear);
+    const monthIsFuture = Number(nextYear) === currentYear && Number(month) > currentMonth;
+    const dayIsFuture = Number(nextYear) === currentYear && Number(month) === currentMonth && Number(day) > currentDay;
+    const nextMonth = nextYear && !monthIsFuture ? month : '';
+    const nextDay = nextMonth && !dayIsFuture ? day : '';
+    setMonth(nextMonth);
+    setDay(nextDay);
+    publishDate(nextYear, nextMonth, nextDay);
+  };
+
+  const handleMonth = (nextMonth) => {
+    setMonth(nextMonth);
+    const monthDays = nextMonth ? new Date(Number(year), Number(nextMonth), 0).getDate() : 0;
+    const maxDay = Number(year) === currentYear && Number(nextMonth) === currentMonth
+      ? Math.min(monthDays, currentDay)
+      : monthDays;
+    const nextDay = Number(day) <= maxDay ? day : '';
+    setDay(nextDay);
+    publishDate(year, nextMonth, nextDay);
+  };
+
+  const handleDay = (nextDay) => {
+    setDay(nextDay);
+    publishDate(year, month, nextDay);
+  };
+
+  return (
+    <fieldset style={{ ...fieldStyle, border: 0, padding: 0, margin: 0 }}>
+      <legend style={{ ...labelStyle, padding: 0 }}>Date of Birth</legend>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: year ? 'var(--slate)' : 'var(--gold)', fontSize: 12, fontWeight: 700 }}>
+        <span aria-hidden="true" style={{ display: 'grid', placeItems: 'center', width: 22, height: 22, borderRadius: '50%', background: year ? 'rgba(34,197,94,0.14)' : 'rgba(246,166,35,0.15)', flexShrink: 0 }}>
+          {value ? '✓' : year ? (month ? '3' : '2') : '1'}
+        </span>
+        {value
+          ? 'Date of birth complete'
+          : month
+            ? 'Now select the birth day'
+            : year
+              ? 'Year selected. Now choose the month.'
+              : 'Start by selecting the birth year'}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.1fr) minmax(0,1.4fr) minmax(0,0.8fr)', gap: 8 }}>
+        <select aria-label="Birth year" value={year} onChange={event => handleYear(event.target.value)} style={selectStyle(true)}>
+          <option value="">Year</option>
+          {years.map(optionYear => <option key={optionYear} value={optionYear}>{optionYear}</option>)}
+        </select>
+        <select aria-label="Birth month" value={month} disabled={!year} onChange={event => handleMonth(event.target.value)} style={selectStyle(Boolean(year))}>
+          <option value="">Month</option>
+          {DOB_MONTHS.map((monthName, index) => {
+            const monthValue = String(index + 1).padStart(2, '0');
+            const futureMonth = Number(year) === currentYear && index + 1 > currentMonth;
+            return <option key={monthName} value={monthValue} disabled={futureMonth}>{monthName}</option>;
+          })}
+        </select>
+        <select aria-label="Birth day" value={day} disabled={!year || !month} onChange={event => handleDay(event.target.value)} style={selectStyle(Boolean(year && month))}>
+          <option value="">Day</option>
+          {Array.from({ length: daysInMonth }, (_, index) => {
+            const dayValue = String(index + 1).padStart(2, '0');
+            return <option key={dayValue} value={dayValue}>{index + 1}</option>;
+          })}
+        </select>
+      </div>
+      {value && (
+        <span role="status" style={{ fontSize: 12, color: 'var(--gold)', fontWeight: 600 }}>
+          Date selected: {fmtDateReadable(value)}
+        </span>
+      )}
+    </fieldset>
+  );
+};
+
 /* ─── Step indicators ─────────────────────────────────────────────────────── */
 const STEPS = ['Trip Details', 'Choose Plan', 'Your Info', 'Confirmed'];
 const STEPS_AGENT = ['Client Trip', 'Choose Plan', 'Client Info', 'Confirmed'];
@@ -239,7 +345,7 @@ const StepBar = ({ step, isAgent, mobile }) => {
       return (
         <React.Fragment key={i}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flex: 1, minWidth: 0 }}>
-            <div style={{
+            <div className="quote-step-indicator" data-state={done ? 'done' : active ? 'active' : 'pending'} style={{
               width: 30, height: 30, borderRadius: '50%', display: 'flex', flexShrink: 0,
               alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800,
               background: done ? 'var(--gold)' : active ? 'var(--indigo)' : 'var(--glass-bg)',
@@ -579,7 +685,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
               {regions.map(r => {
                 const active = form.destinationRegion === r.slug;
                 return (
-                  <button key={r.slug} type="button"
+                  <button key={r.slug} type="button" className="quote-region-option" data-active={active ? 'true' : 'false'}
                     onClick={() => set('destinationRegion', active ? '' : r.slug)}
                     style={{
                       padding: '8px 18px', borderRadius: 100, fontSize: 13, fontWeight: 700,
@@ -627,12 +733,14 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
         <label style={labelStyle}>Number of Travellers</label>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button
+            className="quote-passenger-button"
             type="button"
             aria-label="Remove traveller"
             style={{ ...inputStyle, width: 48, height: 48, padding: 0, textAlign: 'center', cursor: 'pointer', flexShrink: 0, fontSize: 22, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             onClick={() => set('passengers', Math.max(1, form.passengers - 1))}>−</button>
           <span style={{ fontSize: 20, fontWeight: 800, minWidth: 32, textAlign: 'center', color: '#fff' }}>{form.passengers}</span>
           <button
+            className="quote-passenger-button"
             type="button"
             aria-label="Add traveller"
             style={{ ...inputStyle, width: 48, height: 48, padding: 0, textAlign: 'center', cursor: 'pointer', flexShrink: 0, fontSize: 22, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -1061,16 +1169,20 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
             { key: 'dob',      label: 'Date of Birth',      type: 'date',  placeholder: '' },
             { key: 'passport', label: 'Passport / ID No.',  type: 'text',  placeholder: 'Optional' },
           ].map(({ key, label, type, placeholder }) => (
-            <div key={key} style={fieldStyle}>
-              <label style={labelStyle}>{label}</label>
-              <input
-                type={type}
-                style={inputStyle}
-                placeholder={placeholder}
-                value={form[key]}
-                onChange={e => set(key, e.target.value)}
-              />
-            </div>
+            key === 'dob' ? (
+              <BirthDateInput key={key} value={form.dob} onChange={value => set('dob', value)} />
+            ) : (
+              <div key={key} style={fieldStyle}>
+                <label style={labelStyle}>{label}</label>
+                <input
+                  type={type}
+                  style={inputStyle}
+                  placeholder={placeholder}
+                  value={form[key]}
+                  onChange={e => set(key, e.target.value)}
+                />
+              </div>
+            )
           ))}
 
           {requiresSeniorPolicy && (

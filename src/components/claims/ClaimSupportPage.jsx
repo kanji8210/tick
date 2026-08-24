@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { useQuery } from 'urql';
 import { useAuth } from '../../lib/AuthContext';
 import { useResponsive } from '../../lib/useResponsive';
+
+const ClaimFormEditor = lazy(() => import('./ClaimFormEditor'));
 
 const MY_POLICIES = `
   query ClaimEligiblePolicies {
@@ -87,9 +89,30 @@ const createEmptyDocuments = () => CLAIM_DOCUMENT_FIELDS.reduce((accumulator, fi
   return accumulator;
 }, {});
 
+const DocumentPreviewLink = ({ file }) => {
+  const previewUrl = useMemo(() => URL.createObjectURL(file), [file]);
+
+  useEffect(() => {
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
+
+  return (
+    <a
+      className="claim-document-preview"
+      href={previewUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`Preview ${file.name}`}
+    >
+      Preview
+    </a>
+  );
+};
+
 const ClaimDocumentField = ({
   field,
   files,
+  hideUpload = false,
   onAdd,
   onRemove,
 }) => (
@@ -98,19 +121,21 @@ const ClaimDocumentField = ({
       <strong style={{ color: 'var(--white)', fontSize: 15 }}>{field.label}</strong>
       <p style={{ color: 'var(--slate)', fontSize: 12, lineHeight: 1.7, margin: 0 }}>{field.description}</p>
     </div>
-    <label className="claim-upload" style={{ minHeight: 120, position: 'relative' }}>
-      <input
-        type="file"
-        accept={ACCEPTED_FILE_INPUT}
-        multiple={field.multiple}
-        onChange={onAdd}
-        style={{ position: 'absolute', opacity: 0, width: 1, height: 1 }}
-      />
-      <strong style={{ fontSize: 15, marginBottom: 7 }}>Upload {field.label.toLowerCase()}</strong>
-      <span style={{ color: 'var(--slate)', fontSize: 12 }}>
-        {field.multiple ? 'Multiple files allowed' : 'One file required'} · PDF, JPG, or PNG · 5 MB each
-      </span>
-    </label>
+    {!hideUpload && (
+      <label className="claim-upload" style={{ minHeight: 120, position: 'relative' }}>
+        <input
+          type="file"
+          accept={ACCEPTED_FILE_INPUT}
+          multiple={field.multiple}
+          onChange={onAdd}
+          style={{ position: 'absolute', opacity: 0, width: 1, height: 1 }}
+        />
+        <strong style={{ fontSize: 15, marginBottom: 7 }}>Upload {field.label.toLowerCase()}</strong>
+        <span style={{ color: 'var(--slate)', fontSize: 12 }}>
+          {field.multiple ? 'Multiple files allowed' : 'One file required'} · PDF, JPG, or PNG · 5 MB each
+        </span>
+      </label>
+    )}
     {files.length > 0 && (
       <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 8 }}>
         {files.map((file, index) => (
@@ -121,14 +146,17 @@ const ClaimDocumentField = ({
             <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--white)', fontSize: 13 }}>
               {file.name}
             </span>
-            <button
-              type="button"
-              aria-label={`Remove ${file.name}`}
-              onClick={() => onRemove(index)}
-              style={{ minWidth: 44, minHeight: 44, border: 0, background: 'transparent', color: '#fca5a5', cursor: 'pointer' }}
-            >
-              Remove
-            </button>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, flex: '0 0 auto' }}>
+              {field.key === 'completed_claim_form' && <DocumentPreviewLink file={file} />}
+              <button
+                type="button"
+                aria-label={`Remove ${file.name}`}
+                onClick={() => onRemove(index)}
+                style={{ minWidth: 44, minHeight: 44, border: 0, background: 'transparent', color: '#fca5a5', cursor: 'pointer' }}
+              >
+                Remove
+              </button>
+            </span>
           </li>
         ))}
       </ul>
@@ -145,6 +173,7 @@ const ClaimSupportPage = ({ initialContext }) => {
     currency: 'KES',
     nonce: '',
     claimFormUrl: '',
+    claimFormEditorUrl: '',
     claimFormLabel: '',
     claimDocumentsMax: DEFAULT_MAX_DOCUMENTS,
     insurers: [],
@@ -168,6 +197,8 @@ const ClaimSupportPage = ({ initialContext }) => {
     bank_branch: '',
   });
   const [claimDocuments, setClaimDocuments] = useState(createEmptyDocuments);
+  const [claimFormMethod, setClaimFormMethod] = useState('upload');
+  const [claimFormEditorOpen, setClaimFormEditorOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [reference, setReference] = useState('');
@@ -217,6 +248,7 @@ const ClaimSupportPage = ({ initialContext }) => {
           currency: data.currency || 'KES',
           nonce: data.nonce || '',
           claimFormUrl: data.claim_form_url || '',
+          claimFormEditorUrl: data.claim_form_editor_url || '',
           claimFormLabel: data.claim_form_label || '',
           claimDocumentsMax: Number(data.claim_documents_max || DEFAULT_MAX_DOCUMENTS),
           insurers: Array.isArray(data.insurers) ? data.insurers : [],
@@ -355,6 +387,23 @@ const ClaimSupportPage = ({ initialContext }) => {
     }));
   };
 
+  const chooseClaimFormMethod = (method) => {
+    setClaimFormMethod(method);
+    setClaimFormEditorOpen(method === 'online');
+    setClaimDocuments((current) => ({ ...current, completed_claim_form: [] }));
+    setError('');
+  };
+
+  const saveOnlineClaimForm = (file) => {
+    if (file.size > MAX_FILE_SIZE) {
+      setError('The completed online claim form is larger than 5 MB. Use the file upload option instead.');
+      return;
+    }
+    setClaimDocuments((current) => ({ ...current, completed_claim_form: [file] }));
+    setClaimFormEditorOpen(false);
+    setError('');
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     const message = validateStep();
@@ -472,10 +521,44 @@ const ClaimSupportPage = ({ initialContext }) => {
         .claim-field:focus { outline:none; border-color:var(--indigo-glow) !important; box-shadow:0 0 0 3px rgba(49,99,49,.2); }
         .claim-upload { display:grid; place-items:center; min-height:180px; padding:24px; border:1px dashed var(--glass-border-bright); border-radius:8px; background:var(--glass-bg); text-align:center; cursor:pointer; }
         .claim-upload:focus-within { outline:3px solid rgba(246,166,35,.25); outline-offset:2px; }
+        .claim-document-preview { display:inline-grid; place-items:center; min-height:44px; padding:0 12px; border:1px solid rgba(34,197,94,.38); border-radius:6px; color:#bbf7d0; text-decoration:none; font-size:12px; font-weight:700; }
+        .claim-document-preview:hover { border-color:rgba(34,197,94,.62); background:rgba(34,197,94,.1); }
+        .claim-document-preview:focus-visible { outline:3px solid rgba(246,166,35,.25); outline-offset:2px; }
         .claim-spinner { width:16px; height:16px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:claim-spin .7s linear infinite; }
         .claim-download-link { display:inline-flex; align-items:center; gap:10px; margin-top:12px; padding:12px 16px; border-radius:999px; border:1px solid rgba(34,197,94,.35); background:rgba(34,197,94,.08); color:#bbf7d0; text-decoration:none; font-weight:700; }
         .claim-download-link:hover { border-color:rgba(34,197,94,.55); background:rgba(34,197,94,.14); }
         .claim-pill { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:rgba(255,255,255,.04); color:var(--slate); font-size:12px; }
+        .claim-form-method { position:relative; cursor:pointer; flex:1 1 220px; }
+        .claim-form-method input { position:absolute; opacity:0; pointer-events:none; }
+        .claim-form-method span { display:grid; gap:4px; min-height:78px; padding:16px; border:1px solid var(--glass-border); border-radius:8px; background:var(--glass-bg); transition:border-color .2s, background .2s; }
+        .claim-form-method input:checked + span { border-color:var(--gold); background:var(--glass-bg-md); }
+        .claim-form-method input:focus-visible + span { outline:3px solid rgba(246,166,35,.25); outline-offset:2px; }
+        .claim-form-method small { color:var(--slate); font-size:12px; line-height:1.5; }
+        .claim-form-editor { display:grid; gap:18px; padding:20px; border:1px solid rgba(246,166,35,.35); border-radius:8px; background:var(--glass-bg); }
+        .claim-form-editor__header { display:flex; flex-wrap:wrap; justify-content:space-between; gap:16px; align-items:start; }
+        .claim-form-editor__header strong { color:var(--white); font-size:17px; }
+        .claim-form-editor__header p { margin:5px 0 0; color:var(--slate); font-size:12px; }
+        .claim-form-editor__status { display:flex; align-items:center; gap:8px; color:var(--slate); }
+        .claim-form-editor__error { padding:14px; border:1px solid rgba(239,68,68,.35); border-radius:8px; background:rgba(239,68,68,.08); color:#fca5a5; }
+        .claim-form-editor__fields { display:grid; gap:18px; min-width:0; }
+        .claim-form-editor__native-fields { display:grid; grid-template-columns:${mobile ? '1fr' : 'repeat(2,minmax(0,1fr))'}; gap:16px; }
+        .claim-form-editor__field { display:grid; gap:7px; min-width:0; color:var(--white); font-size:12px; font-weight:700; }
+        .claim-form-editor__choices { display:flex; flex-wrap:wrap; gap:12px; min-height:48px; align-items:center; }
+        .claim-form-editor__choices label { display:flex; align-items:center; gap:7px; min-height:44px; color:var(--slate); }
+        .claim-form-editor__signature { display:grid; gap:10px; grid-column:1/-1; color:var(--white); font-size:12px; font-weight:700; }
+        .claim-form-editor__canvas { width:100%; height:150px; border:1px solid var(--glass-border-bright); border-radius:8px; background:#fff; touch-action:none; }
+        .claim-form-editor__signature small { color:var(--slate); font-weight:400; }
+        .claim-form-editor__toolbar { display:flex; flex-wrap:wrap; gap:8px; }
+        .claim-form-editor__toolbar .btn { min-height:44px; }
+        .claim-form-editor__pages { display:grid; gap:22px; min-width:0; }
+        .claim-form-editor__page-shell { display:grid; gap:8px; min-width:0; color:var(--slate); font-size:12px; font-weight:700; }
+        .claim-form-editor__page { position:relative; width:100%; max-width:760px; margin:0 auto; overflow:hidden; border:1px solid var(--glass-border-bright); border-radius:4px; background:#fff; box-shadow:0 14px 30px rgba(0,0,0,.18); cursor:text; }
+        .claim-form-editor__page.is-signature { cursor:crosshair; }
+        .claim-form-editor__page canvas { display:block; width:100%; height:auto; }
+        .claim-form-editor__annotation { position:absolute; display:flex; width:min(38%,220px); min-width:110px; transform:translateY(-50%); z-index:2; }
+        .claim-form-editor__annotation input { width:100%; min-width:0; height:30px; padding:4px 7px; border:1px solid #2563eb; border-radius:3px 0 0 3px; background:rgba(255,255,255,.94); color:#101828; font-size:12px; }
+        .claim-form-editor__annotation button { width:30px; min-width:30px; height:30px; border:0; border-radius:0 3px 3px 0; background:#b91c1c; color:#fff; cursor:pointer; }
+        .claim-form-editor__signature-placement { position:absolute; min-width:76px; aspect-ratio:3/1; transform:translateY(-100%); display:grid; place-items:center; border:2px dashed #2563eb; background:rgba(219,234,254,.82); color:#1d4ed8; font-size:10px; font-weight:700; }
         @keyframes claim-spin { to { transform:rotate(360deg); } }
         @media (prefers-reduced-motion:reduce) { .claim-spinner { animation-duration:1.5s; } }
       `}</style>
@@ -586,13 +669,13 @@ const ClaimSupportPage = ({ initialContext }) => {
         {step === 2 && (
           <section>
             <h2 style={sectionTitle}>Claim form &amp; required documents</h2>
-            <p style={{ color: 'var(--slate)', fontSize: 13, marginBottom: 20 }}>Travel insurance compensation claims require the insurer&apos;s completed claim form, policy copy, loss letter, passport scans, receipts, list of contents, payout details, and proof of residence.</p>
+            <p style={{ color: 'var(--slate)', fontSize: 13, marginBottom: 20 }}>Complete the insurer form online or upload a completed copy, then add the remaining claim documents.</p>
             <div style={{ display: 'grid', gap: 18, marginBottom: 22, padding: 20, border: '1px solid rgba(34,197,94,.22)', borderRadius: 10, background: 'rgba(34,197,94,.06)' }}>
               <div>
-                <strong style={{ display: 'block', marginBottom: 6, color: 'var(--white)', fontSize: 16 }}>Step 1: Download the insurer claim form</strong>
+                <strong style={{ display: 'block', marginBottom: 6, color: 'var(--white)', fontSize: 16 }}>Insurer claim form</strong>
                 <p style={{ margin: 0, color: 'var(--slate)', fontSize: 13, lineHeight: 1.7 }}>
                   {activeInsurerName
-                    ? `We matched this claim to ${activeInsurerName}. Download the insurer's blank form, complete it, then upload the filled copy below.`
+                    ? `We matched this claim to ${activeInsurerName}. Choose how you want to complete its form.`
                     : 'Choose an insurer first so we can load the correct blank claim form.'}
                 </p>
                 {config.claimFormUrl ? (
@@ -607,17 +690,48 @@ const ClaimSupportPage = ({ initialContext }) => {
                   </div>
                 )}
               </div>
+              {config.claimFormEditorUrl && (
+                <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
+                  <legend style={{ marginBottom: 10, color: 'var(--white)', fontSize: 13, fontWeight: 700 }}>How will you provide the completed form?</legend>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                    <label className="claim-form-method">
+                      <input type="radio" name="claim_form_method" value="online" checked={claimFormMethod === 'online'} onChange={() => chooseClaimFormMethod('online')} />
+                      <span><strong>Complete online</strong><small>Fill the PDF here and save it directly to this claim.</small></span>
+                    </label>
+                    <label className="claim-form-method">
+                      <input type="radio" name="claim_form_method" value="upload" checked={claimFormMethod === 'upload'} onChange={() => chooseClaimFormMethod('upload')} />
+                      <span><strong>Upload completed file</strong><small>Attach a PDF, scan, or clear photo completed elsewhere.</small></span>
+                    </label>
+                  </div>
+                </fieldset>
+              )}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                 <span className="claim-pill">{totalDocuments} / {config.claimDocumentsMax} documents uploaded</span>
                 <span className="claim-pill">5 MB max per document</span>
               </div>
             </div>
             <div style={{ display: 'grid', gap: 16 }}>
+              {claimFormMethod === 'online' && claimFormEditorOpen && config.claimFormUrl && (
+                <Suspense fallback={<p role="status" className="claim-form-editor__status"><span className="claim-spinner" />Loading the online editor...</p>}>
+                  <ClaimFormEditor
+                    formUrl={config.claimFormEditorUrl}
+                    formLabel={config.claimFormLabel}
+                    onCancel={() => chooseClaimFormMethod('upload')}
+                    onSave={saveOnlineClaimForm}
+                  />
+                </Suspense>
+              )}
+              {claimFormMethod === 'online' && !claimFormEditorOpen && claimDocuments.completed_claim_form.length === 0 && (
+                <button type="button" className="btn btn--primary" onClick={() => setClaimFormEditorOpen(true)} style={{ justifySelf: 'start', minHeight: 48 }}>
+                  Open online claim form
+                </button>
+              )}
               {CLAIM_DOCUMENT_FIELDS.map((field) => (
                 <ClaimDocumentField
                   key={field.key}
                   field={field}
                   files={claimDocuments[field.key]}
+                  hideUpload={field.key === 'completed_claim_form' && claimFormMethod === 'online'}
                   onAdd={addDocuments(field)}
                   onRemove={(index) => removeDocument(field.key, index)}
                 />

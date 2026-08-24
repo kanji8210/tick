@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '../lib/AuthContext';
 import { useResponsive } from '../lib/useResponsive';
 
-const ThemeToggle = ({ theme = 'dark', onToggleTheme, full = false }) => {
+const ThemeToggle = ({ theme = 'light', onToggleTheme, full = false }) => {
   const themeLabel = theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
   const themeIcon = theme === 'light' ? '☾' : '☀';
 
@@ -20,7 +20,7 @@ const ThemeToggle = ({ theme = 'dark', onToggleTheme, full = false }) => {
   );
 };
 
-const Header = ({ onNavigate, activeView, theme = 'dark', onToggleTheme }) => {
+const Header = ({ onNavigate, activeView, theme = 'light', onToggleTheme }) => {
   const { user, logout, loading } = useAuth();
   const { mobile, tablet } = useResponsive();
   const compact = mobile || tablet;

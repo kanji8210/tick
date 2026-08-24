@@ -56,7 +56,7 @@
   --navy-light:  #FFFCF6;
   --indigo:      #276238;
   --indigo-glow: #347947;
-  --gold:        #9F640F;
+  --gold:        #8A5208;
   --gold-light:  #D99527;
   --slate:       #465568;
   --slate-dark:  #2F3D4F;
@@ -278,7 +278,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
 }
 
 :root[data-theme='light'] .btn--gold {
-  color: #1B2B40;
+  color: #FFFFFF;
 }
 
 :root[data-theme='light'] .btn--ghost {
@@ -467,10 +467,40 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   border-color: rgba(39,98,56,0.38) !important;
 }
 
-:root[data-theme='light'] footer span[style*="color: #6ee7b7"] {
+:root[data-theme='light'] footer span[style*="color: rgb(110, 231, 183)"] {
   color: #276238 !important;
   background: rgba(39,98,56,0.10) !important;
   border-color: rgba(39,98,56,0.28) !important;
+}
+
+:root[data-theme='light'] [style*="color: rgb(134, 239, 172)"],
+:root[data-theme='light'] [style*="color: rgb(110, 231, 183)"],
+:root[data-theme='light'] [style*="color: rgb(34, 197, 94)"] {
+  color: #276238 !important;
+}
+
+:root[data-theme='light'] [style*="color: rgb(167, 139, 250)"] {
+  color: #6D28D9 !important;
+}
+
+:root[data-theme='light'] [style*="color: rgb(248, 113, 113)"],
+:root[data-theme='light'] [style*="color: rgb(252, 165, 165)"] {
+  color: #B91C1C !important;
+}
+
+:root[data-theme='light'] .quote-step-indicator[data-state='active'],
+:root[data-theme='light'] .quote-step-indicator[data-state='done'] {
+  color: #FFFFFF !important;
+}
+
+:root[data-theme='light'] .quote-passenger-button {
+  background: #FFFFFF !important;
+  border-color: rgba(31,44,63,0.28) !important;
+  color: var(--white) !important;
+}
+
+:root[data-theme='light'] .quote-region-option[data-active='false'] {
+  color: var(--white) !important;
 }
 
 :root[data-theme='light'] .insured-dashboard aside button[style*="color: rgba(255,255,255"] {
@@ -553,6 +583,14 @@ body {
 :root[data-theme='light'] :is(p, span, div, li, td, th, label)[style*="color: var(--slate)"],
 :root[data-theme='light'] :is(p, span, div, li, td, th, label)[style*="color: var(--slate-dark)"] {
   color: var(--slate) !important;
+}
+
+/* Preserve image-overlay contrast from the broad light-theme inline-color reset. */
+:root[data-theme='light'] .policy-detail-hero h1 {
+  color: #fff !important;
+}
+:root[data-theme='light'] .policy-detail-hero__back {
+  color: rgba(255,255,255,0.75) !important;
 }
 
 :root[data-theme='light'] :is(div, section, article, aside, button, td, th)[style*="background: rgba(255, 255, 255"],

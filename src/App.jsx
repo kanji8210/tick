@@ -22,8 +22,8 @@ function AppContent() {
   const { role } = useAuth();
   const isAgent = role === 'agent' || role === 'administrator';
   const [theme, setTheme] = React.useState(() => {
-    if (typeof window === 'undefined') return 'dark';
-    return window.localStorage.getItem('tic-theme') || 'dark';
+    if (typeof window === 'undefined') return 'light';
+    return window.localStorage.getItem('tic-theme') === 'dark' ? 'dark' : 'light';
   });
 
   /* ── Global compare state ─────────────────────────────────── */
