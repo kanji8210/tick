@@ -1,5 +1,14 @@
 ﻿import React, { useState } from 'react';
+import { useQuery } from 'urql';
 import { useAuth } from '../lib/AuthContext';
+
+const GET_INSURERS = `
+  query AgencyOnboardingInsurers {
+    insurers(first: 100, where: { status: PUBLISH }) {
+      nodes { databaseId title }
+    }
+  }
+`;
 
 const Register = ({ onNavigate }) => {
   const { register, login, error, loading } = useAuth();
@@ -11,9 +20,16 @@ const Register = ({ onNavigate }) => {
     confirmPassword: '',
     phone: '',
     agencyName: '',
+    iraLicenceNumber: '',
+    insurerAgreementIds: [],
   });
   const [localError, setLocalError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [{ data: insurerData, fetching: insurersFetching, error: insurersError }] = useQuery({
+    query: GET_INSURERS,
+    pause: accountType !== 'agent',
+  });
+  const insurers = insurerData?.insurers?.nodes || [];
 
   const handleChange = (e) =>
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -36,6 +52,14 @@ const Register = ({ onNavigate }) => {
     }
     if (accountType === 'agent' && !formData.agencyName.trim()) {
       setLocalError('Please enter your agency name.');
+      return;
+    }
+    if (accountType === 'agent' && !formData.iraLicenceNumber.trim()) {
+      setLocalError('Please enter your IRA licence number.');
+      return;
+    }
+    if (accountType === 'agent' && formData.insurerAgreementIds.length === 0) {
+      setLocalError('Select at least one insurer with whom your agency has a working agreement.');
       return;
     }
 
@@ -136,6 +160,45 @@ const Register = ({ onNavigate }) => {
             {field('email', 'Email Address', 'email', 'jane@example.com')}
 
             {accountType === 'agent' && field('agencyName', 'Agency Name', 'text', 'Safara Travels Ltd')}
+
+            {accountType === 'agent' && field('iraLicenceNumber', 'IRA Licence Number', 'text', 'IRA/XX/00000/2026')}
+
+            {accountType === 'agent' && (
+              <fieldset style={{ border: '1px solid var(--glass-border)', borderRadius: 10, padding: 16, margin: 0 }}>
+                <legend style={{ padding: '0 7px', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--gold)' }}>
+                  Insurer working agreements
+                </legend>
+                <p style={{ color: 'var(--slate)', fontSize: 12, lineHeight: 1.55, marginBottom: 12 }}>
+                  Select only insurers with whom your agency has an active selling agreement.
+                </p>
+                {insurersFetching && <p style={{ color: 'var(--slate)', fontSize: 12 }}>Loading insurers…</p>}
+                {insurersError && <p style={{ color: '#f87171', fontSize: 12 }}>Insurers could not be loaded. Please refresh and try again.</p>}
+                {!insurersFetching && !insurersError && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 8 }}>
+                    {insurers.map((insurer) => {
+                      const insurerId = Number(insurer.databaseId);
+                      const checked = formData.insurerAgreementIds.includes(insurerId);
+                      return (
+                        <label key={insurerId} style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 44, padding: '9px 11px', borderRadius: 8, border: `1px solid ${checked ? 'var(--indigo)' : 'var(--glass-border)'}`, background: checked ? 'rgba(49,99,49,0.12)' : 'var(--glass-bg)', cursor: 'pointer', fontSize: 13 }}>
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => setFormData((previous) => ({
+                              ...previous,
+                              insurerAgreementIds: checked
+                                ? previous.insurerAgreementIds.filter((id) => id !== insurerId)
+                                : [...previous.insurerAgreementIds, insurerId],
+                            }))}
+                            style={{ width: 18, height: 18, accentColor: 'var(--indigo)', flexShrink: 0 }}
+                          />
+                          <span>{insurer.title}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              </fieldset>
+            )}
 
             <div className="responsive-two-col" style={{ gap: 14 }}>
               {field('password', 'Password', 'password', '8+ characters')}

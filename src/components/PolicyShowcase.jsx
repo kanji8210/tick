@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery } from 'urql';
 import { useResponsive } from '../lib/useResponsive';
+import { useAuth } from '../lib/AuthContext';
 
 const NOT_PROVIDED = 'Not provided';
 
@@ -29,6 +30,7 @@ const GET_POLICIES = `
         policyInsurerName
         policyInsurerLogo
         policyInsurerDatabaseId
+        agentHasInsurerAgreement
         policyInsurerBio
         policyInsurerWebsite
         policyInsurerLinkedin
@@ -406,6 +408,8 @@ const BenefitModal = ({ policy, onClose, onNavigate }) => {
 
 const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [], onAddCompare, onRemoveCompare }) => {
   const { mobile, tablet } = useResponsive();
+  const { role } = useAuth();
+  const isAgent = role === 'agent';
 
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [selectedInsurerPolicy, setSelectedInsurerPolicy] = useState(null);
@@ -706,6 +710,7 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                 : null;
               const tags       = parseTags(policy.policyFeatureTags);
               const checked    = isInCompare(policy.id);
+              const canSell    = !isAgent || policy.agentHasInsurerAgreement !== false;
 
               return (
                 <div key={policy.id} className="policy-card" style={{ background: 'var(--glass-bg)', border: `1px solid ${checked ? 'rgba(49,99,49,0.5)' : 'var(--glass-border)'}`, borderRadius: 'var(--radius-lg)', overflow: 'hidden', position: 'relative' }}
@@ -724,6 +729,7 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                           {'★★★★★'.split('').map((s, i) => <span key={i} style={{ color: i < 5 ? '#FBBF24' : 'var(--slate-dark)', fontSize: 11 }}>{s}</span>)}
                           <span style={{ color: 'var(--slate-dark)', fontSize: 11, marginLeft: 3 }}>5.0</span>
                         </div>
+                        {!canSell && <div style={{ marginTop: 5, color: '#b91c1c', fontSize: 10, fontWeight: 800, lineHeight: 1.3 }}>No working agreement</div>}
                       </div>
                     </div>
 
@@ -758,7 +764,7 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
 
                   {/* Card footer */}
                   <div style={{ borderTop: '1px solid var(--glass-border)', padding: mobile ? '14px 18px' : '16px 22px', display: 'flex', gap: 10, flexWrap: mobile ? 'wrap' : 'nowrap' }}>
-                    <button type="button" className="btn btn--primary btn--sm" style={{ flex: 1, justifyContent: 'center' }} onClick={() => onNavigate('policy-detail', policy.databaseId, { ...(searchParams || {}), departure, returnDate })}>Pick This →</button>
+                    <button type="button" className={canSell ? 'btn btn--primary btn--sm' : 'btn btn--ghost btn--sm'} style={{ flex: 1, justifyContent: 'center' }} onClick={() => onNavigate('policy-detail', policy.databaseId, { ...(searchParams || {}), departure, returnDate })}>{canSell ? 'Pick This →' : 'View Details'}</button>
                     <button
                       type="button"
                       className="btn btn--ghost btn--sm"

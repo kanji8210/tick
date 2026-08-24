@@ -19,6 +19,8 @@ const GET_POLICY_DETAIL = `
       policyCurrency
       policyPaymentDetails
       policyInsurerName
+      policyInsurerDatabaseId
+      agentHasInsurerAgreement
       policyInsurerLogo
       policyDayPremiums { from to premium }
       policyCountries
@@ -116,6 +118,7 @@ const PolicyDetail = ({ policyId, searchData, onBack, onStartWizard, compareSele
   const regions       = policy.regions?.nodes || [];
   const countries     = policy.policyCountries || [];
   const lowestPremium = premiums.length ? Math.min(...premiums.map(p => p.premium)) : null;
+  const canAgentSell  = policy.agentHasInsurerAgreement !== false;
 
   // Live quote calculation from sidebar date pickers
   const quoteDays    = tripDays(departure, returnDate);
@@ -132,14 +135,20 @@ const PolicyDetail = ({ policyId, searchData, onBack, onStartWizard, compareSele
 
       {/* â”€â”€ Hero â”€â”€ */}
       <section className="policy-detail-hero" style={{
-        position: 'relative', height: mobile ? 360 : 360,
+        position: 'relative', minHeight: 360, display: 'flex', alignItems: 'flex-end',
         background: policy.featuredImage?.node?.sourceUrl
           ? `url(${policy.featuredImage.node.sourceUrl}) center/cover`
           : 'linear-gradient(135deg,var(--indigo),#1e1b4b)',
-        borderRadius: '0 0 32px 32px', overflow: 'hidden', marginBottom: mobile ? 24 : 48,
+        borderRadius: '0 0 32px 32px', overflow: 'hidden',
+        marginTop: tablet
+          ? 'calc(132px + env(safe-area-inset-top, 0px))'
+          : mobile
+            ? 'calc(73px + env(safe-area-inset-top, 0px))'
+            : 'calc(79px + env(safe-area-inset-top, 0px))',
+        marginBottom: mobile ? 24 : 48,
       }}>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(8,14,39,0.3), rgba(8,14,39,0.88))' }} />
-        <div style={{ position: 'absolute', top: mobile ? 84 : 'auto', bottom: mobile ? 'auto' : 36, left: 0, right: 0 }} className="container">
+        <div className="container policy-detail-hero__content" style={{ position: 'relative', width: '100%', paddingTop: 24, paddingBottom: mobile ? 24 : 36 }}>
           <button className="policy-detail-hero__back" onClick={onBack} style={{ minHeight: 44, background: 'none', border: 'none', color: 'rgba(255,255,255,0.75)', fontSize: 14, cursor: 'pointer', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6, padding: '0 4px', fontFamily: 'var(--font-body)' }}>
             ← Back to policies
           </button>
@@ -209,7 +218,7 @@ const PolicyDetail = ({ policyId, searchData, onBack, onStartWizard, compareSele
               <Section title="Key" accent="Benefits">
                 <div 
                   className="policy-benefits-table"
-                  style={{ maxWidth: '100%', overflowX: 'auto', color: 'rgba(255,255,255,0.8)', fontSize: 13, lineHeight: 1.6 }}
+                  style={{ maxWidth: '100%', overflowX: 'auto', color: 'var(--white)', fontSize: 13, lineHeight: 1.6 }}
                   dangerouslySetInnerHTML={{ __html: policy.policyBenefits }} 
                 />
               </Section>
@@ -351,10 +360,17 @@ const PolicyDetail = ({ policyId, searchData, onBack, onStartWizard, compareSele
 
               <button
                 className="btn btn--primary"
-                style={{ width: '100%', justifyContent: 'center' }}
+                disabled={!canAgentSell}
+                style={{ width: '100%', justifyContent: 'center', opacity: canAgentSell ? 1 : 0.5, cursor: canAgentSell ? 'pointer' : 'not-allowed' }}
                 onClick={() => onStartWizard(policy.databaseId, { departure, returnDate, passengers, region: regions[0]?.slug }, 3)}>
-                Get This Policy →
+                {canAgentSell ? 'Get This Policy →' : 'No Agency Agreement'}
               </button>
+
+              {!canAgentSell && (
+                <p style={{ margin: '10px 0 0', color: '#b91c1c', fontSize: 12, lineHeight: 1.5, textAlign: 'center', fontWeight: 700 }}>
+                  You can review this policy, but your agency cannot submit it without a working agreement with {policy.policyInsurerName || 'the insurer'}.
+                </p>
+              )}
 
               {onAddCompare && (() => {
                 const inCompare = compareSelected.some(p => p.id === policy.id);

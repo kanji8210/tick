@@ -16,14 +16,16 @@ const LOGIN_MUTATION = `
 `;
 
 const REGISTER_MUTATION = `
-  mutation Register($fullName: String!, $email: String!, $password: String!, $accountType: String!, $phone: String, $agencyName: String) {
+  mutation Register($fullName: String!, $email: String!, $password: String!, $accountType: String!, $phone: String, $agencyName: String, $iraLicenceNumber: String, $insurerAgreementIds: [Int]) {
     maljaniRegister(input: { 
       fullName: $fullName, 
       email: $email, 
       password: $password, 
       accountType: $accountType,
       phone: $phone,
-      agencyName: $agencyName
+      agencyName: $agencyName,
+      iraLicenceNumber: $iraLicenceNumber,
+      insurerAgreementIds: $insurerAgreementIds
     }) {
       authToken
       userName

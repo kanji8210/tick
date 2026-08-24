@@ -27,6 +27,8 @@ const GET_POLICIES = `
         policyCurrency
         defaultExchangeRateValue
         policyInsurerName
+        policyInsurerDatabaseId
+        agentHasInsurerAgreement
         policyCountries
         policyDayPremiums { from to premium usdPremium exchangeRate }
         regions { nodes { name slug } }
@@ -580,6 +582,12 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
   }, [step, saleId, selectedPolicyId]);
 
   const handlePurchase = async () => {
+    if (isAgent && form.selectedPolicy?.agentHasInsurerAgreement === false) {
+      alert(`Your agency does not have a working agreement with ${form.selectedPolicy.policyInsurerName || 'this insurer'}.`);
+      setStep(2);
+      return;
+    }
+
     if (requiresSeniorPolicy && !isSeniorPolicy(form.selectedPolicy)) {
       alert('Traveller above 70 years must take a Senior policy type. Please select a Senior plan.');
       setStep(2);
@@ -919,9 +927,10 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
                   {compareList.map(p => (
                     <td key={p.databaseId} style={{ padding: '10px 14px', borderLeft: '1px solid var(--glass-border)' }}>
                       <button
+                        disabled={isAgent && p.agentHasInsurerAgreement === false}
                         onClick={() => { set('selectedPolicy', p); setCompareIds(new Set()); setStep(3); }}
-                        style={{ padding: '8px 0', borderRadius: 7, border: 'none', background: 'var(--indigo)', color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer', width: '100%' }}>
-                        Select &amp; Continue →
+                        style={{ padding: '8px 0', borderRadius: 7, border: 'none', background: 'var(--indigo)', color: '#fff', fontSize: 12, fontWeight: 800, cursor: isAgent && p.agentHasInsurerAgreement === false ? 'not-allowed' : 'pointer', opacity: isAgent && p.agentHasInsurerAgreement === false ? 0.5 : 1, width: '100%' }}>
+                        {isAgent && p.agentHasInsurerAgreement === false ? 'No agreement' : 'Select & Continue →'}
                       </button>
                     </td>
                   ))}
@@ -953,9 +962,10 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
           const usdMeta = getUsdMeta(policy.computedBracket, form.passengers);
           const selected = form.selectedPolicy?.databaseId === policy.databaseId;
           const inCompare = compareIds.has(String(policy.databaseId));
+          const canSell = !isAgent || policy.agentHasInsurerAgreement !== false;
           return (
             <div key={policy.id}
-              onClick={() => set('selectedPolicy', policy)}
+              onClick={() => canSell && set('selectedPolicy', policy)}
               style={{
                 padding: '16px 18px', borderRadius: 10, cursor: 'pointer', height: '100%',
                 border: `2px solid ${selected ? 'var(--gold)' : inCompare ? 'rgba(49,99,49,0.5)' : 'var(--glass-border)'}`,
@@ -970,6 +980,9 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
                   </div>
                   {policy.policyInsurerName && (
                     <p style={{ fontSize: 11, color: 'var(--slate)', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{policy.policyInsurerName}</p>
+                  )}
+                  {!canSell && (
+                    <p style={{ fontSize: 11, fontWeight: 800, color: '#b91c1c', margin: '0 0 7px' }}>No working agreement — viewing only</p>
                   )}
                   <p style={{ fontSize: 12, color: 'var(--slate)', lineHeight: 1.5, margin: 0 }}>
                     {stripHtml(policy.policyDescription || policy.excerpt || '').substring(0, 110)}…
@@ -991,16 +1004,17 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
                   )}
                   <button
                     type="button"
+                    disabled={!canSell}
                     onClick={e => { e.stopPropagation(); e.preventDefault(); set('selectedPolicy', policy); setStep(3); }}
                     style={{
-                      padding: '6px 16px', borderRadius: 100, fontSize: 11, fontWeight: 800, cursor: 'pointer',
+                      padding: '6px 16px', borderRadius: 100, fontSize: 11, fontWeight: 800, cursor: canSell ? 'pointer' : 'not-allowed',
                       border: 'none',
                       background: 'linear-gradient(135deg, var(--gold), #b8941f)',
                       color: '#0f172a',
                       transition: 'all 0.15s',
-                      whiteSpace: 'nowrap',
+                      whiteSpace: 'nowrap', opacity: canSell ? 1 : 0.5,
                     }}>
-                    Get This →
+                    {canSell ? 'Get This →' : 'Unavailable'}
                   </button>
                   <button
                     type="button"
@@ -1265,7 +1279,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
         </div>
 
         <div className="responsive-action-grid" style={{ gap: 12, marginTop: 22 }}>
-          <button style={{ padding: '11px', borderRadius: 8, border: '1px solid var(--glass-border)', background: 'none', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}
+          <button style={{ padding: '11px', borderRadius: 8, border: '1px solid var(--glass-border)', background: 'none', color: 'var(--white)', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}
             onClick={() => setStep(2)}>← Back</button>
           <button
             style={{ padding: '11px', borderRadius: 8, border: 'none', background: 'var(--gold)', color: '#0a0e27', cursor: (!effectiveName || !effectiveEmail || !form.phone || saleResult.fetching || !seniorPolicyValid) ? 'not-allowed' : 'pointer', opacity: (!effectiveName || !effectiveEmail || !form.phone || !seniorPolicyValid) ? 0.6 : 1, fontSize: 13, fontWeight: 800 }}

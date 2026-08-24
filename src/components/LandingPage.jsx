@@ -929,13 +929,13 @@ const LandingPage = ({ onStartWizard, onNavigate, compareSelected = [], onAddCom
 
       {/* Popular Destinations + 3-step process removed per design */}
 
-      {!isAgent && <PolicyShowcase
+      <PolicyShowcase
         onNavigate={onNavigate}
         searchParams={searchParams}
         compareSelected={compareSelected}
         onAddCompare={onAddCompare}
         onRemoveCompare={onRemoveCompare}
-      />}
+      />
 
       {/* Agency CTA */}
       {!isAgent && (
@@ -1059,7 +1059,6 @@ const LandingPage = ({ onStartWizard, onNavigate, compareSelected = [], onAddCom
                 ? <button className="btn btn--gold btn--lg" onClick={() => onNavigate('dashboard')}>Open Dashboard →</button>
                 : <button className="btn btn--gold btn--lg" onClick={() => document.getElementById('policy-showcase')?.scrollIntoView({ behavior: 'smooth' })}>Compare Policies Now →</button>
               }
-              <button className="btn btn--ghost btn--lg" onClick={() => onNavigate('verify')}>Verify a Certificate</button>
             </div>
           </div>
         </div>

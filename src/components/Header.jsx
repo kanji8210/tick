@@ -29,6 +29,7 @@ const Header = ({ onNavigate, activeView, theme = 'light', onToggleTheme }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
   const menuRef = useRef(null);
+  const showHeaderSurface = scrolled || activeView === 'policy-detail';
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -89,11 +90,13 @@ const Header = ({ onNavigate, activeView, theme = 'light', onToggleTheme }) => {
       className="tic-header"
       style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        padding: compact ? '14px 0' : '20px 0',
+        padding: compact
+          ? 'calc(14px + env(safe-area-inset-top, 0px)) 0 14px'
+          : 'calc(20px + env(safe-area-inset-top, 0px)) 0 20px',
         transition: 'background 0.35s, backdrop-filter 0.35s, border-color 0.35s',
-        background: scrolled ? 'var(--header-bg)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(24px)' : 'none',
-        borderBottom: scrolled ? '1px solid var(--glass-border)' : '1px solid transparent',
+        background: showHeaderSurface ? 'var(--header-bg)' : 'transparent',
+        backdropFilter: showHeaderSurface ? 'blur(24px)' : 'none',
+        borderBottom: showHeaderSurface ? '1px solid var(--glass-border)' : '1px solid transparent',
       }}
       role="navigation" aria-label="Main navigation"
     >
