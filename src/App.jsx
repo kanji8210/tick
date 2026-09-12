@@ -18,6 +18,30 @@ import AgenciesPage from './components/AgenciesPage'
 import GroupQuotesPage from './components/GroupQuotesPage'
 import { ClaimsPage, ClaimsRefundChoice, ClaimSupportPage } from './components/claims'
 
+const VIEW_PATHS = {
+  landing: '/',
+  wizard: '/quote',
+  login: '/login',
+  register: '/register',
+  dashboard: '/dashboard',
+  catalog: '/catalog',
+  verify: '/verify',
+  about: '/about',
+  agencies: '/agencies',
+  'group-quotes': '/group-quotes',
+  claims: '/claims-refunds',
+  claim: '/claims/new',
+  refunds: '/refunds/new',
+  'policy-detail': '/policy',
+};
+const PATH_VIEWS = Object.fromEntries(Object.entries(VIEW_PATHS).map(([view, path]) => [path, view]));
+
+const urlToEntry = () => {
+  const path = window.location.pathname === '/' ? '/' : window.location.pathname.replace(/\/+$/, '');
+  const view = PATH_VIEWS[path] || 'landing';
+  return { view, policyId: null, searchData: null, forceStep: null };
+};
+
 function AppContent() {
   const { role } = useAuth();
   const isAgent = role === 'agent' || role === 'administrator';
@@ -47,30 +71,6 @@ function AppContent() {
 
   const compareProps = { compareSelected, onAddCompare, onRemoveCompare };
   /* ── URL ↔ view mapping ─────────────────────────────────────── */
-  const VIEW_PATHS = {
-    landing:       '/',
-    wizard:        '/quote',
-    login:         '/login',
-    register:      '/register',
-    dashboard:     '/dashboard',
-    catalog:       '/catalog',
-    verify:        '/verify',
-    about:         '/about',
-    agencies:      '/agencies',
-    'group-quotes': '/group-quotes',
-    claims:        '/claims-refunds',
-    claim:         '/claims/new',
-    refunds:       '/refunds/new',
-    'policy-detail': '/policy',
-  };
-  const PATH_VIEWS = Object.fromEntries(Object.entries(VIEW_PATHS).map(([v, p]) => [p, v]));
-
-  const urlToEntry = () => {
-    const path = window.location.pathname === '/' ? '/' : window.location.pathname.replace(/\/+$/, '');
-    const view = PATH_VIEWS[path] || 'landing';
-    return { view, policyId: null, searchData: null, forceStep: null };
-  };
-
   const [history, setHistory] = React.useState([urlToEntry()]);
   const [historyIdx, setHistoryIdx] = React.useState(0);
 
@@ -102,13 +102,18 @@ function AppContent() {
 
   // Listen to browser back/forward buttons
   React.useEffect(() => {
-    const onPop = () => {
-      const entry = urlToEntry();
-      setHistory(h => {
-        const next = [...h, entry];
-        setHistoryIdx(next.length - 1);
-        return next;
-      });
+    const onPop = (event) => {
+      const targetIdx = event.state?.idx;
+      if (Number.isInteger(targetIdx)) {
+        setHistoryIdx(targetIdx);
+      } else {
+        const entry = urlToEntry();
+        setHistory(h => {
+          const next = [...h, entry];
+          setHistoryIdx(next.length - 1);
+          return next;
+        });
+      }
       window.scrollTo(0, 0);
     };
     window.addEventListener('popstate', onPop);
@@ -127,6 +132,7 @@ function AppContent() {
               initialSearchData={history[historyIdx].searchData}
               initialStep={history[historyIdx].forceStep}
               onNavigate={handleNavigate}
+              onBack={handleBack}
             />
             <button
               className="btn-luxury"

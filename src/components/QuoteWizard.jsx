@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation } from 'urql';
 import { useAuth } from '../lib/AuthContext';
@@ -66,13 +65,6 @@ const tripDays = (dep, ret) => {
   if (!dep || !ret) return 0;
   const ms = new Date(ret) - new Date(dep);
   return Math.max(1, Math.round(ms / 86400000) + 1);
-};
-
-/** Find premium for given trip length from bracket array */
-const bracketPremium = (brackets, days) => {
-  if (!brackets || !brackets.length) return null;
-  const match = brackets.find(b => days >= b.from && days <= b.to);
-  return match ? match.premium : null;
 };
 
 const fmt = (n) =>
@@ -290,7 +282,7 @@ const BirthDateInput = ({ value, onChange }) => {
 
   return (
     <fieldset style={{ ...fieldStyle, border: 0, padding: 0, margin: 0 }}>
-      <legend style={{ ...labelStyle, padding: 0 }}>Date of Birth</legend>
+      <legend style={{ ...labelStyle, padding: 0 }}>Date of Birth *</legend>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: year ? 'var(--slate)' : 'var(--gold)', fontSize: 12, fontWeight: 700 }}>
         <span aria-hidden="true" style={{ display: 'grid', placeItems: 'center', width: 22, height: 22, borderRadius: '50%', background: year ? 'rgba(34,197,94,0.14)' : 'rgba(246,166,35,0.15)', flexShrink: 0 }}>
           {value ? '✓' : year ? (month ? '3' : '2') : '1'}
@@ -393,7 +385,7 @@ const DateInput = ({ label, value, onChange, min }) => (
 );
 
 /* ─── Component ───────────────────────────────────────────────────────────── */
-const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initialStep = 1, onNavigate }) => {
+const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initialStep = 1, onNavigate, onBack }) => {
   const { user, loading: authLoading, role, login, register, error: authError } = useAuth();
   const { mobile, tablet } = useResponsive();
   const isAgent = role === 'agent' || role === 'administrator';
@@ -501,10 +493,11 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
         return changed ? next : f;
       });
     }
-  }, [user, authLoading, role, step]); // Re-check when step changes or user data arrives
+  }, [user, authLoading, isAgent, step]); // Re-check when step changes or user data arrives
 
   // Store only IDs so comparisons are never affected by object reference or type mismatches
   const [showDateEdit, setShowDateEdit] = useState(false);
+  const [visiblePlanCount, setVisiblePlanCount] = useState(6);
 
   const [compareIds, setCompareIds] = useState(new Set());
   const toggleCompare = (databaseId) => {
@@ -570,6 +563,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
 
   // Always derive compareList from eligiblePolicies so computedPremium is always current
   const compareList = eligiblePolicies.filter(p => compareIds.has(String(p.databaseId)));
+  const visiblePolicies = eligiblePolicies.slice(0, visiblePlanCount);
 
   const saleData = saleResult.data?.submitPolicySale;
   const saleId = saleData?.saleId;
@@ -653,6 +647,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
           insuredPhone:   form.phone,
           passportNumber: form.passport,
           insuredDob:     form.dob,
+          countryOfOrigin: form.originCountry,
           departure:      form.departure,
           return:         form.returnDate,
         },
@@ -818,6 +813,11 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
 
       {fetching && <p style={{ color: 'var(--slate)', textAlign: 'center', padding: '2rem 0' }}>Loading plans…</p>}
       {error   && <p style={{ color: '#f87171' }}>Error: {error.message}</p>}
+      {!fetching && !error && eligiblePolicies.length > 0 && (
+        <p style={{ color: 'var(--slate)', fontSize: 12, margin: '0 0 14px' }} aria-live="polite">
+          Showing {Math.min(visiblePlanCount, eligiblePolicies.length)} of {eligiblePolicies.length} plans, sorted by lowest price.
+        </p>
+      )}
 
       {/* ── Comparison panel ── */}
       {requiresSeniorPolicy && (
@@ -956,7 +956,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : tablet ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))', gap: mobile ? 12 : 16, alignItems: 'start' }}>
-        {eligiblePolicies.map(policy => {
+        {visiblePolicies.map(policy => {
           const prem = policy.computedPremium;
           const total = prem !== null ? prem * form.passengers : null;
           const usdMeta = getUsdMeta(policy.computedBracket, form.passengers);
@@ -1036,6 +1036,16 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
         })}
       </div>
 
+      {visiblePlanCount < eligiblePolicies.length && (
+        <button
+          type="button"
+          className="btn btn--ghost"
+          style={{ width: '100%', justifyContent: 'center', marginTop: 16, minHeight: 48 }}
+          onClick={() => setVisiblePlanCount(count => count + 6)}>
+          Show 6 More Plans
+        </button>
+      )}
+
       <div className="responsive-action-grid" style={{ gap: 12, marginTop: 20 }}>
         <button style={{ padding: '11px', borderRadius: 8, border: '1px solid var(--glass-border)', background: 'none', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}
           onClick={() => { setStep(1); setCompareIds(new Set()); }}>← Back</button>
@@ -1048,6 +1058,28 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
 
   /* ── Step 3 — Personal Details ── */
   if (step === 3) {
+    if (initialPolicyId && !form.selectedPolicy && fetching) {
+      return (
+        <div className="glass-card fade-in" style={{ padding: mobile ? '2rem 1.25rem' : '3rem 2rem', textAlign: 'center' }} aria-live="polite">
+          <StepBar step={3} isAgent={isAgent} mobile={mobile} />
+          <div style={{ width: 36, height: 36, margin: '0 auto 16px', border: '3px solid var(--glass-border)', borderTopColor: 'var(--indigo)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} aria-hidden="true" />
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 800, marginBottom: 8 }}>Preparing your application</h3>
+          <p style={{ color: 'var(--slate)', fontSize: 13, margin: 0 }}>Loading the selected plan and confirming your premium...</p>
+        </div>
+      );
+    }
+
+    if (!form.selectedPolicy) {
+      return (
+        <div className="glass-card fade-in" style={{ padding: mobile ? '2rem 1.25rem' : '3rem 2rem', textAlign: 'center' }} role="alert">
+          <StepBar step={2} isAgent={isAgent} mobile={mobile} />
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 800, marginBottom: 8 }}>We could not load that plan</h3>
+          <p style={{ color: 'var(--slate)', fontSize: 13, margin: '0 0 20px' }}>Return to the available plans and choose another option.</p>
+          <button className="btn btn--primary" onClick={() => setStep(2)}>View Available Plans</button>
+        </div>
+      );
+    }
+
     const selectedRawBracket = (form.selectedPolicy?.policyDayPremiums || []).find(b => days >= b.from && days <= b.to) || null;
     const selectedBracket = normalizeBracketWithDefaultRate(form.selectedPolicy, selectedRawBracket);
     const prem  = selectedBracket ? selectedBracket.premium : null;
@@ -1061,6 +1093,17 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
     const agentFeeLabel = agentFeeType === 'percent'
       ? `${agentFeeValue}%`
       : fmt(agentFeeValue);
+    const hasRequiredDetails = Boolean(
+      effectiveName?.trim() && effectiveEmail?.trim() && form.phone.trim() && form.dob
+    );
+    const checkoutReady = Boolean(
+      user || (
+        checkoutMode === 'login'
+          ? form.password
+          : form.acceptTerms && (checkoutMode !== 'register' || form.password)
+      )
+    );
+    const canSubmit = hasRequiredDetails && checkoutReady && seniorPolicyValid && !saleResult.fetching && !regFetching;
     return (
       <div className="glass-card fade-in" style={{ padding: mobile ? '1.25rem' : '2rem' }}>
         <StepBar step={3} isAgent={isAgent} mobile={mobile} />
@@ -1177,9 +1220,9 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {[
-            ...(shouldAskName ? [{ key: 'name', label: 'Full Legal Name', type: 'text', placeholder: 'As on passport' }] : []),
-            ...(shouldAskEmail ? [{ key: 'email', label: 'Email Address', type: 'email', placeholder: 'you@example.com' }] : []),
-            { key: 'phone',    label: 'Phone Number',       type: 'tel',   placeholder: '+254 700 000 000' },
+            ...(shouldAskName ? [{ key: 'name', label: 'Full Legal Name *', type: 'text', placeholder: 'As on passport' }] : []),
+            ...(shouldAskEmail ? [{ key: 'email', label: 'Email Address *', type: 'email', placeholder: 'you@example.com' }] : []),
+            { key: 'phone',    label: 'Phone Number *',     type: 'tel',   placeholder: '+254 700 000 000' },
             { key: 'dob',      label: 'Date of Birth',      type: 'date',  placeholder: '' },
             { key: 'passport', label: 'Passport / ID No.',  type: 'text',  placeholder: 'Optional' },
           ].map(({ key, label, type, placeholder }) => (
@@ -1280,10 +1323,10 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
 
         <div className="responsive-action-grid" style={{ gap: 12, marginTop: 22 }}>
           <button style={{ padding: '11px', borderRadius: 8, border: '1px solid var(--glass-border)', background: 'none', color: 'var(--white)', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}
-            onClick={() => setStep(2)}>← Back</button>
+            onClick={() => initialPolicyId && onBack ? onBack() : setStep(2)}>← Back</button>
           <button
-            style={{ padding: '11px', borderRadius: 8, border: 'none', background: 'var(--gold)', color: '#0a0e27', cursor: (!effectiveName || !effectiveEmail || !form.phone || saleResult.fetching || !seniorPolicyValid) ? 'not-allowed' : 'pointer', opacity: (!effectiveName || !effectiveEmail || !form.phone || !seniorPolicyValid) ? 0.6 : 1, fontSize: 13, fontWeight: 800 }}
-            disabled={!effectiveName || !effectiveEmail || !form.phone || saleResult.fetching || regFetching || !seniorPolicyValid}
+            style={{ padding: '11px', borderRadius: 8, border: 'none', background: 'var(--gold)', color: '#0a0e27', cursor: canSubmit ? 'pointer' : 'not-allowed', opacity: canSubmit ? 1 : 0.6, fontSize: 13, fontWeight: 800 }}
+            disabled={!canSubmit}
             onClick={handlePurchase}>
             {saleResult.fetching || regFetching ? (checkoutMode === 'login' ? 'Signing in...' : checkoutMode === 'register' ? 'Creating account...' : 'Processing…') : 
               user ? `Submit Application ${total !== null ? '— ' + (isAgent && agentDisplayFee > 0 ? `${fmt(total)} (client-facing ${fmt(clientFacingTotal)})` : fmt(total)) : ''}` : 
@@ -1295,6 +1338,11 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
             }
           </button>
         </div>
+        {!canSubmit && seniorPolicyValid && (
+          <p style={{ color: 'var(--slate)', fontSize: 12, lineHeight: 1.5, margin: '10px 0 0', textAlign: 'right' }} role="status">
+            Complete your name, email, phone, date of birth, and the selected checkout option to continue.
+          </p>
+        )}
         {saleResult.error && (
           <div style={{ marginTop: 10, padding: 12, background: 'rgba(240,68,68,0.1)', border: '1px solid rgba(240,68,68,0.2)', borderRadius: 8 }}>
             <p style={{ color: '#f87171', fontSize: 13, fontWeight: 700, margin: '0 0 4px' }}>Submission Error</p>
@@ -1363,17 +1411,24 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
               onClick={() => {
                 setStep(1);
                 setForm({
+                  originCountry: 'Kenya',
+                  destinationRegion: '',
+                  departure: today,
+                  returnDate: nextWeek,
+                  passengers: 1,
                   selectedPolicy: null,
-                  days: 0,
                   name: '',
                   email: '',
                   phone: '',
-                  passport: '',
-                  countryOfOrigin: 'Kenya',
                   dob: '',
+                  passport: '',
                   password: '',
                   acceptTerms: false
                 });
+                setCheckoutMode('guest');
+                setAccountCreated(false);
+                setVisiblePlanCount(6);
+                setCompareIds(new Set());
               }}
             >
               Get Another Quote

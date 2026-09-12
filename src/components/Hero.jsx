@@ -72,9 +72,6 @@ const Hero = ({ onStart, onNavigate }) => {
     departure: today,
     returnDate: nextWeek,
     travelers: "1 Person",
-    coverage: "Standard",
-    // Add a note for group logic
-    groupNotice: "For 5 or more travelers, use the Group/Agency Quote option. For fewer, buy individual policies and multiply.",
   });
   const [{ data }] = useQuery({ query: GET_REGIONS });
   const regions = data?.regions?.nodes || [];
@@ -103,11 +100,7 @@ const Hero = ({ onStart, onNavigate }) => {
   const handleSubmit = () => {
     if (!form.dest) return;
     const data = { region: form.dest, departure: form.departure, returnDate: form.returnDate, passengers: parseInt(form.travelers) || 1 };
-    if (user) {
-      onNavigate?.('wizard');
-    } else {
-      onStart(data);
-    }
+    onStart?.(data);
   };
 
   const field = (label, id, children) => (
@@ -380,11 +373,6 @@ const Hero = ({ onStart, onNavigate }) => {
                             {field("Travelers", "travelers",
                               <select id="travelers" className="form-input" value={form.travelers} onChange={e => setForm(f => ({ ...f, travelers: e.target.value }))}>
                                 {["1 Person", "2 People", "3–5 People", "6+ People"].map(o => <option key={o}>{o}</option>)}
-                              </select>
-                            )}
-                            {field("Coverage", "coverage",
-                              <select id="coverage" className="form-input" value={form.coverage} onChange={e => setForm(f => ({ ...f, coverage: e.target.value }))}>
-                                {["Standard", "Comprehensive", "Premium"].map(o => <option key={o}>{o}</option>)}
                               </select>
                             )}
                           </div>
