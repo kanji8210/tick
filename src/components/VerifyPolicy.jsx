@@ -1,7 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const WP_REST_BASE = '/wp-json';
 const VERIFY_URL = `${WP_REST_BASE}/maljani/v1/verify`;
+const VERIFY_CERTIFICATE_URL = `${WP_REST_BASE}/maljani/v1/verify-certificate`;
 
 const STATUS_META = {
   active:    { label: 'ACTIVE',    color: '#22c55e', bg: 'rgba(34,197,94,0.12)' },
@@ -22,6 +23,40 @@ const VerifyPolicy = ({ onNavigate }) => {
   const [loading, setLoading]   = useState(false);
   const [apiError, setApiError] = useState(null);
   const resultRef = useRef(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const saleId = params.get('sale_id');
+    const token = params.get('token');
+    if (!saleId || !token) return undefined;
+
+    const controller = new AbortController();
+    const verifyCertificate = async () => {
+      setLoading(true);
+      setResult(null);
+      setApiError(null);
+      try {
+        const qs = new URLSearchParams({ sale_id: saleId, token });
+        const response = await fetch(`${VERIFY_CERTIFICATE_URL}?${qs}`, {
+          headers: { Accept: 'application/json' },
+          signal: controller.signal,
+        });
+        const data = await response.json().catch(() => null);
+        if (!response.ok) throw new Error(data?.message || 'Certificate verification failed.');
+        setResult(data);
+        setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 120);
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          setApiError(error.message || 'Verification service temporarily unavailable.');
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    };
+
+    verifyCertificate();
+    return () => controller.abort();
+  }, []);
 
   const handleVerify = async (e) => {
     e.preventDefault();

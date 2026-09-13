@@ -243,7 +243,7 @@ const toNumericId = (id) => {
 };
 
 const WP_REST_BASE = '/wp-json';
-const canPrintCertificate = (sale) => sale?.paymentStatus === 'confirmed' || ['active', 'verification_ready', 'approved'].includes(String(sale?.policyStatus || '').toLowerCase());
+const canPrintCertificate = (sale) => sale?.paymentStatus === 'confirmed';
 
 const readRestError = async (res, fallback) => {
   const raw = await res.text().catch(() => '');
@@ -299,17 +299,17 @@ const AgentDashboard = ({ user, onNavigate }) => {
     return h;
   };
 
-  const handleViewInvoice = async (saleId) => {
-    setActionLoading(saleId);
+  const handleViewPaymentDocument = async (saleId, documentType) => {
+    setActionLoading(`${saleId}-${documentType}`);
     const numId = toNumericId(saleId);
     try {
-      const res = await fetch(`${WP_REST_BASE}/maljani/v1/invoice/${numId}?doc_type=invoice`, { headers: restHeaders() });
-      if (!res.ok) throw new Error(`Server returned ${res.status}`);
+      const res = await fetch(`${WP_REST_BASE}/maljani/v1/invoice/${numId}?doc_type=${documentType}`, { headers: restHeaders() });
+      if (!res.ok) throw new Error(await readRestError(res, `Could not load ${documentType}`));
       const data = await res.json();
       if (data.html) { const w = window.open('', '_blank'); if (w) { w.document.write(data.html); w.document.close(); } }
       else if (data.url) window.open(data.url, '_blank');
-      else throw new Error('No invoice content returned');
-    } catch (e) { alert(`Could not load invoice. ${e.message}`); }
+      else throw new Error(`No ${documentType} content returned`);
+    } catch (e) { alert(`Could not load ${documentType}. ${e.message}`); }
     finally { setActionLoading(null); }
   };
 
@@ -605,6 +605,8 @@ const AgentDashboard = ({ user, onNavigate }) => {
         const isUnpaid = s.paymentStatus !== 'confirmed';
         const isSelf = authUser?.email && s.insuredEmail?.toLowerCase() === authUser.email.toLowerCase();
         const loading = actionLoading === s.id;
+        const invoiceLoading = actionLoading === `${s.id}-invoice`;
+        const receiptLoading = actionLoading === `${s.id}-receipt`;
 
         const InfoRow = ({ label, value, accent }) => (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
@@ -663,16 +665,25 @@ const AgentDashboard = ({ user, onNavigate }) => {
                   color: '#0f172a', fontSize: '0.78rem', fontWeight: 800, opacity: loading ? 0.6 : 1,
                 }}>{loading ? 'Processing…' : '💳 Launch Payment'}</button>
               )}
+              <button
+                disabled={invoiceLoading}
+                onClick={() => handleViewPaymentDocument(s.id, 'invoice')}
+                title="Print invoice"
+                style={{
+                  background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)',
+                  borderRadius: '8px', padding: '0.5rem 1rem', cursor: invoiceLoading ? 'wait' : 'pointer',
+                  color: '#93c5fd', fontSize: '0.78rem', fontWeight: 700, opacity: invoiceLoading ? 0.6 : 1,
+                }}>{invoiceLoading ? 'Loading…' : '📄 Invoice'}</button>
               {!isUnpaid && (
                 <button
-                  disabled={loading}
-                  onClick={() => handleViewInvoice(s.id)}
-                  title="Payment invoice — financial document from the insurer"
+                  disabled={receiptLoading}
+                  onClick={() => handleViewPaymentDocument(s.id, 'receipt')}
+                  title="Print payment receipt"
                   style={{
                     background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)',
-                    borderRadius: '8px', padding: '0.5rem 1rem', cursor: loading ? 'wait' : 'pointer',
-                    color: '#22c55e', fontSize: '0.78rem', fontWeight: 700, opacity: loading ? 0.6 : 1,
-                  }}>{loading ? 'Loading…' : '📄 Invoice'}</button>
+                    borderRadius: '8px', padding: '0.5rem 1rem', cursor: receiptLoading ? 'wait' : 'pointer',
+                    color: '#86efac', fontSize: '0.78rem', fontWeight: 700, opacity: receiptLoading ? 0.6 : 1,
+                  }}>{receiptLoading ? 'Loading…' : '🧾 Receipt'}</button>
               )}
               <button onClick={() => openClaimRequest(s, false)} style={{
                 background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)',
@@ -1061,6 +1072,18 @@ const AgentDashboard = ({ user, onNavigate }) => {
                       <td style={tdStyle}><Badge {...ps} /></td>
                       <td style={tdStyle}>
                         <div style={{ display: 'flex', gap: '0.3rem' }} onClick={e => e.stopPropagation()}>
+                          <button title="Print invoice" onClick={() => handleViewPaymentDocument(p.id, 'invoice')} style={{
+                            background: 'rgba(59,130,246,0.12)', border: 'none', borderRadius: '6px',
+                            padding: '0.3rem 0.55rem', cursor: 'pointer', color: '#93c5fd',
+                            fontSize: '0.68rem', fontWeight: 700, whiteSpace: 'nowrap',
+                          }}>Invoice</button>
+                          {!isUnpaid && (
+                            <button title="Print payment receipt" onClick={() => handleViewPaymentDocument(p.id, 'receipt')} style={{
+                              background: 'rgba(34,197,94,0.12)', border: 'none', borderRadius: '6px',
+                              padding: '0.3rem 0.55rem', cursor: 'pointer', color: '#86efac',
+                              fontSize: '0.68rem', fontWeight: 700, whiteSpace: 'nowrap',
+                            }}>Receipt</button>
+                          )}
                           <button title="Start a claim" onClick={() => openClaimRequest(p, false)} style={{
                             background: 'rgba(59,130,246,0.12)', border: 'none', borderRadius: '6px',
                             padding: '0.3rem 0.55rem', cursor: 'pointer', color: '#93c5fd',
@@ -1091,9 +1114,6 @@ const AgentDashboard = ({ user, onNavigate }) => {
                               padding: '0.3rem 0.55rem', cursor: 'pointer', color: '#22c55e',
                               fontSize: '0.68rem', fontWeight: 700, whiteSpace: 'nowrap',
                             }}>→ Assign</button>
-                          )}
-                          {!isUnpaid && !isSelf && (
-                            <span style={{ color: 'var(--text-muted)', fontSize: '0.65rem' }}>—</span>
                           )}
                         </div>
                       </td>
@@ -1271,7 +1291,7 @@ const AgentDashboard = ({ user, onNavigate }) => {
       {!selectedSale && activeTab === 'settings' && (
         <div style={{ ...cardStyle, padding: mobile ? '1.25rem' : '1.75rem', maxWidth: 880 }}>
           <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>
-            Agency Receipt & Fee Settings
+            Agency Document & Fee Settings
           </h3>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', margin: '0.5rem 0 1.2rem' }}>
             These values are display-only for your agency documents and client-facing totals. They do not change backend processed totals, settlement, or insurer remittance.
@@ -1307,7 +1327,7 @@ const AgentDashboard = ({ user, onNavigate }) => {
 
             <label style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', gridColumn: mobile ? '1' : '1 / -1' }}>
               <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                Receipt Issuer Name
+                Invoice & Receipt Issuer Name
               </span>
               <input
                 type="text"
@@ -1317,6 +1337,9 @@ const AgentDashboard = ({ user, onNavigate }) => {
                 placeholder="e.g. Safara Travels Ltd"
                 maxLength={120}
               />
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+                Shown in the “From” section of documents you generate for clients.
+              </span>
             </label>
 
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', gridColumn: mobile ? '1' : '1 / -1', marginTop: '0.2rem' }}>
