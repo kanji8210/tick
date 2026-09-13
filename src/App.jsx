@@ -16,6 +16,7 @@ import VerifyPolicy from './components/VerifyPolicy'
 import AboutPage from './components/AboutPage'
 import AgenciesPage from './components/AgenciesPage'
 import GroupQuotesPage from './components/GroupQuotesPage'
+import PaymentReturn from './components/PaymentReturn'
 import { ClaimsPage, ClaimsRefundChoice, ClaimSupportPage } from './components/claims'
 
 const VIEW_PATHS = {
@@ -29,6 +30,7 @@ const VIEW_PATHS = {
   about: '/about',
   agencies: '/agencies',
   'group-quotes': '/group-quotes',
+  'payment-return': '/payment/return',
   claims: '/claims-refunds',
   claim: '/claims/new',
   refunds: '/refunds/new',
@@ -163,6 +165,8 @@ function AppContent() {
         return <AgenciesPage onNavigate={handleNavigate} />;
       case 'group-quotes':
         return <GroupQuotesPage onNavigate={handleNavigate} />;
+      case 'payment-return':
+        return <PaymentReturn onNavigate={handleNavigate} />;
       case 'claims':
         return <ClaimsRefundChoice onNavigate={handleNavigate} />;
       case 'claim':
