@@ -906,7 +906,12 @@ const LandingPage = ({ onStartWizard, onNavigate, compareSelected = [], onAddCom
         console.log('LandingPage onStart:', data);
         setSearchParams(data);
         document.getElementById('policy-showcase')?.scrollIntoView({ behavior: 'smooth' });
-      }} onNavigate={onNavigate} />
+      }}
+        onNavigate={onNavigate}
+        compareSelected={compareSelected}
+        onAddCompare={onAddCompare}
+        onRemoveCompare={onRemoveCompare}
+      />
 
       {!isAgent && <TrustSection />}
 

@@ -11,7 +11,6 @@ const POLICY_SALES_COUNT = `
   }
 `;
 
-const CHIPS = ['🏛️ Embassy-accepted', '📄 Insurer-issued', '🔒 Fraud-proof'];
 const SHOW_STATS = false;
 
 /* ── Animated count-up hook ── */
@@ -71,9 +70,7 @@ const StatCell = ({ value, suffix, label, mobile, isLast, isOddRight }) => {
       <div style={{
         fontFamily: 'var(--font-display)', fontWeight: 800,
         fontSize: 'clamp(24px,2.8vw,36px)', lineHeight: 1.1, marginBottom: 5,
-        backgroundImage: 'linear-gradient(135deg,#fff 30%,var(--gold))',
-        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text',
+        color: 'var(--white)',
       }}>
         {value ? `${count.toLocaleString()}${suffix}` : label === 'loading' ? '…' : value}
       </div>
@@ -84,7 +81,7 @@ const StatCell = ({ value, suffix, label, mobile, isLast, isOddRight }) => {
   );
 };
 
-const TrustSection = ({ onNavigate }) => {
+const TrustSection = () => {
   const { mobile } = useResponsive();
 
   const [{ data: countData }] = useQuery({ query: POLICY_SALES_COUNT });
@@ -130,65 +127,6 @@ const TrustSection = ({ onNavigate }) => {
       </div>
     </div>
     )}
-
-    {/* Anti-fraud banner */}
-    <div style={{
-      background: 'linear-gradient(135deg,rgba(49,99,49,0.12),rgba(246,166,35,0.05))',
-      borderBottom: '1px solid rgba(49,99,49,0.18)',
-    }}>
-      <div className="container">
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          flexDirection: mobile ? 'column' : 'row',
-          flexWrap: 'wrap', gap: mobile ? 16 : 20, padding: '20px 0',
-        }}>
-
-          {/* Left: shield + message */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{
-              width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
-              background: 'rgba(34,197,94,0.1)', border: '1.5px solid rgba(34,197,94,0.35)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
-            }}>
-              🛡️
-            </div>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--white)', marginBottom: 2 }}>
-                Cryptographically Verified Certificates
-              </div>
-              <p style={{ fontSize: 13, color: 'var(--slate)', margin: 0, lineHeight: 1.5 }}>
-                Every Maljani certificate has a unique code embassies and hotels can check in 3 seconds.
-              </p>
-            </div>
-          </div>
-
-          {/* Right: chips + CTA */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            {CHIPS.map(chip => (
-              <span key={chip} style={{
-                fontSize: 12, fontWeight: 600, color: 'var(--white)',
-                background: 'var(--glass-bg)', border: '1px solid var(--glass-border)',
-                borderRadius: 999, padding: '5px 12px', whiteSpace: 'nowrap',
-              }}>
-                {chip}
-              </span>
-            ))}
-            <button
-              onClick={() => onNavigate ? onNavigate('verify') : undefined}
-              style={{
-                fontSize: 13, fontWeight: 700, color: 'var(--gold)',
-                background: 'none', border: 'none', cursor: 'pointer',
-                padding: 0, textDecoration: 'underline', textUnderlineOffset: 3,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Verify a certificate →
-            </button>
-          </div>
-
-        </div>
-      </div>
-    </div>
 
   </section>
   );

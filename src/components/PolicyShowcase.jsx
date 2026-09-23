@@ -145,34 +145,6 @@ const parseBenefitTableRows = (html) => {
   return rows;
 };
 
-const parseBenefitAmount = (raw) => {
-  if (!raw) return 0;
-  const cleaned = String(raw).replace(/,/g, '');
-  const matches = cleaned.match(/\d+(?:\.\d+)?/g);
-  if (!matches || !matches.length) return 0;
-  return Math.max(...matches.map((m) => Number(m) || 0));
-};
-
-const benefitPriority = (policy, sortKey) => {
-  if (!sortKey || sortKey === 'default') return 0;
-  const rows = parseBenefitTableRows(policy.policyBenefits || '');
-  if (!rows.length) return 0;
-
-  const matchers = {
-    medical: /medical|hospital|health|emergency/i,
-    luggage: /luggage|baggage|bag/i,
-    delay: /delay|flight delay|travel delay/i,
-    cancellation: /cancel|cancellation|trip cancellation/i,
-  };
-
-  const rx = matchers[sortKey];
-  if (!rx) return 0;
-
-  const hit = rows.find(([name]) => rx.test(name || ''));
-  if (!hit) return 0;
-  return parseBenefitAmount(hit[1]);
-};
-
 const filterSelectStyle = {
   width: '100%',
   padding: '12px 14px',
@@ -415,7 +387,6 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
   const [selectedInsurerPolicy, setSelectedInsurerPolicy] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState(searchParams?.region || 'all');
   const [selectedPolicyType, setSelectedPolicyType] = useState('all');
-  const [sortBenefitBy, setSortBenefitBy] = useState('default');
   const [departure, setDeparture] = useState(searchParams?.departure || '');
   const [returnDate, setReturnDate] = useState(searchParams?.returnDate || '');
 
@@ -439,10 +410,19 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
     const backendRegions = regionsData?.regions?.nodes || [];
     const policyNodes = data?.policies?.nodes || [];
 
+    // Only surface regions that at least one policy actually references.
+    const usedKeys = new Set();
+    policyNodes.forEach((policy) => {
+      (policy.regions?.nodes || []).forEach((region) => {
+        const key = regionKey(region);
+        if (key) usedKeys.add(key);
+      });
+    });
+
     const included = new Map();
     backendRegions.forEach((region) => {
       const key = regionKey(region);
-      if (!key || included.has(key)) return;
+      if (!key || included.has(key) || !usedKeys.has(key)) return;
       included.set(key, region);
     });
 
@@ -502,24 +482,20 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
       return true;
     });
 
-    if (sortBenefitBy !== 'default') {
-      nodes.sort((a, b) => benefitPriority(b, sortBenefitBy) - benefitPriority(a, sortBenefitBy));
-    } else {
-      let s = shuffleSeed | 0;
-      const rand = () => {
-        s = s + 0x6D2B79F5 | 0;
-        let t = Math.imul(s ^ s >>> 15, 1 | s);
-        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-        return ((t ^ t >>> 14) >>> 0) / 4294967296;
-      };
-      for (let i = nodes.length - 1; i > 0; i--) {
-        const j = Math.floor(rand() * (i + 1));
-        [nodes[i], nodes[j]] = [nodes[j], nodes[i]];
-      }
+    let s = shuffleSeed | 0;
+    const rand = () => {
+      s = s + 0x6D2B79F5 | 0;
+      let t = Math.imul(s ^ s >>> 15, 1 | s);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+    for (let i = nodes.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [nodes[i], nodes[j]] = [nodes[j], nodes[i]];
     }
 
     return nodes.slice(0, 20);
-  }, [data, selectedRegion, selectedPolicyType, sortBenefitBy, shuffleSeed]);
+  }, [data, selectedRegion, selectedPolicyType, shuffleSeed]);
 
   const isInCompare = (id) => compareSelected.some(p => p.id === id);
 
@@ -544,16 +520,16 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
         {fetching && <p style={{ textAlign: 'center', color: 'var(--slate)', padding: '60px 0' }}>Loading policies…</p>}
         {error   && <p style={{ textAlign: 'center', color: '#f87171', padding: '60px 0' }}>Error: {error.message}</p>}
 
-        {!fetching && !error && destinationOptions.length > 0 && (
+        {!fetching && !error && (data?.policies?.nodes?.length || 0) > 0 && destinationOptions.length > 0 && (
           <div style={{ marginBottom: 18 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10, flexWrap: 'wrap' }}>
               <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--slate)', margin: 0 }}>
                 Filter by Destination, Type &amp; Benefits
               </p>
-              {!mobile && (selectedRegion !== 'all' || selectedPolicyType !== 'all' || sortBenefitBy !== 'default' || departure || returnDate) && (
+              {!mobile && (selectedRegion !== 'all' || selectedPolicyType !== 'all' || departure || returnDate) && (
                 <button
                   type="button"
-                  onClick={() => { setSelectedRegion('all'); setSelectedPolicyType('all'); setSortBenefitBy('default'); setDeparture(''); setReturnDate(''); }}
+                  onClick={() => { setSelectedRegion('all'); setSelectedPolicyType('all'); setDeparture(''); setReturnDate(''); }}
                   style={{ fontSize: 12, color: 'var(--gold)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 700 }}
                 >
                   Clear Filters
@@ -616,19 +592,6 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                     </select>
                   </>
                 )}
-
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate-dark)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Sort by Benefit</div>
-                <select
-                  value={sortBenefitBy}
-                  onChange={(e) => setSortBenefitBy(e.target.value)}
-                  style={filterSelectStyle}
-                >
-                  <option value="default" style={filterOptionStyle}>Default</option>
-                  <option value="medical" style={filterOptionStyle}>Medical</option>
-                  <option value="luggage" style={filterOptionStyle}>Luggage</option>
-                  <option value="delay" style={filterOptionStyle}>Delay</option>
-                  <option value="cancellation" style={filterOptionStyle}>Cancellation</option>
-                </select>
               </div>
             ) : (
               <div style={{ display: 'grid', gap: 10 }}>
@@ -677,19 +640,6 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                     </div>
                   </>
                 )}
-
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--slate-dark)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Sort by Benefit</div>
-                <select
-                  value={sortBenefitBy}
-                  onChange={(e) => setSortBenefitBy(e.target.value)}
-                  style={{ ...filterSelectStyle, maxWidth: 320, padding: '10px 12px' }}
-                >
-                  <option value="default" style={filterOptionStyle}>Default</option>
-                  <option value="medical" style={filterOptionStyle}>Medical</option>
-                  <option value="luggage" style={filterOptionStyle}>Luggage</option>
-                  <option value="delay" style={filterOptionStyle}>Delay</option>
-                  <option value="cancellation" style={filterOptionStyle}>Cancellation</option>
-                </select>
               </div>
             )}
           </div>
