@@ -295,7 +295,7 @@ const Hero = ({ onStart, onNavigate, compareSelected = [], onAddCompare, onRemov
       <style>{`@keyframes spin-slow { to { transform: translateY(-50%) rotate(360deg); } } @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} } @keyframes pulse-dot { 0%,100%{box-shadow:0 0 0 4px rgba(34,197,94,0.25)} 50%{box-shadow:0 0 0 8px rgba(34,197,94,0.10)} }`}</style>
 
       <div className="hero-content" style={{ width: '100%', maxWidth: 1440, padding: mobile ? '0 16px' : '0 48px' }}>
-        <div style={{ width: '100%', display: 'flex', flexDirection: mobile ? 'column' : 'row', gap: mobile ? 32 : 56, alignItems: 'center' }}>
+        <div className="landing-hero__layout" style={{ width: '100%', display: 'flex', flexDirection: mobile ? 'column' : 'row', gap: mobile ? 32 : 56, alignItems: 'center' }}>
 
           {/* ── Left column ── */}
           {isAgent ? (
@@ -337,7 +337,7 @@ const Hero = ({ onStart, onNavigate, compareSelected = [], onAddCompare, onRemov
             </div>
           ) : (
             /* Consumer copy */
-            <div style={{ flex: '1 1 0', minWidth: 0 }}>
+            <div className="landing-hero__copy" style={{ flex: '1 1 0', minWidth: 0 }}>
               {/* Live social-proof pill */}
               <div className="reveal" style={{ display: 'flex', justifyContent: mobile ? 'center' : 'flex-start', marginBottom: 18 }}>
                 <span style={{
@@ -351,10 +351,12 @@ const Hero = ({ onStart, onNavigate, compareSelected = [], onAddCompare, onRemov
                 </span>
               </div>
 
-              <h1 className="reveal reveal-delay-1" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(34px,3.8vw,50px)', fontWeight: 800, lineHeight: 1.06, letterSpacing: '-0.025em', marginBottom: 14, width: '100%', textAlign: mobile ? 'center' : 'left', color: 'var(--white)' }}>
-                Travel insurance.<br />
-                Issued in <span style={{ color: 'var(--gold)' }}>minutes</span>.<br />
-                Accepted at <span style={{ color: 'var(--hero-highlight)' }}>embassies</span>.
+              <h1 className="reveal reveal-delay-1" style={{ fontFamily: 'var(--font-display)', fontSize: mobile ? 27 : 'clamp(32px,3vw,44px)', fontWeight: 800, lineHeight: 1.06, letterSpacing: '-0.025em', marginBottom: 14, width: '100%', textAlign: mobile ? 'center' : 'left', color: 'var(--white)' }}>
+                {mobile ? (
+                  <>Travel cover.<br /><span style={{ color: 'var(--gold)' }}>Choose well.</span><br /><span style={{ color: 'var(--hero-highlight)' }}>Visa-ready.</span></>
+                ) : (
+                  <>Travel insurance.<br />Issued in <span style={{ color: 'var(--gold)' }}>minutes</span>.<br /><span style={{ color: 'var(--hero-highlight)' }}>Embassy accepted.</span></>
+                )}
               </h1>
 
               <p className="reveal reveal-delay-2" style={{ fontSize: mobile ? 15 : 16, color: 'var(--slate)', lineHeight: 1.65, margin: mobile ? '0 auto 20px' : '0 0 20px', width: '100%', maxWidth: 640, textAlign: mobile ? 'center' : 'left' }}>
@@ -398,7 +400,7 @@ const Hero = ({ onStart, onNavigate, compareSelected = [], onAddCompare, onRemov
 
               {/* How it works — 3-step micro-strip */}
               <div className="reveal reveal-delay-4 landing-hero__steps" style={{
-                display: 'grid',
+                display: mobile ? 'none' : 'grid',
                 gridTemplateColumns: mobile ? '1fr' : 'repeat(3, minmax(0, 1fr))',
                 gap: 10,
                 maxWidth: 760, margin: mobile ? '0 auto' : '0',
@@ -447,7 +449,7 @@ const Hero = ({ onStart, onNavigate, compareSelected = [], onAddCompare, onRemov
             </div>
           ) : (
             /* Consumer quote wizard card — hidden on mobile when closed; opens as full-screen modal otherwise */
-            <div className="reveal reveal-delay-2" ref={quoteCardRef} style={{ flex: '0 1 440px', width: '100%', minWidth: 0 }}>
+            <div className="reveal reveal-delay-2 landing-hero__search-column" ref={quoteCardRef} style={{ flex: '0 1 440px', width: '100%', minWidth: 0 }}>
 
               <form
                 className="landing-hero__form"
@@ -470,7 +472,7 @@ const Hero = ({ onStart, onNavigate, compareSelected = [], onAddCompare, onRemov
                   Your trip, covered
                 </p>
                 <h2 style={{ margin: '0 0 6px', color: 'var(--hero-card-text)', fontFamily: 'var(--font-display)', fontSize: 25, fontWeight: 800, lineHeight: 1.2 }}>
-                  Find the right cover
+                  {mobile ? 'Compare plans' : 'Find the right cover'}
                 </h2>
                 <p style={{ margin: '0 0 22px', color: 'var(--hero-card-muted)', fontSize: 13, lineHeight: 1.5 }}>
                   Choose your destination and travel dates to compare plans.
@@ -544,7 +546,7 @@ const Hero = ({ onStart, onNavigate, compareSelected = [], onAddCompare, onRemov
                 >
                   Compare travel insurance <span aria-hidden="true">&rarr;</span>
                 </button>
-                <p style={{ margin: '12px 0 0', textAlign: 'center', color: 'var(--hero-card-muted)', fontSize: 11 }}>
+                <p style={{ display: mobile ? 'none' : undefined, margin: '12px 0 0', textAlign: 'center', color: 'var(--hero-card-muted)', fontSize: 11 }}>
                   🔒 Secure · No obligation · Embassy-accepted cover
                 </p>
               </form>
