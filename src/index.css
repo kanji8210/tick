@@ -159,6 +159,45 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
 .hero-full-bleed {
   width: 100%;
 }
+.landing-hero {
+  --hero-highlight: #86efac;
+  --hero-proof-bg: rgba(34,197,94,0.10);
+  --hero-proof-border: rgba(34,197,94,0.35);
+  --hero-proof-text: #86efac;
+  --hero-card-bg: linear-gradient(150deg, rgba(18,32,51,0.98), rgba(8,19,33,0.98));
+  --hero-card-text: #F8FAFC;
+  --hero-card-muted: #CBD5E1;
+  --hero-card-border: rgba(255,255,255,0.18);
+  --hero-steps-bg: rgba(0,0,0,0.20);
+  --hero-steps-border: rgba(255,255,255,0.14);
+  background:
+    radial-gradient(ellipse 58% 92% at 4% 40%, rgba(49,99,49,0.16), transparent 72%),
+    radial-gradient(ellipse 45% 80% at 96% 12%, rgba(246,166,35,0.09), transparent 70%);
+}
+.landing-hero__form {
+  background: var(--hero-card-bg);
+  border: 1px solid var(--hero-card-border);
+  box-shadow: 0 24px 70px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.landing-hero__steps {
+  background: var(--hero-steps-bg);
+  border: 1px solid var(--hero-steps-border);
+}
+:root[data-theme='light'] .landing-hero {
+  --hero-highlight: #276238;
+  --hero-proof-bg: rgba(39,98,56,0.08);
+  --hero-proof-border: rgba(39,98,56,0.28);
+  --hero-proof-text: #245B34;
+  --hero-card-bg: linear-gradient(150deg, #FFFEFA, #FFFFFF);
+  --hero-card-text: #122033;
+  --hero-card-muted: #465568;
+  --hero-card-border: rgba(31,44,63,0.18);
+  --hero-steps-bg: rgba(255,252,246,0.82);
+  --hero-steps-border: rgba(31,44,63,0.16);
+  background:
+    radial-gradient(ellipse 58% 92% at 4% 40%, rgba(39,98,56,0.11), transparent 72%),
+    radial-gradient(ellipse 45% 80% at 96% 12%, rgba(217,149,39,0.14), transparent 70%);
+}
 .hero-content {
   width: 100%;
   max-width: 100%;

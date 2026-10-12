@@ -41,7 +41,20 @@ const PATH_VIEWS = Object.fromEntries(Object.entries(VIEW_PATHS).map(([view, pat
 const urlToEntry = () => {
   const path = window.location.pathname === '/' ? '/' : window.location.pathname.replace(/\/+$/, '');
   const view = PATH_VIEWS[path] || 'landing';
-  return { view, policyId: null, searchData: null, forceStep: null };
+  const params = new URLSearchParams(window.location.search);
+  const searchData = view === 'catalog'
+    ? {
+        region: params.get('region') || '',
+        departure: params.get('departure') || '',
+        returnDate: params.get('returnDate') || '',
+      }
+    : null;
+  return {
+    view,
+    policyId: null,
+    searchData: searchData && Object.values(searchData).some(Boolean) ? searchData : null,
+    forceStep: null,
+  };
 };
 
 function AppContent() {
@@ -88,7 +101,15 @@ function AppContent() {
 
     setHistory(nextHistory);
     setHistoryIdx(nextIdx);
-    window.history.pushState({ idx: nextIdx }, '', VIEW_PATHS[view] || '/');
+    const path = VIEW_PATHS[view] || '/';
+    const params = new URLSearchParams();
+    if (view === 'catalog' && searchData) {
+      ['region', 'departure', 'returnDate'].forEach((key) => {
+        if (searchData[key]) params.set(key, searchData[key]);
+      });
+    }
+    const query = params.toString();
+    window.history.pushState({ idx: nextIdx }, '', query ? `${path}?${query}` : path);
     window.scrollTo(0, 0);
   };
 
@@ -156,7 +177,7 @@ function AppContent() {
       case 'register':
         return <Register onNavigate={handleNavigate} />;
       case 'catalog':
-        return <Catalog onNavigate={handleNavigate} {...compareProps} />;
+        return <Catalog searchParams={history[historyIdx].searchData} onNavigate={handleNavigate} {...compareProps} />;
       case 'verify':
         return <VerifyPolicy onNavigate={handleNavigate} />;
       case 'about':

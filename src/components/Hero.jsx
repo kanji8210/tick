@@ -286,7 +286,7 @@ const Hero = ({ onStart, onNavigate, compareSelected = [], onAddCompare, onRemov
   };
 
   return (
-    <section id="hero-top" className="hero-full-bleed" style={{ position: "relative", zIndex: 1, minHeight: mobile ? "auto" : "100vh", display: "flex", alignItems: "center", padding: mobile ? "90px 0 48px" : "128px 0 80px" }}>
+    <section id="hero-top" className="hero-full-bleed landing-hero" style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", padding: mobile ? "84px 0 34px" : "104px 0 52px" }}>
       <div style={{
         position: "absolute", right: "-8%", top: "50%", transform: "translateY(-50%)",
         width: mobile ? 0 : 560, height: mobile ? 0 : 560, border: mobile ? "none" : "1px dashed rgba(49,99,49,0.18)", borderRadius: "50%",
@@ -294,8 +294,8 @@ const Hero = ({ onStart, onNavigate, compareSelected = [], onAddCompare, onRemov
       }} aria-hidden="true" />
       <style>{`@keyframes spin-slow { to { transform: translateY(-50%) rotate(360deg); } } @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} } @keyframes pulse-dot { 0%,100%{box-shadow:0 0 0 4px rgba(34,197,94,0.25)} 50%{box-shadow:0 0 0 8px rgba(34,197,94,0.10)} }`}</style>
 
-      <div className="hero-content" style={{ width: '100%', maxWidth: '100%', padding: mobile ? '0 16px' : '0 32px' }}>
-        <div style={{ width: '100%', display: 'flex', flexDirection: (isAgent && user && !mobile) ? 'row' : 'column', gap: 32, alignItems: 'stretch' }}>
+      <div className="hero-content" style={{ width: '100%', maxWidth: 1440, padding: mobile ? '0 16px' : '0 48px' }}>
+        <div style={{ width: '100%', display: 'flex', flexDirection: mobile ? 'column' : 'row', gap: mobile ? 32 : 56, alignItems: 'center' }}>
 
           {/* ── Left column ── */}
           {isAgent ? (
@@ -337,46 +337,34 @@ const Hero = ({ onStart, onNavigate, compareSelected = [], onAddCompare, onRemov
             </div>
           ) : (
             /* Consumer copy */
-            <div>
+            <div style={{ flex: '1 1 0', minWidth: 0 }}>
               {/* Live social-proof pill */}
-              <div className="reveal" style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
+              <div className="reveal" style={{ display: 'flex', justifyContent: mobile ? 'center' : 'flex-start', marginBottom: 18 }}>
                 <span style={{
                   display: 'inline-flex', alignItems: 'center', gap: 8,
                   padding: '6px 14px', borderRadius: 999,
-                  background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.35)',
-                  fontSize: 12, fontWeight: 700, color: '#86efac', letterSpacing: '0.02em',
+                  background: 'var(--hero-proof-bg)', border: '1px solid var(--hero-proof-border)',
+                  fontSize: 12, fontWeight: 700, color: 'var(--hero-proof-text)', letterSpacing: '0.02em',
                 }}>
                   <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 0 4px rgba(34,197,94,0.25)', animation: 'pulse-dot 2s ease-in-out infinite' }} aria-hidden="true" />
                   <span style={{ color: 'var(--white)' }}>{liveCount !== null ? `${liveCount.toLocaleString('en-KE')}+` : '50,000+'}</span> certificates issued &middot; embassy-accepted
                 </span>
               </div>
 
-              <h1 className="reveal reveal-delay-1" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(38px,5vw,68px)', fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.025em', marginBottom: 18, width: '100%', textAlign: 'center', color: 'var(--white)' }}>
-                Real travel insurance.<br />
+              <h1 className="reveal reveal-delay-1" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(34px,3.8vw,50px)', fontWeight: 800, lineHeight: 1.06, letterSpacing: '-0.025em', marginBottom: 14, width: '100%', textAlign: mobile ? 'center' : 'left', color: 'var(--white)' }}>
+                Travel insurance.<br />
                 Issued in <span style={{ color: 'var(--gold)' }}>minutes</span>.<br />
-                Accepted at <span style={{ color: '#86efac' }}>embassies</span>.
+                Accepted at <span style={{ color: 'var(--hero-highlight)' }}>embassies</span>.
               </h1>
 
-              <p className="reveal reveal-delay-2" style={{ fontSize: mobile ? 15 : 17, color: 'var(--slate)', lineHeight: 1.65, margin: '0 auto 28px', width: '100%', maxWidth: 640, textAlign: 'center' }}>
+              <p className="reveal reveal-delay-2" style={{ fontSize: mobile ? 15 : 16, color: 'var(--slate)', lineHeight: 1.65, margin: mobile ? '0 auto 20px' : '0 0 20px', width: '100%', maxWidth: 640, textAlign: mobile ? 'center' : 'left' }}>
                 Compare 15+ licensed insurers. Buy in three taps. Receive your <strong style={{ color: 'var(--white)', fontWeight: 700 }}>cryptographically-verified certificate</strong> by email &mdash; before you finish your visa form.
               </p>
 
-              {/* CTA row: primary dominant, secondary compact */}
-              <div className="reveal reveal-delay-3" style={{ display: 'flex', gap: 12, marginBottom: 20, width: '100%', flexWrap: 'wrap', justifyContent: mobile ? 'stretch' : 'center', alignItems: 'center' }}>
-                <button
-                  className="btn btn--primary btn--lg"
-                  style={{ flex: mobile ? '1 1 100%' : '0 0 auto', padding: '16px 34px', fontSize: 16, justifyContent: 'center', boxShadow: '0 12px 32px rgba(246,166,35,0.35)' }}
-                  onClick={() => {
-                    setShowQuote(true);
-                    setActiveTab(0);
-                    setActiveSheet(null);
-                  }}
-                >
-                  Get Covered &rarr;
-                </button>
+              {/* Secondary group-quote path; individual trips use the adjacent search form. */}
+              <div className="reveal reveal-delay-3" style={{ display: 'flex', gap: 12, marginBottom: 10, width: '100%', flexWrap: 'wrap', justifyContent: mobile ? 'center' : 'flex-start', alignItems: 'center' }}>
                 <button
                   style={{
-                    flex: mobile ? '1 1 100%' : '0 0 auto',
                     background: 'transparent', border: 'none', color: 'var(--slate)',
                     fontSize: 14, fontWeight: 600, cursor: 'pointer',
                     padding: '14px 18px', textDecoration: 'underline', textUnderlineOffset: 4,
@@ -392,7 +380,7 @@ const Hero = ({ onStart, onNavigate, compareSelected = [], onAddCompare, onRemov
               </div>
 
               {/* Rating + trust row */}
-              <div className="reveal reveal-delay-4" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: mobile ? 10 : 20, flexWrap: 'wrap', marginBottom: 22 }}>
+              <div className="reveal reveal-delay-4" style={{ display: 'flex', alignItems: 'center', justifyContent: mobile ? 'center' : 'flex-start', gap: mobile ? 10 : 20, flexWrap: 'wrap', marginBottom: 16 }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--white)', fontWeight: 600 }}>
                   <span style={{ letterSpacing: 1, fontSize: 14 }}>★★★★★</span>
                   <span style={{ color: 'var(--gold)', fontWeight: 800 }}>4.9</span>
@@ -409,14 +397,12 @@ const Hero = ({ onStart, onNavigate, compareSelected = [], onAddCompare, onRemov
               </div>
 
               {/* How it works — 3-step micro-strip */}
-              <div className="reveal reveal-delay-4" style={{
+              <div className="reveal reveal-delay-4 landing-hero__steps" style={{
                 display: 'grid',
                 gridTemplateColumns: mobile ? '1fr' : 'repeat(3, minmax(0, 1fr))',
                 gap: 10,
-                maxWidth: 760, margin: '0 auto',
+                maxWidth: 760, margin: mobile ? '0 auto' : '0',
                 padding: '12px 14px',
-                background: 'rgba(0,0,0,0.20)',
-                border: '1px solid var(--glass-border)',
                 borderRadius: 14,
               }}>
                 {[
@@ -461,7 +447,107 @@ const Hero = ({ onStart, onNavigate, compareSelected = [], onAddCompare, onRemov
             </div>
           ) : (
             /* Consumer quote wizard card — hidden on mobile when closed; opens as full-screen modal otherwise */
-            <div className="reveal reveal-delay-2" ref={quoteCardRef} style={{ display: showQuote ? 'contents' : (mobile ? 'none' : undefined) }}>
+            <div className="reveal reveal-delay-2" ref={quoteCardRef} style={{ flex: '0 1 440px', width: '100%', minWidth: 0 }}>
+
+              <form
+                className="landing-hero__form"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!canSubmit) return;
+                  const destination = form.destinations[0];
+                  onNavigate?.('catalog', null, {
+                    region: destination.slug || destination.name || '',
+                    departure: form.departure,
+                    returnDate: form.returnDate,
+                  });
+                }}
+                style={{
+                  padding: mobile ? 20 : 28,
+                  borderRadius: 'var(--radius-xl)',
+                }}
+              >
+                <p style={{ margin: '0 0 8px', color: 'var(--gold)', fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                  Your trip, covered
+                </p>
+                <h2 style={{ margin: '0 0 6px', color: 'var(--hero-card-text)', fontFamily: 'var(--font-display)', fontSize: 25, fontWeight: 800, lineHeight: 1.2 }}>
+                  Find the right cover
+                </h2>
+                <p style={{ margin: '0 0 22px', color: 'var(--hero-card-muted)', fontSize: 13, lineHeight: 1.5 }}>
+                  Choose your destination and travel dates to compare plans.
+                </p>
+
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 14 }}>
+                  <span style={{ color: 'var(--hero-card-text)', fontSize: 12, fontWeight: 700 }}>Destination region</span>
+                  <select
+                    required
+                    aria-label="Destination region"
+                    value={form.destinations[0]?.slug || ''}
+                    onChange={(e) => {
+                      const selected = regions.find((region) => region.slug === e.target.value);
+                      setForm((current) => ({ ...current, destinations: selected ? [{ slug: selected.slug, name: selected.name }] : [] }));
+                    }}
+                    style={{
+                      width: '100%', boxSizing: 'border-box', padding: '13px 14px', borderRadius: 11,
+                      border: '1px solid var(--glass-border)', background: 'var(--field-bg)', color: 'var(--field-text)',
+                      fontFamily: 'var(--font-body)', fontSize: 14, colorScheme: 'inherit',
+                    }}
+                  >
+                    <option value="" disabled>Select a region</option>
+                    {regions.map((region) => (
+                      <option key={region.slug} value={region.slug}>{region.name}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 18 }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                    <span style={{ color: 'var(--hero-card-text)', fontSize: 12, fontWeight: 700 }}>Departure</span>
+                    <input
+                      required
+                      type="date"
+                      min={today}
+                      value={form.departure}
+                      onChange={(e) => setForm((current) => ({
+                        ...current,
+                        departure: e.target.value,
+                        returnDate: current.returnDate && current.returnDate < e.target.value ? '' : current.returnDate,
+                      }))}
+                      style={{
+                        width: '100%', boxSizing: 'border-box', padding: '13px 12px', borderRadius: 11,
+                        border: '1px solid var(--glass-border)', background: 'var(--field-bg)', color: 'var(--field-text)',
+                        fontFamily: 'var(--font-body)', fontSize: 13, colorScheme: 'inherit',
+                      }}
+                    />
+                  </label>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                    <span style={{ color: 'var(--hero-card-text)', fontSize: 12, fontWeight: 700 }}>Return</span>
+                    <input
+                      required
+                      type="date"
+                      min={form.departure || today}
+                      value={form.returnDate}
+                      onChange={(e) => setForm((current) => ({ ...current, returnDate: e.target.value }))}
+                      style={{
+                        width: '100%', boxSizing: 'border-box', padding: '13px 12px', borderRadius: 11,
+                        border: '1px solid var(--glass-border)', background: 'var(--field-bg)', color: 'var(--field-text)',
+                        fontFamily: 'var(--font-body)', fontSize: 13, colorScheme: 'inherit',
+                      }}
+                    />
+                  </label>
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn btn--primary btn--lg"
+                  disabled={!canSubmit}
+                  style={{ width: '100%', justifyContent: 'center', padding: '15px 20px', boxShadow: '0 12px 32px rgba(246,166,35,0.25)' }}
+                >
+                  Compare travel insurance <span aria-hidden="true">&rarr;</span>
+                </button>
+                <p style={{ margin: '12px 0 0', textAlign: 'center', color: 'var(--hero-card-muted)', fontSize: 11 }}>
+                  🔒 Secure · No obligation · Embassy-accepted cover
+                </p>
+              </form>
 
               {/* ── Client dashboard card ── */}
               {!showQuote && (

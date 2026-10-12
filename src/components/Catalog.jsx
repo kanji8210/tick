@@ -2,7 +2,7 @@ import React from 'react';
 import PolicyShowcase from './PolicyShowcase';
 import { useResponsive } from '../lib/useResponsive';
 
-const Catalog = ({ onNavigate, compareSelected = [], onAddCompare, onRemoveCompare }) => {
+const Catalog = ({ onNavigate, searchParams = null, compareSelected = [], onAddCompare, onRemoveCompare }) => {
   const { mobile } = useResponsive();
 
   const handleAddCompare    = (p)   => onAddCompare?.(p);
@@ -13,6 +13,7 @@ const Catalog = ({ onNavigate, compareSelected = [], onAddCompare, onRemoveCompa
 
       <PolicyShowcase
         onNavigate={onNavigate}
+        searchParams={searchParams}
         compareSelected={compareSelected}
         onAddCompare={handleAddCompare}
         onRemoveCompare={handleRemoveCompare}
