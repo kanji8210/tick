@@ -69,7 +69,7 @@ const readRestError = async (res, fallback) => {
     message = raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
   }
 
-  console.error('Payment initiation failed:', {
+  console.error(`${fallback}:`, {
     status: res.status,
     statusText: res.statusText,
     body: raw,
