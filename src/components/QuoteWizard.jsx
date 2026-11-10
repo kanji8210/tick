@@ -405,6 +405,14 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
     phone:             '',
     dob:               '',
     passport:          '',
+    occupation:        '',
+    permanentAddress:  '',
+    postalAddress:     '',
+    travelPurpose:     '',
+    doctorDetails:     '',
+    dependants:        [],
+    agentContactName:  '',
+    agentContactDetails: '',
     password:          '',
     acceptTerms:       false,
   });
@@ -519,6 +527,12 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
   const shouldAskEmail = isAgent || !isLoggedIn || !effectiveEmail;
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
+  const setDependant = (index, key, value) => setForm(f => {
+    const dependants = [...(f.dependants || [])];
+    dependants[index] = { ...(dependants[index] || {}), [key]: value };
+    return { ...f, dependants };
+  });
+  const dependantCount = Math.max(0, Number(form.passengers || 1) - 1);
 
   const travelerAge = useMemo(() => ageFromDob(form.dob), [form.dob]);
   const requiresSeniorPolicy = travelerAge !== null && travelerAge > 70;
@@ -650,6 +664,14 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
           countryOfOrigin: form.originCountry,
           departure:      form.departure,
           return:         form.returnDate,
+          insuredOccupation: form.occupation,
+          permanentAddress: form.permanentAddress,
+          postalAddress: form.postalAddress,
+          travelPurpose: form.travelPurpose,
+          doctorDetails: form.doctorDetails,
+          dependantsJson: JSON.stringify((form.dependants || []).slice(0, dependantCount)),
+          agentContactName: isAgent ? form.agentContactName : '',
+          agentContactDetails: isAgent ? form.agentContactDetails : '',
         },
       });
   
@@ -1094,7 +1116,24 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
       ? `${agentFeeValue}%`
       : fmt(agentFeeValue);
     const hasRequiredDetails = Boolean(
-      effectiveName?.trim() && effectiveEmail?.trim() && form.phone.trim() && form.dob
+      form.destinationRegion
+      && form.departure
+      && form.returnDate
+      && effectiveName?.trim()
+      && effectiveEmail?.trim()
+      && form.phone.trim()
+      && form.dob
+      && form.passport.trim()
+      && form.occupation.trim()
+      && form.permanentAddress.trim()
+      && form.postalAddress.trim()
+      && form.travelPurpose.trim()
+      && form.doctorDetails.trim()
+      && (isAgent ? form.agentContactName.trim() && form.agentContactDetails.trim() : true)
+      && (form.dependants || []).slice(0, dependantCount).length === dependantCount
+      && (form.dependants || []).slice(0, dependantCount).every(
+        dependant => dependant?.fullName?.trim() && dependant?.dob && dependant?.passport?.trim()
+      )
     );
     const checkoutReady = Boolean(
       user || (
@@ -1222,9 +1261,10 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
           {[
             ...(shouldAskName ? [{ key: 'name', label: 'Full Legal Name *', type: 'text', placeholder: 'As on passport' }] : []),
             ...(shouldAskEmail ? [{ key: 'email', label: 'Email Address *', type: 'email', placeholder: 'you@example.com' }] : []),
-            { key: 'phone',    label: 'Phone Number *',     type: 'tel',   placeholder: '+254 700 000 000' },
-            { key: 'dob',      label: 'Date of Birth',      type: 'date',  placeholder: '' },
-            { key: 'passport', label: 'Passport / ID No.',  type: 'text',  placeholder: 'Optional' },
+            { key: 'phone',      label: 'Mobile Number *',       type: 'tel',   placeholder: '+254 700 000 000' },
+            { key: 'dob',        label: 'Date of Birth *',       type: 'date',  placeholder: '' },
+            { key: 'passport',   label: 'Passport Number *',     type: 'text',  placeholder: 'As shown on passport' },
+            { key: 'occupation', label: 'Occupation *',          type: 'text',  placeholder: 'Your occupation' },
           ].map(({ key, label, type, placeholder }) => (
             key === 'dob' ? (
               <BirthDateInput key={key} value={form.dob} onChange={value => set('dob', value)} />
@@ -1236,11 +1276,81 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
                   style={inputStyle}
                   placeholder={placeholder}
                   value={form[key]}
+                  required
                   onChange={e => set(key, e.target.value)}
                 />
               </div>
             )
           ))}
+
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Permanent Address *</label>
+            <textarea style={{ ...inputStyle, minHeight: 76, resize: 'vertical' }} value={form.permanentAddress}
+              onChange={e => set('permanentAddress', e.target.value)} required />
+          </div>
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Postal Address *</label>
+            <textarea style={{ ...inputStyle, minHeight: 76, resize: 'vertical' }} value={form.postalAddress}
+              onChange={e => set('postalAddress', e.target.value)} required />
+          </div>
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Purpose of Travel *</label>
+            <textarea style={{ ...inputStyle, minHeight: 76, resize: 'vertical' }} value={form.travelPurpose}
+              onChange={e => set('travelPurpose', e.target.value)} required />
+          </div>
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Doctor Details *</label>
+            <textarea style={{ ...inputStyle, minHeight: 76, resize: 'vertical' }}
+              placeholder="Doctor's name, phone number, and any relevant details"
+              value={form.doctorDetails} onChange={e => set('doctorDetails', e.target.value)} required />
+          </div>
+
+          {dependantCount > 0 && (
+            <section aria-label="Travelling dependants" style={{
+              display: 'flex', flexDirection: 'column', gap: 14, padding: 16,
+              border: '1px solid var(--glass-border)', borderRadius: 10,
+            }}>
+              <h4 style={{ margin: 0, color: 'var(--gold)', fontSize: 13 }}>Travelling Dependants</h4>
+              {Array.from({ length: dependantCount }, (_, index) => {
+                const dependant = form.dependants?.[index] || {};
+                return (
+                  <div key={index} style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : 'repeat(3, 1fr)', gap: 12 }}>
+                    <div style={fieldStyle}>
+                      <label style={labelStyle}>Dependant {index + 1} Full Name *</label>
+                      <input style={inputStyle} value={dependant.fullName || ''} required
+                        onChange={e => setDependant(index, 'fullName', e.target.value)} />
+                    </div>
+                    <div style={fieldStyle}>
+                      <label style={labelStyle}>Date of Birth *</label>
+                      <input type="date" max={today} style={inputStyle} value={dependant.dob || ''} required
+                        onChange={e => setDependant(index, 'dob', e.target.value)} />
+                    </div>
+                    <div style={fieldStyle}>
+                      <label style={labelStyle}>Passport Number *</label>
+                      <input style={inputStyle} value={dependant.passport || ''} required
+                        onChange={e => setDependant(index, 'passport', e.target.value)} />
+                    </div>
+                  </div>
+                );
+              })}
+            </section>
+          )}
+
+          {isAgent && (
+            <>
+              <div style={fieldStyle}>
+                <label style={labelStyle}>Agent Name *</label>
+                <input style={inputStyle} value={form.agentContactName} required
+                  onChange={e => set('agentContactName', e.target.value)} />
+              </div>
+              <div style={fieldStyle}>
+                <label style={labelStyle}>Agent Contact Details *</label>
+                <input style={inputStyle} value={form.agentContactDetails} required
+                  placeholder="Phone number and/or email"
+                  onChange={e => set('agentContactDetails', e.target.value)} />
+              </div>
+            </>
+          )}
 
           {requiresSeniorPolicy && (
             <div style={{
@@ -1340,7 +1450,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
         </div>
         {!canSubmit && seniorPolicyValid && (
           <p style={{ color: 'var(--slate)', fontSize: 12, lineHeight: 1.5, margin: '10px 0 0', textAlign: 'right' }} role="status">
-            Complete your name, email, phone, date of birth, and the selected checkout option to continue.
+            Complete all required travel and insured-person details, plus the selected checkout option, to continue.
           </p>
         )}
         {saleResult.error && (
@@ -1422,6 +1532,14 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
                   phone: '',
                   dob: '',
                   passport: '',
+                  occupation: '',
+                  permanentAddress: '',
+                  postalAddress: '',
+                  travelPurpose: '',
+                  doctorDetails: '',
+                  dependants: [],
+                  agentContactName: '',
+                  agentContactDetails: '',
                   password: '',
                   acceptTerms: false
                 });

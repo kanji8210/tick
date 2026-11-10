@@ -28,6 +28,18 @@ const AGENCY_DASHBOARD = gql`
   }
 `;
 
+const formatDependants = (dependantsJson) => {
+  try {
+    const dependants = JSON.parse(dependantsJson || '[]');
+    if (!Array.isArray(dependants) || !dependants.length) return '—';
+    return dependants.map(({ fullName, dob, passport }) =>
+      [fullName, dob, passport].filter(Boolean).join(' · ')
+    ).join('; ');
+  } catch {
+    return '—';
+  }
+};
+
 const UPDATE_POLICY_STATUS = gql`
   mutation UpdatePolicySaleStatus($saleId: Int!, $status: String!) {
     maljaniUpdatePolicySaleStatus(input: { saleId: $saleId, status: $status }) {
@@ -44,6 +56,8 @@ const MY_POLICIES = gql`
       policyInsurerName
       departure returnDate passengers insuredNames insuredEmail insuredPhone
       passportNumber insuredDob nationalId insuredAddress countryOfOrigin
+      insuredOccupation permanentAddress postalAddress travelPurpose doctorDetails
+      dependantsJson agentContactName agentContactDetails
       amountPaid paymentStatus policyStatus createdAt
       workflowStatus agentCommissionAmount agentCommissionStatus
       serviceFeeAmount maljaniCommissionAmount netToInsurer
@@ -770,8 +784,13 @@ const AgentDashboard = ({ user, onNavigate }) => {
                 <InfoRow label="Date of Birth" value={fmtDate(s.insuredDob)} />
                 <InfoRow label="Passport" value={s.passportNumber} />
                 <InfoRow label="National ID" value={s.nationalId} />
-                <InfoRow label="Address" value={s.insuredAddress} />
+                <InfoRow label="Occupation" value={s.insuredOccupation} />
+                <InfoRow label="Permanent Address" value={s.permanentAddress || s.insuredAddress} />
+                <InfoRow label="Postal Address" value={s.postalAddress} />
                 <InfoRow label="Country of Origin" value={s.countryOfOrigin} />
+                <InfoRow label="Doctor Details" value={s.doctorDetails} />
+                <InfoRow label="Agent Name" value={s.agentContactName} />
+                <InfoRow label="Agent Contact" value={s.agentContactDetails} />
                 {isSelf && (
                   <div style={{ marginTop: '0.5rem', padding: '0.4rem 0.8rem', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '6px', fontSize: '0.72rem', color: '#f59e0b', fontWeight: 600 }}>
                     ⚑ Self-policy — you are the agent and the insured
@@ -786,6 +805,8 @@ const AgentDashboard = ({ user, onNavigate }) => {
                 <InfoRow label="Duration" value={s.days ? `${s.days} day${s.days > 1 ? 's' : ''}` : '—'} />
                 <InfoRow label="Passengers" value={s.passengers} />
                 <InfoRow label="Region" value={s.region} />
+                <InfoRow label="Purpose of Travel" value={s.travelPurpose} />
+                <InfoRow label="Travelling Dependants" value={formatDependants(s.dependantsJson)} />
               </SectionCard>
 
               {/* Financial */}
