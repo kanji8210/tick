@@ -2,11 +2,8 @@ import React from 'react';
 import PolicyShowcase from './PolicyShowcase';
 import { useResponsive } from '../lib/useResponsive';
 
-const Catalog = ({ onNavigate, searchParams = null, compareSelected = [], onAddCompare, onRemoveCompare }) => {
+const Catalog = ({ onNavigate, searchParams = null }) => {
   const { mobile } = useResponsive();
-
-  const handleAddCompare    = (p)   => onAddCompare?.(p);
-  const handleRemoveCompare = (id)  => onRemoveCompare?.(id);
 
   return (
     <div className="fade-in" style={{ padding: mobile ? '5rem 0 2rem' : '6rem 0' }}>
@@ -14,9 +11,6 @@ const Catalog = ({ onNavigate, searchParams = null, compareSelected = [], onAddC
       <PolicyShowcase
         onNavigate={onNavigate}
         searchParams={searchParams}
-        compareSelected={compareSelected}
-        onAddCompare={handleAddCompare}
-        onRemoveCompare={handleRemoveCompare}
       />
 
       <div style={{ textAlign: 'center', marginTop: '6rem', padding: '4rem', background: 'rgba(255,255,255,0.02)', borderRadius: '24px' }}>

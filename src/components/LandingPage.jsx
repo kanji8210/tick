@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery } from 'urql';
 import { useAuth } from '../lib/AuthContext';
 import { useResponsive } from '../lib/useResponsive';
@@ -864,7 +864,7 @@ const POLICY_SALES_COUNT = `
   }
 `;
 
-const LandingPage = ({ onStartWizard, onNavigate, compareSelected = [], onAddCompare, onRemoveCompare }) => {
+const LandingPage = ({ onStartWizard, onNavigate }) => {
   const { user, role } = useAuth();
   const { mobile } = useResponsive();
   const isAgent = role === 'agent' || role === 'administrator';
@@ -908,9 +908,6 @@ const LandingPage = ({ onStartWizard, onNavigate, compareSelected = [], onAddCom
         document.getElementById('policy-showcase')?.scrollIntoView({ behavior: 'smooth' });
       }}
         onNavigate={onNavigate}
-        compareSelected={compareSelected}
-        onAddCompare={onAddCompare}
-        onRemoveCompare={onRemoveCompare}
       />
 
       {!isAgent && <TrustSection />}
@@ -937,9 +934,6 @@ const LandingPage = ({ onStartWizard, onNavigate, compareSelected = [], onAddCom
       <PolicyShowcase
         onNavigate={onNavigate}
         searchParams={searchParams}
-        compareSelected={compareSelected}
-        onAddCompare={onAddCompare}
-        onRemoveCompare={onRemoveCompare}
       />
 
       {/* Agency CTA */}

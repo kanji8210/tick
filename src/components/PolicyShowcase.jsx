@@ -378,7 +378,7 @@ const BenefitModal = ({ policy, onClose, onNavigate }) => {
   );
 };
 
-const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [], onAddCompare, onRemoveCompare }) => {
+const PolicyShowcase = ({ onNavigate, searchParams = null }) => {
   const { mobile, tablet } = useResponsive();
   const { role } = useAuth();
   const isAgent = role === 'agent';
@@ -496,16 +496,6 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
 
     return nodes.slice(0, 20);
   }, [data, selectedRegion, selectedPolicyType, shuffleSeed]);
-
-  const isInCompare = (id) => compareSelected.some(p => p.id === id);
-
-  const toggleCompare = (policy) => {
-    if (isInCompare(policy.id)) {
-      onRemoveCompare?.(policy.id);
-    } else if (compareSelected.length < 3) {
-      onAddCompare?.(policy);
-    }
-  };
 
   return (
     <section id="policy-showcase" style={{ position: 'relative', zIndex: 1, padding: mobile ? '48px 0 60px' : '80px 0 110px' }}>
@@ -659,11 +649,10 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                 ? { usd: Number(activeBracket.usdPremium), rate: Number(activeBracket.exchangeRate) }
                 : null;
               const tags       = parseTags(policy.policyFeatureTags);
-              const checked    = isInCompare(policy.id);
               const canSell    = !isAgent || policy.agentHasInsurerAgreement !== false;
 
               return (
-                <div key={policy.id} className="policy-card" style={{ background: 'var(--glass-bg)', border: `1px solid ${checked ? 'rgba(49,99,49,0.5)' : 'var(--glass-border)'}`, borderRadius: 'var(--radius-lg)', overflow: 'hidden', position: 'relative' }}
+                <div key={policy.id} className="policy-card" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', position: 'relative' }}
                 >
                   {/* Card header */}
                   <div style={{ padding: '18px 18px 14px' }}>
@@ -715,13 +704,6 @@ const PolicyShowcase = ({ onNavigate, searchParams = null, compareSelected = [],
                   {/* Card footer */}
                   <div style={{ borderTop: '1px solid var(--glass-border)', padding: mobile ? '14px 18px' : '16px 22px', display: 'flex', gap: 10, flexWrap: mobile ? 'wrap' : 'nowrap' }}>
                     <button type="button" className={canSell ? 'btn btn--primary btn--sm' : 'btn btn--ghost btn--sm'} style={{ flex: 1, justifyContent: 'center' }} onClick={() => onNavigate('policy-detail', policy.databaseId, { ...(searchParams || {}), departure, returnDate })}>{canSell ? 'Pick This →' : 'View Details'}</button>
-                    <button
-                      type="button"
-                      className="btn btn--ghost btn--sm"
-                      disabled={compareSelected.length >= 3 && !checked}
-                      style={{ opacity: compareSelected.length >= 3 && !checked ? 0.45 : 1, background: checked ? 'rgba(49,99,49,0.2)' : undefined, borderColor: checked ? 'rgba(49,99,49,0.6)' : undefined, color: checked ? 'var(--success-text)' : undefined }}
-                      onClick={() => toggleCompare(policy)}
-                    >{checked ? '✓ Comparing' : 'Compare'}</button>
                     <button type="button" className="btn btn--ghost btn--sm" style={{ justifyContent: 'center' }} onClick={() => setSelectedPolicy(policy)}>
                       Benefits
                     </button>

@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useQuery } from "urql";
 import { useAuth } from "../lib/AuthContext";
@@ -153,7 +153,7 @@ const FieldIcon = ({ children, gradient }) => (
   </div>
 );
 
-const Hero = ({ onStart, onNavigate, compareSelected = [], onAddCompare, onRemoveCompare }) => {
+const Hero = ({ onStart, onNavigate }) => {
   const { user, role } = useAuth();
   const { mobile } = useResponsive();
   const isAgent = role === "agent" || role === "administrator";
@@ -234,12 +234,6 @@ const Hero = ({ onStart, onNavigate, compareSelected = [], onAddCompare, onRemov
   const isDestSelected = (r) => {
     const key = String(r.slug || r.name || '').toLowerCase();
     return form.destinations.some((d) => String(d.slug || d.name || '').toLowerCase() === key);
-  };
-  const isInCompare = (id) => compareSelected.some((p) => p.id === id);
-  const toggleCompare = (e, policy) => {
-    e.stopPropagation();
-    if (isInCompare(policy.id)) onRemoveCompare?.(policy.id);
-    else if (compareSelected.length < 3) onAddCompare?.(policy);
   };
 
   const [{ data: polData, fetching: polFetching }, reexecutePolicies] = useQuery({ query: MY_POLICIES, pause: !user?.token, requestPolicy: "network-only" });
@@ -870,7 +864,6 @@ const Hero = ({ onStart, onNavigate, compareSelected = [], onAddCompare, onRemov
                                 {matchingPolicies.map((p) => {
                                   const exact = hasDates ? bracketPremiumFor(p.policyDayPremiums, days) : null;
                                   const price = exact ?? cheapest(p.policyDayPremiums);
-                                  const inCompare = isInCompare(p.id);
                                   return (
                                     <div
                                       key={p.id}
@@ -881,8 +874,8 @@ const Hero = ({ onStart, onNavigate, compareSelected = [], onAddCompare, onRemov
                                       style={{
                                         display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
                                         padding: '10px 12px', borderRadius: 10,
-                                        background: inCompare ? 'rgba(49,99,49,0.18)' : 'rgba(255,255,255,0.04)',
-                                        border: `1px solid ${inCompare ? 'rgba(49,99,49,0.55)' : 'var(--glass-border)'}`,
+                                        background: 'rgba(255,255,255,0.04)',
+                                        border: '1px solid var(--glass-border)',
                                         color: 'var(--white)', cursor: 'pointer', transition: 'all 0.15s',
                                       }}
                                     >
@@ -915,23 +908,6 @@ const Hero = ({ onStart, onNavigate, compareSelected = [], onAddCompare, onRemov
                                           <div style={{ fontSize: 11, color: 'var(--slate)' }}>Quote</div>
                                         )}
                                       </div>
-                                      <button
-                                        type="button"
-                                        onClick={(e) => toggleCompare(e, p)}
-                                        disabled={!inCompare && compareSelected.length >= 3}
-                                        aria-label={inCompare ? 'Remove from comparison' : 'Add to comparison'}
-                                        title={inCompare ? 'Remove from comparison' : (compareSelected.length >= 3 ? 'Max 3 policies' : 'Add to compare')}
-                                        style={{
-                                          flexShrink: 0, padding: '5px 9px', borderRadius: 999,
-                                          border: `1px solid ${inCompare ? 'rgba(49,99,49,0.7)' : 'var(--glass-border)'}`,
-                                          background: inCompare ? 'rgba(49,99,49,0.28)' : 'transparent',
-                                          color: inCompare ? '#86efac' : 'var(--slate)',
-                                          fontSize: 10, fontWeight: 700, cursor: (!inCompare && compareSelected.length >= 3) ? 'not-allowed' : 'pointer',
-                                          opacity: (!inCompare && compareSelected.length >= 3) ? 0.4 : 1,
-                                        }}
-                                      >
-                                        {inCompare ? '✓ Compare' : '+ Compare'}
-                                      </button>
                                     </div>
                                   );
                                 })}
@@ -1129,12 +1105,6 @@ const Hero = ({ onStart, onNavigate, compareSelected = [], onAddCompare, onRemov
                               </div>
                             ))}
                           </div>
-
-                          {compareSelected.length > 0 && (
-                            <div style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(49,99,49,0.15)', border: '1px solid rgba(49,99,49,0.4)', fontSize: 12, color: '#86efac', marginBottom: 12 }}>
-                              🔍 {compareSelected.length} polic{compareSelected.length === 1 ? 'y' : 'ies'} queued for side-by-side comparison
-                            </div>
-                          )}
 
                           <button
                             className="btn btn--primary"

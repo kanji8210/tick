@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from 'urql';
 import { useResponsive } from '../lib/useResponsive';
 
@@ -77,7 +77,7 @@ const bracketPremium = (brackets, days) => {
 const fmtUSD = (n) => `USD ${Number(n).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const fmtRate = (n) => Number(n || 0).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
 
-const PolicyDetail = ({ policyId, searchData, onBack, onStartWizard, compareSelected = [], onAddCompare, onRemoveCompare }) => {
+const PolicyDetail = ({ policyId, searchData, onBack, onStartWizard }) => {
   const { mobile, tablet } = useResponsive();
   const [today]    = useState(() => new Date().toISOString().split('T')[0]);
   const [nextWeek] = useState(() => new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]);
@@ -371,21 +371,6 @@ const PolicyDetail = ({ policyId, searchData, onBack, onStartWizard, compareSele
                   You can review this policy, but your agency cannot submit it without a working agreement with {policy.policyInsurerName || 'the insurer'}.
                 </p>
               )}
-
-              {onAddCompare && (() => {
-                const inCompare = compareSelected.some(p => p.id === policy.id);
-                const full = compareSelected.length >= 3 && !inCompare;
-                return (
-                  <button
-                    className="btn btn--ghost"
-                    style={{ width: '100%', justifyContent: 'center', marginTop: 8, opacity: full ? 0.45 : 1, cursor: full ? 'not-allowed' : 'pointer' }}
-                    disabled={full}
-                    onClick={() => inCompare ? onRemoveCompare(policy.id) : onAddCompare({ id: policy.id, databaseId: policy.databaseId, title: policy.title, policyInsurerLogo: policy.policyInsurerLogo, policyInsurerName: policy.policyInsurerName, policyBenefits: policy.policyBenefits, policyNotCovered: policy.policyNotCovered, policyCurrency: policy.policyCurrency, policyDayPremiums: policy.policyDayPremiums, policyCountries: policy.policyCountries, policyFeatureTags: policy.policyFeatureTags, policyCoverDetails: policy.policyCoverDetails, regions: policy.regions })}
-                  >
-                    {inCompare ? '✓ Added to Compare' : full ? 'Compare full (3/3)' : '+ Add to Compare'}
-                  </button>
-                );
-              })()}
             </div>
 
             {/* Quick specs */}

@@ -507,17 +507,6 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
   const [showDateEdit, setShowDateEdit] = useState(false);
   const [visiblePlanCount, setVisiblePlanCount] = useState(6);
 
-  const [compareIds, setCompareIds] = useState(new Set());
-  const toggleCompare = (databaseId) => {
-    const id = String(databaseId);
-    setCompareIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else if (next.size < 3) next.add(id);
-      return next;
-    });
-  };
-
   const isLoggedIn = !!user;
   const effectiveName = (isAgent ? form.name : user?.name) || form.name;
   const effectiveEmail = (isAgent ? form.email : user?.email) || form.email;
@@ -575,8 +564,6 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
       .sort((a, b) => (a.computedPremium ?? Infinity) - (b.computedPremium ?? Infinity));
   }, [data, form.destinationRegion, days, requiresSeniorPolicy]);
 
-  // Always derive compareList from eligiblePolicies so computedPremium is always current
-  const compareList = eligiblePolicies.filter(p => compareIds.has(String(p.databaseId)));
   const visiblePolicies = eligiblePolicies.slice(0, visiblePlanCount);
 
   const saleData = saleResult.data?.submitPolicySale;
@@ -857,118 +844,6 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
         </div>
       )}
 
-      {compareList.length >= 2 && (
-        <div style={{ marginBottom: 24, borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(212,175,55,0.35)' }}>
-          <div style={{ padding: '10px 16px', background: 'rgba(212,175,55,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontWeight: 800, fontSize: 13, color: 'var(--gold)' }}>Comparing {compareList.length} Plans</span>
-            <button onClick={() => setCompareIds(new Set())}
-              style={{ fontSize: 11, color: 'var(--slate)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 8px' }}>
-              Clear all
-            </button>
-          </div>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 420 }}>
-              <thead>
-                <tr>
-                  <th style={{ padding: '10px 14px', textAlign: 'left', color: 'var(--slate)', fontSize: 11, fontWeight: 700, borderBottom: '1px solid var(--glass-border)', width: 100 }} />
-                  {compareList.map(p => (
-                    <th key={p.databaseId} style={{ padding: '10px 14px', textAlign: 'left', color: '#fff', fontWeight: 800, borderBottom: '1px solid var(--glass-border)', borderLeft: '1px solid var(--glass-border)', minWidth: 160 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
-                        <span>{p.title}</span>
-                        <button type="button" onClick={e => { e.stopPropagation(); e.preventDefault(); toggleCompare(p.databaseId); }}
-                          style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0, lineHeight: 1, padding: '0 2px' }}>✕</button>
-                      </div>
-                      {p.policyInsurerName && <div style={{ fontSize: 10, color: 'var(--slate)', fontWeight: 400, marginTop: 2 }}>{p.policyInsurerName}</div>}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { label: 'Total Price', render: p => {
-                    const tot = p.computedPremium !== null ? p.computedPremium * form.passengers : null;
-                    const usdMeta = getUsdMeta(p.computedBracket, form.passengers);
-                    return tot !== null
-                      ? <div>
-                          <strong style={{ color: 'var(--gold)', fontSize: 15 }}>{fmt(tot)}</strong>
-                          {usdMeta && (
-                            <div style={{ fontSize: 9, color: 'var(--slate)', marginTop: 2 }}>
-                              {fmtUSD(usdMeta.usdTotal)} @ 1 USD = KES {fmtRate(usdMeta.rate)}
-                            </div>
-                          )}
-                        </div>
-                      : <span style={{ color: 'var(--slate)' }}>On request</span>;
-                  }},
-                  { label: 'Per Person', render: p => {
-                    const usdMeta = getUsdMeta(p.computedBracket, 1);
-                    if (p.computedPremium === null) return '—';
-                    return (
-                      <div>
-                        <div>{fmt(p.computedPremium)}</div>
-                        {usdMeta && (
-                          <div style={{ fontSize: 9, color: 'var(--slate)', marginTop: 2 }}>
-                            {fmtUSD(usdMeta.usdPerPerson)} @ 1 USD = KES {fmtRate(usdMeta.rate)}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  }},
-                  { label: 'Region', render: p => (p.regions?.nodes || []).map(r => r.name).join(', ') || '—' },
-                  { label: 'Countries', render: p => {
-                    const list = p.policyCountries || [];
-                    if (!list.length) return '—';
-                    return list.slice(0, 5).join(', ') + (list.length > 5 ? ` +${list.length - 5}` : '');
-                  }},
-                  { label: 'Benefits', render: p => {
-                    const benefits = parseBenefits(p);
-                    if (!benefits.length) return '—';
-                    return (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                        {benefits.map(benefit => (
-                          <div key={benefit} style={{ display: 'flex', gap: 7, alignItems: 'flex-start', color: 'rgba(255,255,255,0.85)', fontSize: 12, lineHeight: 1.4 }}>
-                            <span style={{ color: '#86efac', fontWeight: 800, lineHeight: 1 }}>•</span>
-                            <span>{benefit}</span>
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  }},
-                  { label: 'About', render: p => stripHtml(p.policyDescription || p.excerpt || '').substring(0, 90) + '…' },
-                ].map(row => (
-                  <tr key={row.label} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                    <td style={{ padding: '9px 14px', fontSize: 11, fontWeight: 700, color: 'var(--slate)', textTransform: 'uppercase', letterSpacing: '0.07em', whiteSpace: 'nowrap' }}>{row.label}</td>
-                    {compareList.map(p => (
-                      <td key={p.databaseId} style={{ padding: '9px 14px', color: 'rgba(255,255,255,0.85)', borderLeft: '1px solid var(--glass-border)', lineHeight: 1.5 }}>
-                        {row.render(p)}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-                <tr>
-                  <td style={{ padding: '10px 14px' }} />
-                  {compareList.map(p => (
-                    <td key={p.databaseId} style={{ padding: '10px 14px', borderLeft: '1px solid var(--glass-border)' }}>
-                      <button
-                        disabled={isAgent && p.agentHasInsurerAgreement === false}
-                        onClick={() => { set('selectedPolicy', p); setCompareIds(new Set()); setStep(3); }}
-                        style={{ padding: '8px 0', borderRadius: 7, border: 'none', background: 'var(--indigo)', color: '#fff', fontSize: 12, fontWeight: 800, cursor: isAgent && p.agentHasInsurerAgreement === false ? 'not-allowed' : 'pointer', opacity: isAgent && p.agentHasInsurerAgreement === false ? 0.5 : 1, width: '100%' }}>
-                        {isAgent && p.agentHasInsurerAgreement === false ? 'No agreement' : 'Select & Continue →'}
-                      </button>
-                    </td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {compareList.length === 1 && (
-        <div style={{ padding: '8px 14px', borderRadius: 7, background: 'rgba(49,99,49,0.08)', border: '1px solid rgba(49,99,49,0.2)', fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 16 }}>
-          Add one more plan to compare side-by-side.
-        </div>
-      )}
-
       {!fetching && !error && eligiblePolicies.length === 0 && (
         <div style={{ textAlign: 'center', padding: '2rem 0' }}>
           <p style={{ color: 'var(--slate)', marginBottom: 16 }}>No plans found for <strong>{selectedRegionName}</strong>.</p>
@@ -983,15 +858,14 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
           const total = prem !== null ? prem * form.passengers : null;
           const usdMeta = getUsdMeta(policy.computedBracket, form.passengers);
           const selected = form.selectedPolicy?.databaseId === policy.databaseId;
-          const inCompare = compareIds.has(String(policy.databaseId));
           const canSell = !isAgent || policy.agentHasInsurerAgreement !== false;
           return (
             <div key={policy.id}
               onClick={() => canSell && set('selectedPolicy', policy)}
               style={{
                 padding: '16px 18px', borderRadius: 10, cursor: 'pointer', height: '100%',
-                border: `2px solid ${selected ? 'var(--gold)' : inCompare ? 'rgba(49,99,49,0.5)' : 'var(--glass-border)'}`,
-                background: selected ? 'rgba(212,175,55,0.07)' : inCompare ? 'rgba(49,99,49,0.06)' : 'var(--glass-bg)',
+                border: `2px solid ${selected ? 'var(--gold)' : 'var(--glass-border)'}`,
+                background: selected ? 'rgba(212,175,55,0.07)' : 'var(--glass-bg)',
                 transition: 'border-color 0.15s, background 0.15s',
               }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, height: '100%' }}>
@@ -1038,19 +912,6 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
                     }}>
                     {canSell ? 'Get This →' : 'Unavailable'}
                   </button>
-                  <button
-                    type="button"
-                    onClick={e => { e.stopPropagation(); e.preventDefault(); toggleCompare(policy.databaseId); }}
-                    style={{
-                      padding: '5px 13px', borderRadius: 100, fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                      border: inCompare ? '1.5px solid #4ade80' : '1.5px solid rgba(255,255,255,0.25)',
-                      background: inCompare ? 'rgba(49,99,49,0.25)' : 'rgba(255,255,255,0.07)',
-                      color: inCompare ? '#86efac' : 'rgba(255,255,255,0.85)',
-                      transition: 'all 0.15s',
-                      whiteSpace: 'nowrap',
-                    }}>
-                    {inCompare ? '✓ Comparing' : '＋ Compare'}
-                  </button>
                 </div>
               </div>
             </div>
@@ -1070,7 +931,7 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
 
       <div className="responsive-action-grid" style={{ gap: 12, marginTop: 20 }}>
         <button style={{ padding: '11px', borderRadius: 8, border: '1px solid var(--glass-border)', background: 'none', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}
-          onClick={() => { setStep(1); setCompareIds(new Set()); }}>← Back</button>
+          onClick={() => setStep(1)}>← Back</button>
         <button style={{ padding: '11px', borderRadius: 8, border: 'none', background: form.selectedPolicy ? 'var(--indigo)' : 'var(--glass-bg)', color: '#fff', cursor: form.selectedPolicy ? 'pointer' : 'not-allowed', opacity: form.selectedPolicy ? 1 : 0.5, fontSize: 13, fontWeight: 800 }}
           disabled={!form.selectedPolicy}
           onClick={() => setStep(3)}>Continue →</button>
@@ -1546,7 +1407,6 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
                 setCheckoutMode('guest');
                 setAccountCreated(false);
                 setVisiblePlanCount(6);
-                setCompareIds(new Set());
               }}
             >
               Get Another Quote
