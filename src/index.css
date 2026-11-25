@@ -471,6 +471,14 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
 .fade-in { animation: fadeIn 0.8s ease-out forwards; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
 
+@keyframes tickPulseGlow {
+  0%, 100% { box-shadow: 0 0 10px rgba(246, 166, 35, 0.2); }
+  50% { box-shadow: 0 0 22px rgba(246, 166, 35, 0.45); }
+}
+.pulse-glow {
+  animation: tickPulseGlow 2.5s infinite ease-in-out;
+}
+
 /* ── Scroll reveal ── */
 .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.65s ease, transform 0.65s ease; }
 .reveal.visible { opacity: 1; transform: translateY(0); }

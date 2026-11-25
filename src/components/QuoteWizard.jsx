@@ -1347,38 +1347,371 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
     );
   }
 
-  /* ── Step 4 — Confirmed ── */
+  /* ── Step 4 — Confirmed & 4-Stage Client Roadmap ── */
   if (step === 4) {
+    const selectedPolicy = form.selectedPolicy;
+    const selectedRawBracket = (selectedPolicy?.policyDayPremiums || []).find(b => days >= b.from && days <= b.to) || null;
+    const selectedBracket = normalizeBracketWithDefaultRate(selectedPolicy, selectedRawBracket);
+    const prem = selectedBracket ? selectedBracket.premium : null;
+    const total = prem !== null ? prem * form.passengers : null;
+    const currency = selectedPolicy?.policyCurrency || CURRENCY;
+
+    const stages = [
+      {
+        num: 1,
+        title: 'Application Received',
+        badge: 'Completed',
+        desc: 'Travel details & passenger info registered with TIC-Kenya.',
+        note: `Ref: #${saleData?.saleId || '—'}`,
+        status: 'done',
+        icon: '✓'
+      },
+      {
+        num: 2,
+        title: 'Underwriter Processing',
+        badge: 'In Progress',
+        desc: 'Our underwriting team enters your details into the insurer portal.',
+        note: 'Avg. turnaround: 1–2 hours',
+        status: 'active',
+        icon: '⏳'
+      },
+      {
+        num: 3,
+        title: 'Receive Protected Policy',
+        badge: 'Next Step',
+        desc: `A password-protected PDF proof is emailed to ${form.email || 'your email'}.`,
+        note: 'Inspect before paying',
+        status: 'pending',
+        icon: '✉️'
+      },
+      {
+        num: 4,
+        title: 'Pay & Unlock Documents',
+        badge: 'Final Step',
+        desc: 'Pay via M-Pesa to receive your password, Embassy Letter & Certificate.',
+        note: 'Embassy-ready instant delivery',
+        status: 'pending',
+        icon: '🔓'
+      }
+    ];
+
     return (
-      <div className="glass-card fade-in">
-        <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-          <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(34,197,94,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
-            <span style={{ fontSize: 40, color: '#22c55e' }}>✓</span>
+      <div className="glass-card fade-in" style={{ padding: mobile ? '1.5rem 1rem' : '2.5rem 2rem' }}>
+        <div style={{ textAlign: 'center', maxWidth: 880, margin: '0 auto' }}>
+          
+          {/* Top Success Icon */}
+          <div style={{
+            width: 72,
+            height: 72,
+            borderRadius: '50%',
+            background: 'rgba(34,197,94,0.12)',
+            border: '2px solid rgba(34,197,94,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 18px',
+            boxShadow: '0 0 24px rgba(34,197,94,0.18)'
+          }}>
+            <span style={{ fontSize: 34, color: '#22c55e', lineHeight: 1 }}>✓</span>
           </div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 32, marginBottom: 12, color: '#fff' }}>
-            Application <span style={{ color: 'var(--gold)' }}>Received</span>
+
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 14px', borderRadius: 100, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', color: '#4ade80', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>
+            Step 1 of 4 Completed
+          </div>
+
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: mobile ? 26 : 34, fontWeight: 800, marginBottom: 10, color: '#fff', letterSpacing: '-0.02em' }}>
+            Application <span style={{ color: 'var(--gold)' }}>Registered</span>
           </h2>
-          <p style={{ color: 'var(--slate)', fontSize: 16, maxWidth: 400, margin: '0 auto 30px', lineHeight: 1.6 }}>
-            Your policy request <strong style={{ color: '#fff' }}>#{saleData?.saleId || '—'}</strong> has been registered.
-            Our team will enter your details on the insurer website and send the policy number when the insurer issues it.
+          
+          <p style={{ color: 'var(--slate)', fontSize: mobile ? 14 : 15, maxWidth: 560, margin: '0 auto 24px', lineHeight: 1.6 }}>
+            Your policy request <strong style={{ color: '#fff' }}>#{saleData?.saleId || '—'}</strong> has been logged. 
+            Follow the 4-stage roadmap below to see how your policy and embassy documents will be delivered.
           </p>
-          {!user && !accountCreated && (
-            <p style={{ color: 'rgba(255,255,255,0.78)', fontSize: 13, maxWidth: 520, margin: '0 auto 24px', lineHeight: 1.7 }}>
-              You continued without creating an account. Our team will contact you via <strong style={{ color: '#fff' }}>email and phone</strong> for payment, cover updates, and claim support.
-            </p>
+
+          {/* Zero Upfront Payment Guarantee Callout */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 14,
+            padding: mobile ? '14px 16px' : '16px 22px',
+            borderRadius: 14,
+            background: 'linear-gradient(135deg, rgba(246,166,35,0.12) 0%, rgba(246,166,35,0.03) 100%)',
+            border: '1px solid rgba(246,166,35,0.35)',
+            margin: '0 auto 32px',
+            textAlign: 'left',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.15)'
+          }}>
+            <div style={{ fontSize: 24, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>🛡️</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 800, color: 'var(--gold)', fontSize: mobile ? 14 : 15, marginBottom: 4, letterSpacing: '-0.01em' }}>
+                Zero Upfront Payment Required
+              </div>
+              <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: mobile ? 12 : 13, lineHeight: 1.6 }}>
+                You <strong>do not have to pay anything right now</strong>. Our team will first process your policy with the underwriter and email you an encrypted, password-protected PDF proof. You only pay to unlock your document password, official Embassy Letter, and QR Verification Certificate.
+              </div>
+            </div>
+          </div>
+
+          {/* 4-Stage Visual Roadmap */}
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ 
+              fontSize: 11, 
+              fontWeight: 800, 
+              color: 'var(--slate)', 
+              textTransform: 'uppercase', 
+              letterSpacing: '0.1em', 
+              textAlign: 'left',
+              marginBottom: 14
+            }}>
+              Your Policy Delivery Roadmap
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: mobile ? '1fr' : 'repeat(4, 1fr)',
+              gap: 12,
+              textAlign: 'left'
+            }}>
+              {stages.map((st) => {
+                const isDone = st.status === 'done';
+                const isActive = st.status === 'active';
+                const isPending = st.status === 'pending';
+
+                const cardBorder = isDone 
+                  ? 'rgba(34,197,94,0.35)' 
+                  : isActive 
+                    ? 'rgba(246,166,35,0.5)' 
+                    : 'var(--glass-border)';
+                const cardBg = isDone 
+                  ? 'rgba(34,197,94,0.06)' 
+                  : isActive 
+                    ? 'rgba(246,166,35,0.08)' 
+                    : 'rgba(255,255,255,0.02)';
+                const indicatorBg = isDone 
+                  ? '#22c55e' 
+                  : isActive 
+                    ? 'var(--gold)' 
+                    : 'rgba(255,255,255,0.08)';
+                const indicatorColor = isDone || isActive ? '#000' : 'var(--slate)';
+
+                return (
+                  <div 
+                    key={st.num}
+                    className={isActive ? 'pulse-glow' : undefined}
+                    style={{
+                      padding: '16px 14px',
+                      borderRadius: 14,
+                      background: cardBg,
+                      border: `1px solid ${cardBorder}`,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    {isActive && (
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: 3,
+                        background: 'linear-gradient(90deg, transparent, var(--gold), transparent)',
+                        animation: 'fadeIn 1.5s infinite alternate'
+                      }} />
+                    )}
+
+                    <div>
+                      {/* Step Header */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                        <div style={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: '50%',
+                          background: indicatorBg,
+                          color: indicatorColor,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 800,
+                          fontSize: 12,
+                          flexShrink: 0
+                        }}>
+                          {isDone ? '✓' : st.num}
+                        </div>
+
+                        <span style={{
+                          fontSize: 10,
+                          fontWeight: 800,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.06em',
+                          padding: '3px 8px',
+                          borderRadius: 6,
+                          background: isDone 
+                            ? 'rgba(34,197,94,0.18)' 
+                            : isActive 
+                              ? 'rgba(246,166,35,0.2)' 
+                              : 'rgba(255,255,255,0.06)',
+                          color: isDone 
+                            ? '#4ade80' 
+                            : isActive 
+                              ? 'var(--gold)' 
+                              : 'var(--slate)',
+                          border: `1px solid ${isDone ? 'rgba(34,197,94,0.3)' : isActive ? 'rgba(246,166,35,0.4)' : 'rgba(255,255,255,0.1)'}`
+                        }}>
+                          {st.badge}
+                        </span>
+                      </div>
+
+                      {/* Title */}
+                      <div style={{
+                        fontFamily: 'var(--font-display)',
+                        fontSize: 14,
+                        fontWeight: 800,
+                        color: isPending ? 'rgba(255,255,255,0.7)' : '#fff',
+                        marginBottom: 6,
+                        lineHeight: 1.3
+                      }}>
+                        {st.title}
+                      </div>
+
+                      {/* Description */}
+                      <div style={{
+                        fontSize: 12,
+                        color: 'var(--slate)',
+                        lineHeight: 1.45,
+                        marginBottom: 12
+                      }}>
+                        {st.desc}
+                      </div>
+                    </div>
+
+                    {/* Footer / note */}
+                    <div style={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      paddingTop: 8,
+                      borderTop: `1px solid ${cardBorder}`,
+                      color: isDone ? '#4ade80' : isActive ? 'var(--gold)' : 'rgba(255,255,255,0.5)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4
+                    }}>
+                      <span>{st.icon}</span>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {st.note}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Application Details Summary Card */}
+          <div style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid var(--glass-border)',
+            borderRadius: 14,
+            padding: '18px 20px',
+            marginBottom: 28,
+            textAlign: 'left'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Application Summary
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--slate)' }}>
+                Registered to: <strong style={{ color: '#fff' }}>{form.email}</strong>
+              </div>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: mobile ? '1fr' : 'repeat(3, 1fr)',
+              gap: 14,
+              fontSize: 12
+            }}>
+              <div>
+                <div style={{ color: 'var(--slate)', marginBottom: 2 }}>Selected Plan</div>
+                <div style={{ fontWeight: 700, color: '#fff' }}>{selectedPolicy?.title || 'Selected Plan'}</div>
+                <div style={{ fontSize: 11, color: 'var(--gold)', opacity: 0.9 }}>{selectedPolicy?.policyInsurerName || 'Insurer Network'}</div>
+              </div>
+
+              <div>
+                <div style={{ color: 'var(--slate)', marginBottom: 2 }}>Destination & Trip</div>
+                <div style={{ fontWeight: 700, color: '#fff' }}>{selectedRegionName || 'International'}</div>
+                <div style={{ fontSize: 11, color: 'var(--slate)' }}>
+                  {fmtDateReadable(form.departure)} → {fmtDateReadable(form.returnDate)} ({days} days)
+                </div>
+              </div>
+
+              <div>
+                <div style={{ color: 'var(--slate)', marginBottom: 2 }}>Amount Payable Upon Issuance</div>
+                <div style={{ fontWeight: 800, color: '#fff', fontSize: 14 }}>
+                  {total !== null ? `${currency} ${fmt(total)}` : 'As per policy schedule'}
+                </div>
+                <div style={{ fontSize: 11, color: '#4ade80' }}>
+                  Payable only after policy inspection
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Guest Account Creation Notification if applicable */}
+          {accountCreated && (
+            <div style={{
+              marginBottom: 24,
+              padding: '14px 18px',
+              background: 'rgba(34,197,94,0.08)',
+              border: '1px solid rgba(34,197,94,0.3)',
+              borderRadius: 12,
+              fontSize: 13,
+              textAlign: 'left',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12
+            }}>
+              <span style={{ fontSize: 20 }}>🎉</span>
+              <div>
+                <div style={{ fontWeight: 800, color: '#4ade80', marginBottom: 2 }}>Account Created Successfully</div>
+                <div style={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1.4 }}>
+                  Your account for <strong>{form.email}</strong> is ready. You can log in at any time to monitor status, track underwriter approval, and pay to release documents.
+                </div>
+              </div>
+            </div>
           )}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 300, margin: '0 auto' }}>
+          {!user && !accountCreated && (
+            <div style={{
+              marginBottom: 24,
+              padding: '14px 18px',
+              background: 'rgba(59,130,246,0.08)',
+              border: '1px solid rgba(59,130,246,0.25)',
+              borderRadius: 12,
+              fontSize: 13,
+              textAlign: 'left'
+            }}>
+              <div style={{ fontWeight: 800, color: '#93c5fd', marginBottom: 2 }}>You Continued as Guest</div>
+              <div style={{ color: 'rgba(255,255,255,0.8)', lineHeight: 1.5 }}>
+                Our operations team will deliver your password-protected policy to <strong style={{ color: '#fff' }}>{form.email}</strong> and SMS updates to <strong style={{ color: '#fff' }}>{form.phone}</strong>. You can create an account below to track live status anytime.
+              </div>
+            </div>
+          )}
+
+          {/* Action CTAs */}
+          <div style={{ display: 'flex', flexDirection: mobile ? 'column' : 'row', gap: 12, justifyContent: 'center', maxWidth: 480, margin: '0 auto 24px' }}>
             <button 
               className="btn btn--primary" 
-              style={{ width: '100%' }}
+              style={{ flex: 1, padding: '12px 24px', fontSize: 14 }}
               onClick={() => onNavigate?.(!user && !accountCreated ? 'register' : 'dashboard')}
             >
-              {!user && !accountCreated ? 'Create Account Now' : 'View in My Dashboard'}
+              {!user && !accountCreated ? 'Create Free Account to Track' : 'View in My Dashboard'}
             </button>
             <button 
               className="btn btn--ghost" 
-              style={{ width: '100%', fontSize: 13 }}
+              style={{ flex: 1, padding: '12px 24px', fontSize: 13 }}
               onClick={() => {
                 setStep(1);
                 setForm({
@@ -1413,14 +1746,13 @@ const QuoteWizard = ({ initialPolicyId = null, initialSearchData = null, initial
             </button>
           </div>
 
-          {accountCreated && (
-            <div style={{ marginTop: 32, padding: '16px', background: 'rgba(34,197,94,0.05)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 12, fontSize: 13, textAlign: 'left' }}>
-              <div style={{ fontWeight: 800, color: '#4ade80', marginBottom: 4 }}>Account Created Successfully</div>
-              <p style={{ margin: 0, opacity: 0.8, lineHeight: 1.5 }}>
-                You can now log in with <strong>{form.email}</strong> to track your applications and insurer-issued documents.
-              </p>
-            </div>
-          )}
+          {/* Support line */}
+          <div style={{ fontSize: 12, color: 'var(--slate)', lineHeight: 1.6 }}>
+            Need urgent visa processing or embassy assistance? Contact our 24/7 travel desk at{' '}
+            <a href="mailto:info@tick.co.ke" style={{ color: 'var(--gold)', textDecoration: 'none' }}>info@tick.co.ke</a>
+            {' '}or call <strong style={{ color: '#fff' }}>+254 700 000 000</strong>.
+          </div>
+
         </div>
       </div>
     );

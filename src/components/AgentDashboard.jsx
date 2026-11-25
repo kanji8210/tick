@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, gql } from 'urql';
 import { useAuth } from '../lib/AuthContext';
 import { useResponsive } from '../lib/useResponsive';
@@ -54,6 +54,7 @@ const MY_POLICIES = gql`
     myPolicySales {
       id policyId policyTitle policyNumber region premium days
       policyInsurerName
+      policyDocumentUrl
       departure returnDate passengers insuredNames insuredEmail insuredPhone
       passportNumber insuredDob nationalId insuredAddress countryOfOrigin
       insuredOccupation permanentAddress postalAddress travelPurpose doctorDetails
@@ -238,12 +239,13 @@ const Badge = ({ label, color, bg }) => (
  * ═══════════════════════════════════════════════════════════════════ */
 
 const TABS = [
-  { id: 'overview',    label: 'Overview',    icon: '◎' },
-  { id: 'clients',     label: 'Clients',     icon: '◉' },
-  { id: 'policies',    label: 'Policies',    icon: '◈' },
-  { id: 'commissions', label: 'Commissions', icon: '◆' },
-  { id: 'analytics',   label: 'Analytics',   icon: '◇' },
-  { id: 'settings',    label: 'Settings',    icon: '⚙' },
+  { id: 'overview',    label: 'Overview',          icon: '◎' },
+  { id: 'clients',     label: 'Clients',           icon: '◉' },
+  { id: 'policies',    label: 'Policies',          icon: '◈' },
+  { id: 'claims',      label: 'Claims & Refunds',  icon: '⚖' },
+  { id: 'commissions', label: 'Commissions',       icon: '◆' },
+  { id: 'analytics',   label: 'Analytics',         icon: '◇' },
+  { id: 'settings',    label: 'Settings',          icon: '⚙' },
 ];
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -302,6 +304,18 @@ const AgentDashboard = ({ user, onNavigate }) => {
   });
   const [settingsFeedback, setSettingsFeedback] = useState(null);
   const [savingSettings, setSavingSettings] = useState(false);
+
+  // Claims & Refunds state
+  const [claimsList, setClaimsList] = useState([]);
+  const [claimsLoading, setClaimsLoading] = useState(false);
+  const [claimsError, setClaimsError] = useState(null);
+  const [claimsTypeFilter, setClaimsTypeFilter] = useState('all'); // 'all' | 'claim' | 'refund'
+  const [claimsStatusFilter, setClaimsStatusFilter] = useState('all');
+  const [claimsSearch, setClaimsSearch] = useState('');
+  const [selectedClaim, setSelectedClaim] = useState(null);
+  const [claimEditForm, setClaimEditForm] = useState(null);
+  const [savingClaim, setSavingClaim] = useState(false);
+  const [claimSaveFeedback, setClaimSaveFeedback] = useState(null);
 
   const [, execUpdateStatus] = useMutation(UPDATE_POLICY_STATUS);
   const [, execUpdateAgentSettings] = useMutation(UPDATE_AGENT_DISPLAY_SETTINGS);
@@ -396,6 +410,70 @@ const AgentDashboard = ({ user, onNavigate }) => {
       if (data.paymentUrl) window.location.href = data.paymentUrl;
     } catch (e) { alert(e.message || 'Could not start payment.'); }
     finally { setActionLoading(null); }
+  };
+
+  const fetchClaims = useCallback(async () => {
+    setClaimsLoading(true);
+    setClaimsError(null);
+    try {
+      const res = await fetch(`${WP_REST_BASE}/maljani/v1/admin/claims`, {
+        headers: restHeaders()
+      });
+      if (!res.ok) throw new Error('Could not load claims');
+      const data = await res.json();
+      setClaimsList(data.claims || []);
+    } catch (e) {
+      setClaimsError(e.message);
+    } finally {
+      setClaimsLoading(false);
+    }
+  }, [authUser?.token]);
+
+  useEffect(() => {
+    if (activeTab === 'claims') {
+      fetchClaims();
+    }
+  }, [activeTab, fetchClaims]);
+
+  const handleOpenClaimReview = (c) => {
+    setSelectedClaim(c);
+    setClaimEditForm({
+      status: c.status || 'new',
+      feeStatus: c.feeStatus || 'pending',
+      adminNotes: c.adminNotes || '',
+      paymentReference: c.paymentReference || '',
+    });
+    setClaimSaveFeedback(null);
+  };
+
+  const handleSaveClaimUpdate = async () => {
+    if (!selectedClaim || !claimEditForm) return;
+    setSavingClaim(true);
+    setClaimSaveFeedback(null);
+    try {
+      const res = await fetch(`${WP_REST_BASE}/maljani/v1/admin/claims/${selectedClaim.id}`, {
+        method: 'POST',
+        headers: { ...restHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: claimEditForm.status,
+          feeStatus: claimEditForm.feeStatus,
+          adminNotes: claimEditForm.adminNotes,
+          paymentReference: claimEditForm.paymentReference,
+        })
+      });
+      if (!res.ok) throw new Error('Failed to update request');
+      setClaimSaveFeedback('✓ Updated successfully');
+      fetchClaims();
+      setTimeout(() => {
+        setSelectedClaim(null);
+        setClaimEditForm(null);
+        setClaimSaveFeedback(null);
+      }, 1000);
+    } catch (e) {
+      setClaimSaveFeedback('✕ ' + e.message);
+    } finally {
+      setSavingClaim(false);
+    }
   };
 
   const [dashResult] = useQuery({ query: AGENCY_DASHBOARD, pause: !authUser?.token });
@@ -493,6 +571,30 @@ const AgentDashboard = ({ user, onNavigate }) => {
     if (commFilter === 'all') return policies.filter(p => (p.agentCommissionAmount || 0) > 0);
     return policies.filter(p => (p.agentCommissionAmount || 0) > 0 && p.agentCommissionStatus === commFilter);
   }, [policies, commFilter]);
+
+  const filteredClaims = useMemo(() => {
+    return claimsList.filter(c => {
+      if (claimsTypeFilter !== 'all' && c.requestType !== claimsTypeFilter) return false;
+      if (claimsStatusFilter !== 'all') {
+        const s = (c.status || '').toLowerCase();
+        if (claimsStatusFilter === 'pending' && !['new', 'pending', 'pending_fee', 'in_review', 'submitted', 'pending_review', 'documents_required'].includes(s)) return false;
+        if (claimsStatusFilter === 'approved' && !['approved', 'approved_by_insurer', 'completed'].includes(s)) return false;
+        if (claimsStatusFilter === 'rejected' && !['rejected', 'closed'].includes(s)) return false;
+      }
+      if (claimsSearch.trim()) {
+        const q = claimsSearch.toLowerCase();
+        const match = (
+          (c.clientName || '').toLowerCase().includes(q) ||
+          (c.clientEmail || '').toLowerCase().includes(q) ||
+          (c.reference || '').toLowerCase().includes(q) ||
+          (c.policyNumber || '').toLowerCase().includes(q) ||
+          (c.insurerName || '').toLowerCase().includes(q)
+        );
+        if (!match) return false;
+      }
+      return true;
+    });
+  }, [claimsList, claimsTypeFilter, claimsStatusFilter, claimsSearch]);
 
   /* ── shared styles ─────────────────────────────────────── */
   const cardStyle = {
@@ -597,15 +699,7 @@ const AgentDashboard = ({ user, onNavigate }) => {
             <span style={{ marginRight: '0.35rem' }}>{t.icon}</span>{t.label}
           </button>
         ))}
-        <button type="button" onClick={() => onNavigate?.('claims')} style={{
-          background: 'none', border: 'none', cursor: 'pointer',
-          padding: mobile ? '0.6rem 0.7rem' : '0.7rem 1.1rem',
-          fontSize: mobile ? '0.72rem' : '0.78rem', fontWeight: 600,
-          color: 'var(--text-muted)', borderBottom: '2px solid transparent',
-          whiteSpace: 'nowrap', textDecoration: 'none', transition: 'all 0.2s',
-        }}>
-          <span style={{ marginRight: '0.35rem' }}>◐</span>Claims &amp; Refunds
-        </button>
+
       </div>
 
       {/* ═══════════════════════════════════════════════════
@@ -722,13 +816,38 @@ const AgentDashboard = ({ user, onNavigate }) => {
                   {loading ? 'Loading…' : '🖨 Print certificate'}
                 </button>
               )}
-              <span
-                title="Policy documents are issued by the insurer after manual processing."
+              {s.policyDocumentUrl ? (
+                <a
+                  href={s.policyDocumentUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                    background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)',
+                    borderRadius: '8px', padding: '0.5rem 1rem', textDecoration: 'none',
+                    color: '#60a5fa', fontSize: '0.78rem', fontWeight: 700,
+                  }}>
+                  📄 View Insurer Policy (Storage) ↗
+                </a>
+              ) : (
+                <span
+                  title="Policy documents are issued by the insurer after manual processing."
+                  style={{
+                    background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.3)',
+                    borderRadius: '8px', padding: '0.5rem 1rem',
+                    color: 'var(--gold)', fontSize: '0.78rem', fontWeight: 700,
+                  }}>📄 Insurer document pending</span>
+              )}
+              <button
+                title="Update official policy number or paste external Google Storage link"
+                onClick={() => setEditPolicy(s)}
                 style={{
-                  background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.3)',
-                  borderRadius: '8px', padding: '0.5rem 1rem',
+                  background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)',
+                  borderRadius: '8px', padding: '0.5rem 1rem', cursor: 'pointer',
                   color: 'var(--gold)', fontSize: '0.78rem', fontWeight: 700,
-                }}>📄 Insurer document pending</span>
+                }}>
+                ✎ Edit Policy &amp; Link Document
+              </button>
               <button onClick={() => onNavigate?.('policy-detail', s.policyId)} style={{
                 background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
                 borderRadius: '8px', padding: '0.5rem 1rem', cursor: 'pointer',
@@ -846,6 +965,13 @@ const AgentDashboard = ({ user, onNavigate }) => {
                 <InfoRow label="Workflow" value={s.workflowStatus || '—'} />
                 <InfoRow label="Commission" value={fmtKES(s.agentCommissionAmount)} accent="var(--gold)" />
                 <InfoRow label="Commission Status" value={<Badge label={cm.label} color={cm.color} bg={cm.bg} />} />
+                {s.policyDocumentUrl && (
+                  <InfoRow label="Official Document" value={
+                    <a href={s.policyDocumentUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#60a5fa', textDecoration: 'underline' }}>
+                      Google Storage Link ↗
+                    </a>
+                  } />
+                )}
               </SectionCard>
             </div>
           </div>
@@ -1074,7 +1200,28 @@ const AgentDashboard = ({ user, onNavigate }) => {
                   const canPrint = canPrintCertificate(p);
                   return (
                     <tr key={p.id} style={{ cursor: 'pointer', background: isSelf ? 'rgba(245,158,11,0.04)' : 'transparent' }} onClick={() => setSelectedSale(p)}>
-                      <td style={tdStyle}><span style={{ color: 'var(--gold)', fontWeight: 600, fontSize: '0.78rem' }}>{p.policyNumber}</span></td>
+                      <td style={tdStyle}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                          <span style={{ color: 'var(--gold)', fontWeight: 600, fontSize: '0.78rem' }}>{p.policyNumber || 'Pending'}</span>
+                          {p.policyDocumentUrl && (
+                            <a
+                              href={p.policyDocumentUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={e => e.stopPropagation()}
+                              title="Open Official Policy Document (Google Storage)"
+                              style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '0.2rem',
+                                padding: '0.15rem 0.45rem', borderRadius: '4px',
+                                fontSize: '0.62rem', fontWeight: 700,
+                                color: '#60a5fa', background: 'rgba(59,130,246,0.15)', textDecoration: 'none',
+                              }}
+                            >
+                              📄 Doc ↗
+                            </a>
+                          )}
+                        </div>
+                      </td>
                       <td style={tdStyle}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                           {p.insuredNames || '—'}
@@ -1122,13 +1269,11 @@ const AgentDashboard = ({ user, onNavigate }) => {
                               fontSize: '0.68rem', fontWeight: 700, whiteSpace: 'nowrap',
                             }}>Print cert</button>
                           )}
-                          {isUnpaid && (
-                            <button title="Edit policy details" onClick={() => setEditPolicy(p)} style={{
-                              background: 'rgba(59,130,246,0.12)', border: 'none', borderRadius: '6px',
-                              padding: '0.3rem 0.55rem', cursor: 'pointer', color: '#60a5fa',
-                              fontSize: '0.68rem', fontWeight: 700, whiteSpace: 'nowrap',
-                            }}>✎ Edit</button>
-                          )}
+                          <button title="Edit policy details, insurer policy number & doc link" onClick={() => setEditPolicy(p)} style={{
+                            background: 'rgba(59,130,246,0.12)', border: 'none', borderRadius: '6px',
+                            padding: '0.3rem 0.55rem', cursor: 'pointer', color: '#60a5fa',
+                            fontSize: '0.68rem', fontWeight: 700, whiteSpace: 'nowrap',
+                          }}>✎ Edit</button>
                           {isSelf && isUnpaid && (
                             <button title="Assign to a client" onClick={() => setAssignPolicy(p)} style={{
                               background: 'rgba(34,197,94,0.12)', border: 'none', borderRadius: '6px',
@@ -1146,6 +1291,238 @@ const AgentDashboard = ({ user, onNavigate }) => {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════
+       *  TAB: CLAIMS & REFUNDS DESK
+       * ═══════════════════════════════════════════════════ */}
+      {!selectedSale && activeTab === 'claims' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {/* Top stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(${mobile ? '130px' : '170px'}, 1fr))`, gap: '1rem' }}>
+            {[
+              { label: 'TOTAL INTAKE', value: claimsList.length, color: 'white' },
+              { label: 'IN REVIEW / PROCESSING', value: claimsList.filter(c => ['new', 'pending', 'pending_fee', 'in_review', 'submitted', 'pending_review', 'documents_required'].includes((c.status || '').toLowerCase())).length, color: '#f59e0b' },
+              { label: 'APPROVED / SETTLED', value: claimsList.filter(c => ['approved', 'approved_by_insurer', 'completed'].includes((c.status || '').toLowerCase())).length, color: '#22c55e' },
+              { label: 'FEES PAID', value: claimsList.filter(c => (c.feeStatus || '').toLowerCase() === 'paid').length, color: 'var(--gold)' },
+            ].map((st, i) => (
+              <div key={i} style={{ ...cardStyle, padding: mobile ? '1rem' : '1.25rem', textAlign: 'center' }}>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '0.4rem' }}>{st.label}</div>
+                <div style={{ fontSize: mobile ? '1.3rem' : '1.6rem', fontWeight: 800, color: st.color }}>{st.value}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Table Card */}
+          <div style={{ ...cardStyle, padding: mobile ? '1.25rem' : '1.75rem' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
+              <div>
+                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>
+                  Claims &amp; Refunds Desk <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 400 }}>({filteredClaims.length})</span>
+                </h3>
+                <p style={{ margin: '0.3rem 0 0', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+                  Manage client claim and refund requests submitted for operations handling with underwriters.
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <button
+                  onClick={() => openClaimRequest(null, true)}
+                  style={{
+                    background: 'linear-gradient(135deg, var(--gold), #b8941f)',
+                    border: 'none', borderRadius: '8px', padding: '0.45rem 0.9rem',
+                    color: '#0f172a', fontSize: '0.74rem', fontWeight: 800, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: '0.35rem',
+                  }}
+                >
+                  + New Request on Behalf
+                </button>
+                <button
+                  onClick={fetchClaims}
+                  disabled={claimsLoading}
+                  style={{
+                    background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: '8px', padding: '0.45rem 0.8rem', color: 'white',
+                    fontSize: '0.74rem', fontWeight: 600, cursor: 'pointer',
+                  }}
+                >
+                  {claimsLoading ? 'Refreshing…' : '↻ Refresh'}
+                </button>
+              </div>
+            </div>
+
+            {/* Filter controls row */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', marginBottom: '1.25rem' }}>
+              {/* Type pills */}
+              <div style={{ display: 'flex', gap: '0.3rem', background: 'rgba(255,255,255,0.04)', padding: '0.2rem', borderRadius: '8px' }}>
+                {[
+                  { id: 'all', label: 'All Types' },
+                  { id: 'claim', label: 'Claims' },
+                  { id: 'refund', label: 'Refunds' },
+                ].map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => setClaimsTypeFilter(t.id)}
+                    style={{
+                      background: claimsTypeFilter === t.id ? 'var(--gold)' : 'transparent',
+                      color: claimsTypeFilter === t.id ? '#0f172a' : 'var(--text-muted)',
+                      border: 'none', borderRadius: '6px', padding: '0.35rem 0.75rem',
+                      fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer',
+                    }}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Status filter */}
+              <div style={{ display: 'flex', gap: '0.3rem', background: 'rgba(255,255,255,0.04)', padding: '0.2rem', borderRadius: '8px' }}>
+                {[
+                  { id: 'all', label: 'All Statuses' },
+                  { id: 'pending', label: 'Processing' },
+                  { id: 'approved', label: 'Approved' },
+                  { id: 'rejected', label: 'Rejected' },
+                ].map(s => (
+                  <button
+                    key={s.id}
+                    onClick={() => setClaimsStatusFilter(s.id)}
+                    style={{
+                      background: claimsStatusFilter === s.id ? 'rgba(255,255,255,0.15)' : 'transparent',
+                      color: claimsStatusFilter === s.id ? '#ffffff' : 'var(--text-muted)',
+                      border: 'none', borderRadius: '6px', padding: '0.35rem 0.75rem',
+                      fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer',
+                    }}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Search input */}
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <input
+                  type="text"
+                  placeholder="Search client, ref, policy #, insurer…"
+                  value={claimsSearch}
+                  onChange={e => setClaimsSearch(e.target.value)}
+                  style={{ ...inputStyle, padding: '0.45rem 0.85rem' }}
+                />
+              </div>
+            </div>
+
+            {/* Error or Loading */}
+            {claimsLoading && claimsList.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                Loading claims and refund records…
+              </div>
+            )}
+            {claimsError && (
+              <div style={{ padding: '0.8rem 1rem', borderRadius: '8px', background: 'rgba(248,113,113,0.1)', color: '#f87171', fontSize: '0.82rem', marginBottom: '1rem' }}>
+                {claimsError}
+              </div>
+            )}
+
+            {/* Table */}
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 840 }}>
+                <thead>
+                  <tr>
+                    {['REF & DATE', 'CLIENT', 'TYPE', 'INSURER & POLICY #', 'AMOUNT CLAIMED', 'SERVICE FEE', 'STATUS', 'ACTIONS'].map(h => (
+                      <th key={h} style={thStyle}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredClaims.map(c => {
+                    const isClaim = c.requestType === 'claim';
+                    const statusColors = {
+                      new: { label: 'New Intake', color: '#60a5fa', bg: 'rgba(59,130,246,0.12)' },
+                      pending_fee: { label: 'Pending Fee', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
+                      documents_required: { label: 'Docs Required', color: '#f97316', bg: 'rgba(249,115,22,0.12)' },
+                      in_review: { label: 'In Review', color: '#a78bfa', bg: 'rgba(167,139,250,0.12)' },
+                      submitted: { label: 'With Insurer', color: '#06b6d4', bg: 'rgba(6,182,212,0.12)' },
+                      approved: { label: 'Approved', color: '#22c55e', bg: 'rgba(34,197,94,0.12)' },
+                      rejected: { label: 'Rejected', color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
+                    };
+                    const sBadge = statusColors[c.status] || { label: c.status || 'Pending', color: '#94a3b8', bg: 'rgba(148,163,184,0.1)' };
+                    const feePaid = (c.feeStatus || '').toLowerCase() === 'paid';
+
+                    return (
+                      <tr key={c.id} style={{ transition: 'background 0.15s' }}>
+                        <td style={tdStyle}>
+                          <div style={{ fontWeight: 700, color: 'var(--gold)', fontSize: '0.78rem' }}>{c.reference || `#${c.id}`}</div>
+                          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>{fmtDate(c.createdAt)}</div>
+                        </td>
+                        <td style={tdStyle}>
+                          <div style={{ fontWeight: 600, color: '#fff' }}>{c.clientName || '—'}</div>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{c.clientEmail || c.clientPhone || '—'}</div>
+                        </td>
+                        <td style={tdStyle}>
+                          <span style={{
+                            display: 'inline-block', padding: '0.15rem 0.5rem', borderRadius: '4px',
+                            fontSize: '0.66rem', fontWeight: 700, letterSpacing: '0.04em',
+                            color: isClaim ? '#38bdf8' : '#e879f9',
+                            background: isClaim ? 'rgba(56,189,248,0.12)' : 'rgba(232,121,249,0.12)',
+                          }}>
+                            {isClaim ? 'CLAIM' : 'REFUND'}
+                          </span>
+                        </td>
+                        <td style={tdStyle}>
+                          <div style={{ fontWeight: 600 }}>{c.insurerName || '—'}</div>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--gold)' }}>{c.policyNumber || 'External/Pending'}</div>
+                        </td>
+                        <td style={{ ...tdStyle, fontWeight: 700 }}>
+                          {c.requestedAmount > 0 ? `${c.currency || 'KES'} ${Number(c.requestedAmount).toLocaleString('en-KE')}` : '—'}
+                        </td>
+                        <td style={tdStyle}>
+                          {c.feeAmount > 0 ? (
+                            <div>
+                              <div style={{ fontSize: '0.78rem', fontWeight: 600 }}>{c.currency || 'KES'} {Number(c.feeAmount).toLocaleString('en-KE')}</div>
+                              <span style={{
+                                fontSize: '0.62rem', fontWeight: 700,
+                                color: feePaid ? '#22c55e' : '#f59e0b',
+                              }}>
+                                {feePaid ? '✓ Fee Paid' : '⏳ Pending Fee'}
+                              </span>
+                            </div>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>Free / Included</span>
+                          )}
+                        </td>
+                        <td style={tdStyle}>
+                          <Badge label={sBadge.label} color={sBadge.color} bg={sBadge.bg} />
+                        </td>
+                        <td style={tdStyle}>
+                          <div style={{ display: 'flex', gap: '0.35rem' }}>
+                            <button
+                              onClick={() => handleOpenClaimReview(c)}
+                              style={{
+                                background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)',
+                                borderRadius: '6px', padding: '0.35rem 0.65rem', cursor: 'pointer',
+                                color: 'var(--gold)', fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap',
+                              }}
+                            >
+                              Manage / Update
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {!claimsLoading && filteredClaims.length === 0 && (
+                    <tr>
+                      <td colSpan={8} style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-muted)', padding: '2.5rem' }}>
+                        {claimsSearch || claimsTypeFilter !== 'all' || claimsStatusFilter !== 'all'
+                          ? 'No claims match your active filters.'
+                          : 'No claims or refunds have been submitted yet.'}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -1433,6 +1810,217 @@ const AgentDashboard = ({ user, onNavigate }) => {
           onClose={() => setAssignPolicy(null)}
           onAssigned={() => { setAssignPolicy(null); polResult.reexecute?.({ requestPolicy: 'network-only' }); dashResult.reexecute?.({ requestPolicy: 'network-only' }); }}
         />
+      )}
+
+      {/* Claim / Refund Review & Operational Update Modal */}
+      {selectedClaim && claimEditForm && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem',
+        }}>
+          <div style={{
+            ...cardStyle, width: '100%', maxWidth: 640, maxHeight: '90vh', overflowY: 'auto',
+            padding: mobile ? '1.5rem' : '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.5)', border: '1px solid rgba(212,175,55,0.3)',
+          }}>
+            {/* Modal Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>
+                    {selectedClaim.requestType === 'claim' ? 'Claim Request' : 'Refund Request'}: {selectedClaim.reference || `#${selectedClaim.id}`}
+                  </h3>
+                  <span style={{
+                    fontSize: '0.65rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '4px',
+                    color: selectedClaim.requestType === 'claim' ? '#38bdf8' : '#e879f9',
+                    background: selectedClaim.requestType === 'claim' ? 'rgba(56,189,248,0.15)' : 'rgba(232,121,249,0.15)',
+                  }}>
+                    {selectedClaim.requestType?.toUpperCase()}
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                  Submitted on {fmtDate(selectedClaim.createdAt)}
+                </div>
+              </div>
+              <button
+                onClick={() => { setSelectedClaim(null); setClaimEditForm(null); }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '1.4rem', cursor: 'pointer', lineHeight: 1 }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Request Summary Info */}
+            <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', gap: '0.8rem', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '10px' }}>
+              <div>
+                <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Client Details</span>
+                <div style={{ fontWeight: 600, fontSize: '0.84rem', marginTop: '0.15rem' }}>{selectedClaim.clientName}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{selectedClaim.clientEmail}</div>
+                {selectedClaim.clientPhone && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{selectedClaim.clientPhone}</div>}
+              </div>
+              <div>
+                <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Insurer &amp; Policy</span>
+                <div style={{ fontWeight: 600, fontSize: '0.84rem', marginTop: '0.15rem' }}>{selectedClaim.insurerName || '—'}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--gold)' }}>{selectedClaim.policyNumber || 'External Policy'}</div>
+              </div>
+              {selectedClaim.incidentDate && (
+                <div>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Incident Date &amp; Type</span>
+                  <div style={{ fontSize: '0.78rem', marginTop: '0.15rem' }}>{fmtDate(selectedClaim.incidentDate)} · {selectedClaim.incidentType || 'General'}</div>
+                </div>
+              )}
+              {selectedClaim.requestedAmount > 0 && (
+                <div>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Claimed Amount</span>
+                  <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--gold)', marginTop: '0.15rem' }}>
+                    {selectedClaim.currency || 'KES'} {Number(selectedClaim.requestedAmount).toLocaleString('en-KE')}
+                  </div>
+                </div>
+              )}
+              {selectedClaim.refundReason && (
+                <div style={{ gridColumn: mobile ? '1' : '1 / -1' }}>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Reason for Cancellation / Refund</span>
+                  <div style={{ fontSize: '0.78rem', color: 'white', marginTop: '0.15rem' }}>{selectedClaim.refundReason}</div>
+                </div>
+              )}
+              {selectedClaim.payoutMethod && (
+                <div style={{ gridColumn: mobile ? '1' : '1 / -1' }}>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Payout Destination</span>
+                  <div style={{ fontSize: '0.78rem', color: '#86efac', marginTop: '0.15rem' }}>
+                    {selectedClaim.payoutMethod?.toUpperCase()}: {selectedClaim.payoutAccountDetails || 'Provided'}
+                  </div>
+                </div>
+              )}
+              {selectedClaim.description && (
+                <div style={{ gridColumn: mobile ? '1' : '1 / -1' }}>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Description</span>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.15rem', whiteSpace: 'pre-wrap' }}>{selectedClaim.description}</div>
+                </div>
+              )}
+              {selectedClaim.proofDocumentUrl && (
+                <div style={{ gridColumn: mobile ? '1' : '1 / -1', marginTop: '0.2rem' }}>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Attached Document</span>
+                  <div style={{ marginTop: '0.2rem' }}>
+                    <a
+                      href={selectedClaim.proofDocumentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: '#60a5fa', fontSize: '0.78rem', textDecoration: 'underline' }}
+                    >
+                      📄 Open Uploaded Document / Evidence ↗
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Operations Edit Controls */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1rem' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--gold)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                Operations &amp; Underwriter Handling
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', gap: '0.8rem' }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Workflow Status</span>
+                  <select
+                    value={claimEditForm.status}
+                    onChange={e => setClaimEditForm(prev => ({ ...prev, status: e.target.value }))}
+                    style={{ ...inputStyle, padding: '0.45rem 0.65rem' }}
+                  >
+                    <option value="new" style={optionStyle}>New Intake</option>
+                    <option value="pending_fee" style={optionStyle}>Awaiting Assistance Fee</option>
+                    <option value="documents_required" style={optionStyle}>Additional Documents Required</option>
+                    <option value="in_review" style={optionStyle}>Operations In Review</option>
+                    <option value="submitted" style={optionStyle}>Submitted to Insurer Portal</option>
+                    <option value="approved" style={optionStyle}>Approved / Settled</option>
+                    <option value="rejected" style={optionStyle}>Rejected / Closed</option>
+                  </select>
+                </label>
+
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Assistance Fee Status</span>
+                  <select
+                    value={claimEditForm.feeStatus}
+                    onChange={e => setClaimEditForm(prev => ({ ...prev, feeStatus: e.target.value }))}
+                    style={{ ...inputStyle, padding: '0.45rem 0.65rem' }}
+                  >
+                    <option value="pending" style={optionStyle}>Pending Payment</option>
+                    <option value="paid" style={optionStyle}>Paid</option>
+                    <option value="waived" style={optionStyle}>Waived / Included</option>
+                  </select>
+                </label>
+              </div>
+
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                  Underwriter Reference / Payment Ref
+                </span>
+                <input
+                  type="text"
+                  placeholder="e.g. GA-CLM-9823 or MPESA ref"
+                  value={claimEditForm.paymentReference}
+                  onChange={e => setClaimEditForm(prev => ({ ...prev, paymentReference: e.target.value }))}
+                  style={inputStyle}
+                />
+              </label>
+
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+                  Operations Remarks / Notes (Shared with client)
+                </span>
+                <textarea
+                  rows={3}
+                  placeholder="Notes on underwriter communication, required doctor receipts, or payout updates…"
+                  value={claimEditForm.adminNotes}
+                  onChange={e => setClaimEditForm(prev => ({ ...prev, adminNotes: e.target.value }))}
+                  style={{ ...inputStyle, resize: 'vertical' }}
+                />
+              </label>
+            </div>
+
+            {/* Feedback message */}
+            {claimSaveFeedback && (
+              <div style={{
+                padding: '0.65rem 0.85rem', borderRadius: '8px', fontSize: '0.78rem',
+                color: claimSaveFeedback.startsWith('✓') ? '#22c55e' : '#f87171',
+                background: claimSaveFeedback.startsWith('✓') ? 'rgba(34,197,94,0.1)' : 'rgba(248,113,113,0.1)',
+                border: claimSaveFeedback.startsWith('✓') ? '1px solid rgba(34,197,94,0.2)' : '1px solid rgba(248,113,113,0.2)',
+              }}>
+                {claimSaveFeedback}
+              </div>
+            )}
+
+            {/* Modal Actions */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', marginTop: '0.5rem' }}>
+              <button
+                type="button"
+                onClick={() => { setSelectedClaim(null); setClaimEditForm(null); }}
+                style={{
+                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: '8px', padding: '0.55rem 1.1rem', color: 'white',
+                  cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600,
+                }}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                disabled={savingClaim}
+                onClick={handleSaveClaimUpdate}
+                style={{
+                  background: 'linear-gradient(135deg, var(--gold), #b8941f)',
+                  border: 'none', borderRadius: '8px', padding: '0.55rem 1.3rem',
+                  color: '#0f172a', cursor: savingClaim ? 'wait' : 'pointer',
+                  fontSize: '0.78rem', fontWeight: 800, opacity: savingClaim ? 0.6 : 1,
+                }}
+              >
+                {savingClaim ? 'Saving…' : 'Save Update'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

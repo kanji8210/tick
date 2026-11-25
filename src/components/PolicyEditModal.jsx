@@ -7,13 +7,15 @@ const UPDATE_POLICY_SALE = gql`
     $saleId: Int!, $departure: String, $return: String, $passengers: Int,
     $insuredNames: String, $insuredDob: String, $passportNumber: String,
     $nationalId: String, $insuredPhone: String, $insuredEmail: String,
-    $insuredAddress: String, $countryOfOrigin: String
+    $insuredAddress: String, $countryOfOrigin: String,
+    $policyNumber: String, $policyDocumentUrl: String, $policyStatus: String
   ) {
     updatePolicySale(input: {
       saleId: $saleId, departure: $departure, return: $return, passengers: $passengers,
       insuredNames: $insuredNames, insuredDob: $insuredDob, passportNumber: $passportNumber,
       nationalId: $nationalId, insuredPhone: $insuredPhone, insuredEmail: $insuredEmail,
-      insuredAddress: $insuredAddress, countryOfOrigin: $countryOfOrigin
+      insuredAddress: $insuredAddress, countryOfOrigin: $countryOfOrigin,
+      policyNumber: $policyNumber, policyDocumentUrl: $policyDocumentUrl, policyStatus: $policyStatus
     }) {
       saleId amountPaid success
     }
@@ -23,40 +25,84 @@ const UPDATE_POLICY_SALE = gql`
 const PolicyEditModal = ({ policy, onClose, onSaved }) => {
   const { mobile } = useResponsive();
   const [form, setForm] = useState({
-    insuredNames:   policy.insuredNames || '',
-    insuredEmail:   policy.insuredEmail || '',
-    insuredPhone:   policy.insuredPhone || '',
-    insuredDob:     policy.insuredDob || '',
+    insuredNames: policy.insuredNames || '',
+    insuredEmail: policy.insuredEmail || '',
+    insuredPhone: policy.insuredPhone || '',
+    insuredDob: policy.insuredDob || '',
     passportNumber: policy.passportNumber || '',
-    nationalId:     policy.nationalId || '',
+    nationalId: policy.nationalId || '',
     insuredAddress: policy.insuredAddress || '',
-    countryOfOrigin:policy.countryOfOrigin || '',
-    departure:      policy.departure || '',
-    returnDate:     policy.returnDate || '',
-    passengers:     policy.passengers || 1,
+    countryOfOrigin: policy.countryOfOrigin || '',
+    departure: policy.departure || '',
+    returnDate: policy.returnDate || '',
+    passengers: policy.passengers || 1,
+    policyNumber: policy.policyNumber || '',
+    policyDocumentUrl: policy.policyDocumentUrl || '',
+    policyStatus: policy.policyStatus || 'unconfirmed',
   });
+  const [copied, setCopied] = useState(false);
   const [status, setStatus] = useState(null); // 'saving' | 'success' | 'error'
   const [errMsg, setErrMsg] = useState('');
   const [, executeMutation] = useMutation(UPDATE_POLICY_SALE);
 
   const set = (k) => (e) => setForm(prev => ({ ...prev, [k]: e.target.value }));
 
+  const handleCopyForInsurer = () => {
+    let depText = '';
+    try {
+      const deps = JSON.parse(policy.dependantsJson || '[]');
+      if (Array.isArray(deps) && deps.length > 0) {
+        depText = '\n--- DEPENDANTS ---\n' + deps.map((d, i) => `${i + 1}. Name: ${d.fullName || d.name || ''} | DOB: ${d.dob || ''} | Passport: ${d.passport || ''}`).join('\n');
+      }
+    } catch { }
+
+    const text = `=== TRAVELER DETAILS FOR UNDERWRITER PORTAL ===
+Plan: ${policy.policyTitle || 'Travel Insurance'} (${policy.policyInsurerName || 'Insurer'})
+Destination: ${policy.region || 'International'}
+Dates: ${form.departure || policy.departure} to ${form.returnDate || policy.returnDate} (${form.passengers || policy.passengers || 1} passenger(s))
+
+PRIMARY TRAVELER:
+Full Name: ${form.insuredNames}
+Passport Number: ${form.passportNumber}
+National ID: ${form.nationalId || 'N/A'}
+Date of Birth: ${form.insuredDob || 'N/A'}
+Phone: ${form.insuredPhone}
+Email: ${form.insuredEmail}
+Address: ${form.insuredAddress || 'N/A'}
+Occupation: ${policy.insuredOccupation || 'N/A'}
+Country of Origin: ${form.countryOfOrigin || 'Kenya'}
+
+TRAVEL & MEDICAL DETAILS:
+Travel Purpose: ${policy.travelPurpose || 'Tourism / Business'}
+Doctor / Emergency Contact: ${policy.doctorDetails || 'N/A'}${depText}
+==============================================`;
+
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 3000);
+  };
+
   const handleSave = async () => {
     setStatus('saving');
     setErrMsg('');
     const res = await executeMutation({
-      saleId:         policy.id,
-      departure:      form.departure || undefined,
-      return:         form.returnDate || undefined,
-      passengers:     parseInt(form.passengers, 10) || undefined,
-      insuredNames:   form.insuredNames || undefined,
-      insuredDob:     form.insuredDob || undefined,
+      saleId: policy.id,
+      departure: form.departure || undefined,
+      return: form.returnDate || undefined,
+      passengers: parseInt(form.passengers, 10) || undefined,
+      insuredNames: form.insuredNames || undefined,
+      insuredDob: form.insuredDob || undefined,
       passportNumber: form.passportNumber || undefined,
-      nationalId:     form.nationalId || undefined,
-      insuredPhone:   form.insuredPhone || undefined,
-      insuredEmail:   form.insuredEmail || undefined,
+      nationalId: form.nationalId || undefined,
+      insuredPhone: form.insuredPhone || undefined,
+      insuredEmail: form.insuredEmail || undefined,
       insuredAddress: form.insuredAddress || undefined,
-      countryOfOrigin:form.countryOfOrigin || undefined,
+      countryOfOrigin: form.countryOfOrigin || undefined,
+      policyNumber: form.policyNumber !== undefined ? form.policyNumber : undefined,
+      policyDocumentUrl: form.policyDocumentUrl !== undefined ? form.policyDocumentUrl : undefined,
+      policyStatus: form.policyStatus || undefined,
     });
     if (res.error) {
       setStatus('error');
@@ -73,7 +119,7 @@ const PolicyEditModal = ({ policy, onClose, onSaved }) => {
   };
   const card = {
     background: 'var(--navy, #0f172a)', border: '1px solid var(--glass-border, rgba(255,255,255,0.1))',
-    borderRadius: '18px', padding: mobile ? '1.5rem' : '2rem', width: '100%', maxWidth: 560,
+    borderRadius: '18px', padding: mobile ? '1.5rem' : '2rem', width: '100%', maxWidth: 640,
     maxHeight: '90vh', overflowY: 'auto', position: 'relative',
   };
   const labelStyle = { display: 'block', fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.06em', marginBottom: '0.3rem' };
@@ -86,15 +132,108 @@ const PolicyEditModal = ({ policy, onClose, onSaved }) => {
   return (
     <div style={overlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={card}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 700, margin: 0 }}>
-            Edit Policy <span style={{ color: 'var(--gold)', fontSize: '0.85rem' }}>{policy.policyNumber}</span>
-          </h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+          <div>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 700, margin: 0 }}>
+              Underwriter Operations <span style={{ color: 'var(--gold)', fontSize: '0.85rem' }}>#{policy.id}</span>
+            </h3>
+            <div style={{ fontSize: '0.78rem', color: 'var(--slate)', marginTop: 2 }}>
+              {policy.policyTitle || 'Travel Policy'} · {policy.policyInsurerName || 'Insurer Network'}
+            </div>
+          </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.4rem', padding: '0.2rem' }}>✕</button>
         </div>
 
+        {/* Quick Underwriter Portal Helper & Copy Tool */}
+        <div style={{
+          padding: '14px 16px', borderRadius: 12, marginBottom: '1.5rem',
+          background: 'rgba(246,166,35,0.08)', border: '1px solid rgba(246,166,35,0.3)',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap'
+        }}>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--gold)', marginBottom: 2 }}>
+              Manual Entry to Underwriter Portal
+            </div>
+            <div style={{ fontSize: '0.74rem', color: 'rgba(255,255,255,0.75)' }}>
+              Copy all traveler information in one click to paste into the insurer's portal.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleCopyForInsurer}
+            style={{
+              padding: '7px 14px', borderRadius: 8, fontSize: '0.75rem', fontWeight: 800,
+              background: copied ? '#22c55e' : 'var(--gold)',
+              color: copied ? '#fff' : '#0f172a', border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.2s', flexShrink: 0
+            }}
+          >
+            {copied ? '✓ Copied to Clipboard!' : '📋 Copy Details for Insurer'}
+          </button>
+        </div>
+
+        {/* Insurer Portal Output Fields */}
+        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.1em', marginBottom: '0.75rem' }}>
+          INSURER ISSUANCE & DOCUMENT LINK
+        </div>
+        <div style={row}>
+          <div>
+            <label style={labelStyle}>OFFICIAL POLICY NUMBER (from insurer)</label>
+            <input
+              style={{ ...inputStyle, border: '1px solid rgba(246,166,35,0.4)', background: 'rgba(246,166,35,0.06)' }}
+              value={form.policyNumber}
+              onChange={set('policyNumber')}
+              placeholder="e.g. GA-TRV-2026-00481"
+            />
+            <span style={{ fontSize: '0.68rem', color: 'var(--slate)', marginTop: 4, display: 'block' }}>
+              Generated by insurer portal after inputting info.
+            </span>
+          </div>
+          <div>
+            <label style={labelStyle}>POLICY STATUS</label>
+            <select
+              style={{ ...inputStyle, cursor: 'pointer' }}
+              value={form.policyStatus}
+              onChange={set('policyStatus')}
+            >
+              <option value="unconfirmed">Pending Entry (Unconfirmed)</option>
+              <option value="pending_review">In Review / Processing</option>
+              <option value="approved">Issued & Proof Emailed (Approved)</option>
+              <option value="active">Active (Paid & Released)</option>
+              <option value="archived">Archived</option>
+            </select>
+          </div>
+        </div>
+
+        <div style={{ marginTop: '0.75rem' }}>
+          <label style={labelStyle}>EXTERNAL POLICY DOCUMENT URL (Google Storage / Drive)</label>
+          <input
+            style={inputStyle}
+            value={form.policyDocumentUrl}
+            onChange={set('policyDocumentUrl')}
+            placeholder="https://storage.googleapis.com/... or Google Drive shareable link"
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+            <span style={{ fontSize: '0.68rem', color: 'var(--slate)' }}>
+              Linked document is delivered to client or unlocked upon payment.
+            </span>
+            {form.policyDocumentUrl && (
+              <a
+                href={form.policyDocumentUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{ fontSize: '0.72rem', color: 'var(--gold)', textDecoration: 'underline' }}
+              >
+                Open Document ↗
+              </a>
+            )}
+          </div>
+        </div>
+
         {/* Client Info */}
-        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.1em', marginBottom: '0.75rem' }}>CLIENT INFORMATION</div>
+        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.1em', marginTop: '1.5rem', marginBottom: '0.75rem' }}>
+          CLIENT INFORMATION
+        </div>
         <div style={row}>
           <div><label style={labelStyle}>LEGAL NAME *</label><input style={inputStyle} value={form.insuredNames} onChange={set('insuredNames')} placeholder="Full legal name" /></div>
           <div><label style={labelStyle}>EMAIL</label><input style={inputStyle} value={form.insuredEmail} onChange={set('insuredEmail')} type="email" /></div>
@@ -113,16 +252,13 @@ const PolicyEditModal = ({ policy, onClose, onSaved }) => {
         </div>
 
         {/* Travel Info */}
-        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.1em', marginTop: '1.5rem', marginBottom: '0.75rem' }}>TRAVEL DETAILS</div>
+        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--gold)', letterSpacing: '0.1em', marginTop: '1.5rem', marginBottom: '0.75rem' }}>
+          TRAVEL DETAILS
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr 1fr', gap: '1rem' }}>
           <div><label style={labelStyle}>DEPARTURE</label><input style={inputStyle} value={form.departure} onChange={set('departure')} type="date" /></div>
           <div><label style={labelStyle}>RETURN</label><input style={inputStyle} value={form.returnDate} onChange={set('returnDate')} type="date" /></div>
           <div><label style={labelStyle}>PASSENGERS</label><input style={inputStyle} value={form.passengers} onChange={(e) => setForm(prev => ({ ...prev, passengers: e.target.value }))} type="number" min="1" /></div>
-        </div>
-
-        {/* Premium note */}
-        <div style={{ marginTop: '1rem', padding: '0.65rem 0.85rem', background: 'rgba(245,158,11,0.08)', borderRadius: '8px', fontSize: '0.75rem', color: '#fbbf24' }}>
-          ⚡ Changing dates or passengers will recalculate the premium automatically.
         </div>
 
         {/* Feedback */}
